@@ -1,0 +1,27 @@
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { CheckSheetModule } from './check_sheet/check_sheet.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { WorkPlanModule } from './work-plan/work-plan.module';
+import { DriversModule } from './drivers/drivers.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (ConfigService: ConfigService) => ({
+        uri: ConfigService.get<string>('MONGODB_CHECK_SHEET_URL'),
+      }),
+      inject: [ConfigService],
+    }),
+    CheckSheetModule,
+    WorkPlanModule,
+    DriversModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
