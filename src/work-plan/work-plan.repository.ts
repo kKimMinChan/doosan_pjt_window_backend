@@ -36,7 +36,7 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
   async createWorkPlan(workPlanItem: WorkPlanItem) {
     const workPlanDocument = await this.workPlanModel.findOne();
     const workPlanList = workPlanDocument?.workPlanList;
-    
+
     const workPlanItemCopy = JSON.parse(JSON.stringify(workPlanItem));
     if (workPlanList) {
       const workPlan = workPlanList[workPlanDocument.workPlanList.length - 1];

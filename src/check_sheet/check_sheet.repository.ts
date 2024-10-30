@@ -35,57 +35,18 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   }
 
   async createCheckSheet(checkSheetDto: CheckSheet) {
-    // console.log(checkSheetDto.workPlan, 'repo');
-
     const checkSheet = await this.checkSheetModel.findOne();
     if (checkSheet) {
       checkSheet.checkSheetInfo = checkSheetDto.checkSheetInfo;
       checkSheet.checkLists = checkSheetDto.checkLists;
       checkSheet.image = checkSheetDto.image;
-      // checkSheet.driversImage = checkSheetDto.driversImage;
-      checkSheet.password = checkSheetDto.password;
 
       return await checkSheet.save();
     } else {
       const createCheckSheet = new this.checkSheetModel({ ...checkSheetDto });
-      console.log(JSON.stringify(createCheckSheet, null, 2), 'repo111');
       return await createCheckSheet.save();
     }
   }
-  // async createCheckSheet(checkSheetDto: CheckSheet) {
-  //   // console.log(checkSheetDto.workPlan, 'repo');
-
-  //   const checkSheet = await this.checkSheetModel.findOne();
-  //   const workPlanLen = checkSheet?.workPlan?.length;
-  //   if (checkSheet) {
-  //     checkSheet.checkSheetInfo = checkSheetDto.checkSheetInfo;
-  //     checkSheet.checkLists = checkSheetDto.checkLists;
-  //     checkSheet.image = checkSheetDto.image;
-  //     checkSheet.driversImage = checkSheetDto.driversImage;
-  //     checkSheet.password = checkSheetDto.password;
-  //     console.log(
-  //       checkSheet.workPlan[workPlanLen - 1].workPlanImage.image_url,
-  //       checkSheetDto.workPlan[0].workPlanImage.image_url,
-  //     );
-  //     if (
-  //       checkSheet.workPlan[workPlanLen - 1].workPlanImage.image_url !==
-  //       checkSheetDto.workPlan[0].workPlanImage.image_url
-  //     ) {
-  //       console.log('이미지 새로');
-  //       checkSheet.workPlan.push(checkSheetDto.workPlan[0]);
-  //     } else {
-  //       checkSheet.workPlan[workPlanLen - 1] = checkSheetDto.workPlan[0];
-  //       console.log('기존 이미지');
-  //     }
-  //     // console.log(JSON.stringify(checkSheetDto.workPlan, null, 2), 'repo111');
-  //     // checkSheet.markModified(`workPlan[${workPlanLen - 1}].signature`);
-  //     return await checkSheet.save();
-  //   } else {
-  //     const createCheckSheet = new this.checkSheetModel({ ...checkSheetDto });
-  //     console.log(JSON.stringify(createCheckSheet, null, 2), 'repo111');
-  //     return await createCheckSheet.save();
-  //   }
-  // }
 
   async updateSheet(checkItemDto: CheckedList) {
     try {

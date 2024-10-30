@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Post,
   Res,
   UploadedFiles,
@@ -19,9 +21,23 @@ export class DriversController {
   async GetDriverImages() {
     try {
       const driversImage = await this.driversService.getDriverImages();
+      if (!driversImage) {
+        // 데이터가 없는 경우 404 상태와 메시지 반환
+        throw new HttpException(
+          '운전자 사진 데이터가 없습니다. 운전자 사진을 추가해주세요.',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
       return driversImage;
     } catch (error) {
-      console.log('Error fetching DriverImages', error);
+      console.error(error.message);
+      // 에러를 클라이언트로 재발생시켜 전송
+      throw new HttpException(
+        error.response ||
+          '운전자 사진 데이터를 가져오는 중 문제가 발생했습니다.',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

@@ -2,14 +2,13 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Post,
   Put,
-  Request,
   Res,
   Response as resp,
-  UploadedFile,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { CheckSheetService } from './check_sheet.service';
@@ -22,7 +21,6 @@ import {
   CheckedList,
   // DriversImage,
 } from './check_sheet.schema';
-import { LocalAuthGuard } from './check_sheet.guard';
 
 @Controller('check-sheet')
 export class CheckSheetController {
@@ -31,10 +29,22 @@ export class CheckSheetController {
   async getCheckSheet() {
     try {
       const checkSheet = await this.checkSheetService.getCheckSheet();
-
+      if (!checkSheet) {
+        // 데이터가 없는 경우 404 상태와 메시지 반환
+        throw new HttpException(
+          '작업 안전 점검표 데이터가 없습니다. 작업 안전 점검표 데이터를 추가해주세요.',
+          HttpStatus.NOT_FOUND,
+        );
+      }
       return checkSheet;
     } catch (error) {
-      console.error('Error fetching CheckSheet', error);
+      console.error(error.message);
+      // 에러를 클라이언트로 재발생시켜 전송
+      throw new HttpException(
+        error.response ||
+          '작업 안전 점검표 데이터를 가져오는 중 문제가 발생했습니다.',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -45,8 +55,6 @@ export class CheckSheetController {
     @Body('checkSheetInfo') checkSheetInfo: string,
     @Body('checkLists') checkLists: string,
     @Body('originWorkSafetyCheckListPath') images: string[],
-    @Body('originDriversPath') originDriversPath: string[],
-    @Body('password') password: string,
     @Res() response: Response,
   ) {
     try {
@@ -64,7 +72,6 @@ export class CheckSheetController {
         checkLists: parsedCheckLists,
         image: imageUrls,
         checkedList: [],
-        password,
       };
 
       if (images?.length > 0) {
@@ -88,28 +95,6 @@ export class CheckSheetController {
     } catch (error) {
       console.error('Error parsing JSON:', error);
       return response.status(500).json({ message: 'Internal Server Error' });
-    }
-  }
-
-  @UseGuards(LocalAuthGuard)
-  @Post('login')
-  async login(@Request() req, @resp() res) {
-    console.log(res.cookies, 'cookies');
-    return res.json(req.user);
-  }
-
-  // @UseGuards(AuthenticatedGuard)
-  // @Get('check')
-  // testGuardWithSession(@Request() req, @resp() res) {
-  //   return res.json(req.user);
-  // }
-
-  @Get('check')
-  getProtected(@Request() req) {
-    if (req.isAuthenticated()) {
-      return { message: 'Access granted', user: req.user };
-    } else {
-      return { message: 'Access denied' };
     }
   }
 
@@ -137,26 +122,4 @@ export class CheckSheetController {
       return response.status(500).json({ message: 'Internal Server Error' });
     }
   }
-
-  // @Post('signature')
-  // @UseInterceptors(FileInterceptor('file', MulterConfig))
-  // async signatureImage(
-  //   @UploadedFile() file: Express.Multer.File,
-  //   @Res() response: Response,
-  //   @Body('type') type: string,
-  //   @Body('name') name: string,
-  // ) {
-  //   if (name) {
-  //     const signature = await this.checkSheetService.signature(
-  //       file.path,
-  //       type,
-  //       name,
-  //     );
-  //     console.log(JSON.stringify(signature, null, 2));
-  //     return response.status(201).json(signature);
-  //   }
-  //   const signature = await this.checkSheetService.signature(file.path, type);
-  //   console.log(JSON.stringify(signature, null, 2));
-  //   return response.status(201).json(signature);
-  // }
 }

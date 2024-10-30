@@ -13,56 +13,102 @@ export class WorkPlanService {
     private driversService: DriversService,
   ) {}
 
+  async getWorkPlanList() {
+    const workPlanList = await this.workPlanRepository.getWorkPlan();
+
+    if (workPlanList) {
+      const workPlanListToBase64 = await Promise.all(
+        workPlanList.workPlanList.map(async (workPlan) => {
+          workPlan.workPlanImage = await getBase64Image(
+            workPlan.workPlanImage?.image_url,
+          );
+          workPlan.signature.approval = await getBase64Image(
+            workPlan.signature.approval?.image_url,
+          );
+          workPlan.signature.draft = await getBase64Image(
+            workPlan.signature.draft?.image_url,
+          );
+          workPlan.signature.authorization = await getBase64Image(
+            workPlan.signature.authorization?.image_url,
+          );
+
+          workPlan.signature.driver = await Promise.all(
+            workPlan.signature.driver.map(async (driver) => {
+              if (driver.signatureImage?.image_url) {
+                driver.signatureImage = await getBase64Image(
+                  driver.signatureImage.image_url,
+                );
+              }
+              return driver;
+            }),
+          );
+
+          return workPlan;
+        }),
+      );
+
+      return workPlanListToBase64;
+    }
+    return workPlanList;
+  }
+
   async getWorkPlan() {
     const workPlanList = await this.workPlanRepository.getWorkPlan();
-    const workPlan = workPlanList.workPlanList.pop();
-    workPlan.workPlanImage = await getBase64Image(
-      workPlan.workPlanImage?.image_url,
-    );
-    workPlan.signature.approval = await getBase64Image(
-      workPlan.signature.approval?.image_url,
-    );
-    workPlan.signature.draft = await getBase64Image(
-      workPlan.signature.draft?.image_url,
-    );
-    workPlan.signature.authorization = await getBase64Image(
-      workPlan.signature.authorization?.image_url,
-    );
+    if (workPlanList !== null) {
+      const workPlan = workPlanList.workPlanList.pop();
+      workPlan.workPlanImage = await getBase64Image(
+        workPlan.workPlanImage?.image_url,
+      );
+      workPlan.signature.approval = await getBase64Image(
+        workPlan.signature.approval?.image_url,
+      );
+      workPlan.signature.draft = await getBase64Image(
+        workPlan.signature.draft?.image_url,
+      );
+      workPlan.signature.authorization = await getBase64Image(
+        workPlan.signature.authorization?.image_url,
+      );
 
-    workPlan.signature.driver = await Promise.all(
-      workPlan.signature.driver.map(async (driver) => {
-        if (driver.signatureImage?.image_url) {
-          driver.signatureImage = await getBase64Image(
-            driver.signatureImage.image_url,
-          );
-        }
-        return driver;
-      }),
-    );
+      workPlan.signature.driver = await Promise.all(
+        workPlan.signature.driver.map(async (driver) => {
+          if (driver.signatureImage?.image_url) {
+            driver.signatureImage = await getBase64Image(
+              driver.signatureImage.image_url,
+            );
+          }
+          return driver;
+        }),
+      );
 
-    return workPlan;
+      return workPlan;
+    }
+    return null;
   }
 
   async newWeekWorkPlan(originWorkPlanPath: string) {
     const driverImages = await this.getDriverImages();
-    const driverNames = driverImages.map(
-      (image: DriversImage): DriverSignature => ({
-        name: image.name,
-      }),
-    );
+    if (driverImages) {
+      const driverNames = driverImages.map(
+        (image: DriversImage): DriverSignature => ({
+          name: image.name,
+        }),
+      );
 
-    const workPlanImage: Image = {
-      image_url: originWorkPlanPath,
-    };
+      const workPlanImage: Image = {
+        image_url: originWorkPlanPath,
+      };
 
-    const workPlanItem: WorkPlanItem = {
-      workPlanImage: workPlanImage,
-      signature: {
-        driver: driverNames,
-      },
-    };
-    const workPlan = await this.workPlanRepository.createWorkPlan(workPlanItem);
-    return workPlan;
+      const workPlanItem: WorkPlanItem = {
+        workPlanImage: workPlanImage,
+        signature: {
+          driver: driverNames,
+        },
+      };
+      const workPlan = await this.workPlanRepository.createWorkPlan(
+        workPlanItem,
+      );
+      return workPlan;
+    }
   }
 
   async updatedDriver(originWorkPlanPath: string) {

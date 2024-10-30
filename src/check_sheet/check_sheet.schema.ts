@@ -76,46 +76,6 @@ export class Image {
   image_url?: string;
 }
 
-// @Schema()
-// export class DriversImage {
-//   name?: string;
-//   base64?: string;
-//   image_url?: string;
-// }
-
-// @Schema()
-// export class DriverSignature {
-//   name?: string;
-//   signatureImage?: {
-//     base64?: string;
-//     image_url?: string;
-//   };
-// }
-
-// @Schema()
-// export class WorkPlan {
-//   date?: string;
-//   workPlanImage: {
-//     base64?: string;
-//     image_url: string;
-//   };
-//   signature?: {
-//     draft?: {
-//       base64?: string;
-//       image_url?: string;
-//     };
-//     authorization?: {
-//       base64?: string;
-//       image_url?: string;
-//     };
-//     approval?: {
-//       base64?: string;
-//       image_url?: string;
-//     };
-//     driver?: DriverSignature[];
-//   };
-// }
-
 @Schema()
 export class CheckSheet {
   @Prop({ type: CheckSheetInfo, required: true })
@@ -129,15 +89,6 @@ export class CheckSheet {
 
   @Prop({ type: [CheckedList], required: false })
   checkedList: CheckedList[];
-
-  // @Prop({ type: [DriversImage], required: false })
-  // driversImage: DriversImage[];
-
-  @Prop({ required: true })
-  password: string;
-
-  // @Prop({ type: [WorkPlan], required: true })
-  // workPlan: WorkPlan[];
 }
 
 export const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);

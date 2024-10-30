@@ -18,7 +18,7 @@ export const MulterConfig = {
 
       const lastIndex = safeName.lastIndexOf('_');
       const baseName = safeName.substring(0, lastIndex);
-      console.log(baseName, 'safe', fileExtName, 'ext', buffer);
+      // console.log(baseName, 'safe', fileExtName, 'ext', buffer);
       callback(null, `${baseName}.${fileExtName}`);
     },
   }),

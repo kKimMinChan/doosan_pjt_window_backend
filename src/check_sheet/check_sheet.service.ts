@@ -63,8 +63,7 @@ export class CheckSheetService {
           ? checkSheetData.toObject()
           : checkSheetData;
 
-        const { password, ...rest } = plainObject;
-        return rest;
+        return plainObject;
       }
       return null;
     } catch (error) {
@@ -74,13 +73,10 @@ export class CheckSheetService {
   }
 
   async createCheckSheet(checkSheetDto: CheckSheet) {
-    const encryptedPassword = bcrypt.hashSync(checkSheetDto.password, 10);
     try {
       const checkSheet = await this.checkSheetRepository.createCheckSheet({
         ...checkSheetDto,
-        password: encryptedPassword,
       });
-      checkSheet.password = undefined;
       return checkSheet;
     } catch (error) {
       throw new HttpException('서버 에러', 500);
@@ -113,30 +109,4 @@ export class CheckSheetService {
   //   }
   //   return null;
   // }
-
-  async login(password: string) {
-    const checkSheetData = await this.checkSheetRepository.getCheckSheet();
-
-    console.log(checkSheetData.password, password);
-    if (checkSheetData.password) {
-      Logger.log(`Stored password hash: ${checkSheetData.password}`, 'login');
-      Logger.log(`Received password for comparison: ${password}`, 'login');
-
-      const comparisonResult = bcrypt.compareSync(
-        password,
-        checkSheetData.password,
-      );
-      Logger.log(`Password comparison result: ${comparisonResult}`, 'login');
-
-      if (comparisonResult) {
-        return checkSheetData;
-      } else {
-        Logger.log(`Password mismatch. Access denied.`, 'login');
-        return false;
-      }
-    } else {
-      Logger.log(`No password set in the checkSheetData.`, 'login');
-      return null;
-    }
-  }
 }
