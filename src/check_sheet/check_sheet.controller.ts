@@ -58,7 +58,7 @@ export class CheckSheetController {
     @Res() response: Response,
   ) {
     try {
-      const checkSheetData = await this.checkSheetService.getCheckSheet();
+      // const checkSheetData = await this.checkSheetService.getCheckSheet();
 
       const parsedCheckSheetInfo = JSON.parse(checkSheetInfo) as CheckSheetInfo;
       const parsedCheckLists = JSON.parse(checkLists) as CheckList[];

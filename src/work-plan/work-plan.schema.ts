@@ -16,7 +16,6 @@ export class DriverSignature {
 export const DriverSignatureSchema =
   SchemaFactory.createForClass(DriverSignature);
 
-
 @Schema({ timestamps: true })
 export class WorkPlanItem {
   @Prop({ type: ImageSchema, required: true, _id: false }) // ImageSchema 사용

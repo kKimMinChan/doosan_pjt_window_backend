@@ -53,16 +53,6 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     }
   }
 
-  // async createWorkPlan(workPlanItem: WorkPlanItem) {
-  //   const workPlan = await this.workPlanModel.findOne();
-  //   if (workPlan) {
-  //     workPlan.workPlanList.push(workPlanItem);
-  //     return workPlan.save();
-  //   } else {
-  //     // const createWorkPlan;
-  //   }
-  // }
-
   async signature(signatureUrl: string, signatureType: string, name: string) {
     try {
       const workPlanDocument = await this.workPlanModel.findOne();
