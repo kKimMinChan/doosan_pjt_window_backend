@@ -36,7 +36,7 @@ export class CheckSheetService {
   async getCheckSheet() {
     try {
       const checkSheetData = await this.checkSheetRepository.getCheckSheet();
-      console.log(checkSheetData, 'data');
+      // console.log(checkSheetData, 'data');
       if (checkSheetData) {
         if (checkSheetData?.image.length > 0) {
           const imageUrls = checkSheetData?.image?.map(

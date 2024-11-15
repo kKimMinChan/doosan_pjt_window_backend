@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WorkPlanModule } from './work-plan/work-plan.module';
 import { DriversModule } from './drivers/drivers.module';
+import { Esp32Module } from './esp32/esp32.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DriversModule } from './drivers/drivers.module';
     CheckSheetModule,
     WorkPlanModule,
     DriversModule,
+    Esp32Module,
   ],
   controllers: [AppController],
   providers: [AppService],
