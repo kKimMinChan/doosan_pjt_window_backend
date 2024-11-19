@@ -126,7 +126,7 @@ export class Esp32Controller {
   private recordFileName = '';
 
   constructor() {
-    this.initializeESP32Stream();
+    // this.initializeESP32Stream();
   }
 
   private initializeESP32Stream() {
@@ -209,6 +209,7 @@ export class Esp32Controller {
   @Get('stream/video')
   @Sse()
   videoStream(): Observable<MessageEvent> {
+    this.initializeESP32Stream();
     return new Observable((observer) => {
       this.videoStream$.subscribe((frame) => {
         const event = new MessageEvent('message', {
