@@ -1,243 +1,69 @@
-// // import { Controller, Get, Sse } from '@nestjs/common';
-// // import { Observable, Subject } from 'rxjs';
-// // import * as http from 'http';
-
-// // @Controller('esp32')
-// // export class Esp32Controller {
-// //   private videoStream$ = new Subject<string>();
-
-// //   constructor() {
-// //     this.initializeESP32Stream();
-// //   }
-
-// //   private initializeESP32Stream() {
-// //     http
-// //       .get('http://192.168.0.8:81/stream', (response) => {
-// //         response.on('data', (chunk: Buffer) => {
-// //           this.videoStream$.next(chunk.toString('base64'));
-// //         });
-
-// //         response.on('end', () => {
-// //           console.log('ESP32 stream ended');
-// //         });
-// //       })
-// //       .on('error', (error) => {
-// //         console.error('Error initializing ESP32 stream:', error);
-// //       });
-// //   }
-
-// //   @Get('stream/video')
-// //   @Sse()
-// //   videoStream(): Observable<MessageEvent> {
-// //     return new Observable((observer) => {
-// //       this.videoStream$.subscribe((frame) => {
-// //         const event = new MessageEvent('message', {
-// //           data: frame,
-// //         });
-// //         observer.next(event);
-// //       });
-// //     });
-// //   }
-// // }
-// import { Controller, Get, Sse } from '@nestjs/common';
-// import { Observable, Subject } from 'rxjs';
-// import * as http from 'http';
-
-// @Controller('esp32')
-// export class Esp32Controller {
-//   private videoStream$ = new Subject<string>();
-
-//   constructor() {
-//     this.initializeESP32Stream();
-//   }
-
-//   private initializeESP32Stream() {
-//     let buffer = Buffer.alloc(0);
-//     http
-//       .get('http://192.168.0.8:81/stream', (response) => {
-//         response.on('data', (chunk: Buffer) => {
-//           buffer = Buffer.concat([buffer, chunk]);
-
-//           // Check for boundary marker to split images
-//           const boundary = '--123456789000000000000987654321';
-//           let boundaryIndex = buffer.indexOf(boundary);
-
-//           while (boundaryIndex !== -1) {
-//             // Extract the image data up to the boundary
-//             const imageChunk = buffer.slice(0, boundaryIndex);
-//             buffer = buffer.slice(boundaryIndex + boundary.length);
-
-//             // Extract the Content-Length header and image data
-//             const contentLengthMatch = imageChunk
-//               .toString()
-//               .match(/Content-Length: (\d+)/);
-//             if (contentLengthMatch) {
-//               const contentLength = parseInt(contentLengthMatch[1], 10);
-//               const imageDataIndex = imageChunk.indexOf('\r\n\r\n') + 4;
-//               const imageData = imageChunk.slice(
-//                 imageDataIndex,
-//                 imageDataIndex + contentLength,
-//               );
-
-//               // Send the image data as base64
-//               this.videoStream$.next(imageData.toString('base64'));
-//             }
-
-//             boundaryIndex = buffer.indexOf(boundary);
-//           }
-//         });
-
-//         response.on('end', () => {
-//           console.log('ESP32 stream ended');
-//         });
-//       })
-//       .on('error', (error) => {
-//         console.error('Error initializing ESP32 stream:', error);
-//       });
-//   }
-
-//   @Get('stream/video')
-//   @Sse()
-//   videoStream(): Observable<MessageEvent> {
-//     console.log('connect');
-//     return new Observable((observer) => {
-//       this.videoStream$.subscribe((frame) => {
-//         const event = new MessageEvent('message', {
-//           data: frame,
-//         });
-//         observer.next(event);
-//       });
-//     });
-//   }
-// }
-
-import { Controller, Get, Post, Sse, Body } from '@nestjs/common';
-import { Observable, Subject } from 'rxjs';
-import * as http from 'http';
+import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Response } from 'express';
+import { join } from 'path';
 import * as fs from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import * as os from 'os';
+import * as extract from 'extract-zip';
+import * as archiver from 'archiver';
+import { exec } from 'child_process';
 
 @Controller('esp32')
 export class Esp32Controller {
-  private videoStream$ = new Subject<string>();
-  private recording = false;
-  private recordBuffer = Buffer.alloc(0);
-  private recordFileName = '';
+  @Post('upload')
+  async handleUpload(
+    @Body('folderName') folderName: string,
+    @Res() res: Response,
+  ) {
+    try {
+      console.log('Upload request received for folder:', folderName);
+      const downloadDirPath = join(os.homedir(), 'Downloads');
+      const zipFilePath = join(downloadDirPath, folderName);
 
-  constructor() {
-    // this.initializeESP32Stream();
-  }
+      // 압축 해제
+      await extract(zipFilePath, { dir: downloadDirPath });
+      console.log('Unzipped successfully to', downloadDirPath);
 
-  private initializeESP32Stream() {
-    let buffer = Buffer.alloc(0);
-    http
-      .get('http://192.168.0.8:81/stream', (response) => {
-        this.startRecording();
+      // 압축 해제된 폴더 내의 두 개의 폴더 압축
+      const extractedFolderPath = join(
+        downloadDirPath,
+        folderName.replace('.zip', ''),
+      );
+      const folders = fs.readdirSync(downloadDirPath).filter((file) => {
+        return (
+          fs.statSync(join(downloadDirPath, file)).isDirectory() &&
+          (file.startsWith('1_') || file.startsWith('2_'))
+        );
+      });
 
-        response.on('data', (chunk: Buffer) => {
-          buffer = Buffer.concat([buffer, chunk]);
+      // 각 폴더의 이미지를 사용하여 영상 생성
+      for (const folder of folders) {
+        const folderPath = join(downloadDirPath, folder);
+        const outputVideoPath = join(downloadDirPath, `${folder}.mp4`);
 
-          // Check for boundary marker to split images
-          const boundary = '--123456789000000000000987654321';
-          let boundaryIndex = buffer.indexOf(boundary);
+        // ffmpeg 명령어를 사용하여 이미지들을 영상으로 합치기
+        const command = `ffmpeg -y -pattern_type glob -framerate 20 -i '${folderPath}/*.jpg' -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -r 20 ${outputVideoPath}`;
 
-          while (boundaryIndex !== -1) {
-            // Extract the image data up to the boundary
-            const imageChunk = buffer.slice(0, boundaryIndex);
-            buffer = buffer.slice(boundaryIndex + boundary.length);
-
-            // Extract the Content-Length header and image data
-            const contentLengthMatch = imageChunk
-              .toString()
-              .match(/Content-Length: (\d+)/);
-            if (contentLengthMatch) {
-              const contentLength = parseInt(contentLengthMatch[1], 10);
-              const imageDataIndex = imageChunk.indexOf('\r\n\r\n') + 4;
-              const imageData = imageChunk.slice(
-                imageDataIndex,
-                imageDataIndex + contentLength,
-              );
-
-              // Send the image data as base64
-              const base64Data = imageData.toString('base64');
-              this.videoStream$.next(base64Data);
-
-              // Record the data
-              if (this.recording) {
-                this.recordBuffer = Buffer.concat([
-                  this.recordBuffer,
-                  imageData,
-                ]);
-              }
+        await new Promise((resolve, reject) => {
+          exec(command, (error, stdout, stderr) => {
+            if (error) {
+              console.error(`Error creating video for ${folder}:`, error);
+              reject(error);
+            } else {
+              console.log(`Video created successfully at ${outputVideoPath}`);
+              resolve(stdout);
             }
-
-            boundaryIndex = buffer.indexOf(boundary);
-          }
+          });
         });
 
-        response.on('end', () => {
-          console.log('ESP32 stream ended');
-          this.stopRecording();
-        });
-      })
-      .on('error', (error) => {
-        console.error('Error initializing ESP32 stream:', error);
-      });
-  }
+        // 폴더 삭제
+        fs.rmdirSync(folderPath, { recursive: true });
+        console.log(`Deleted folder: ${folderPath}`);
+      }
 
-  private startRecording() {
-    this.recording = true;
-    this.recordFileName = path.join(__dirname, `recording-${uuidv4()}.mjpeg`);
-    this.recordBuffer = Buffer.alloc(0);
-    console.log(`Recording started: ${this.recordFileName}`);
-  }
-
-  private stopRecording() {
-    if (this.recording) {
-      fs.writeFile(this.recordFileName, this.recordBuffer, (err) => {
-        if (err) {
-          console.error('Error saving recording:', err);
-        } else {
-          console.log(`Recording saved: ${this.recordFileName}`);
-        }
-      });
-      this.recording = false;
+      return res.status(200).send('Folders zipped successfully');
+    } catch (error) {
+      console.error('Error processing upload:', error);
+      return res.status(500).send('Internal server error');
     }
   }
-
-  @Get('stream/video')
-  @Sse()
-  videoStream(): Observable<MessageEvent> {
-    this.initializeESP32Stream();
-    return new Observable((observer) => {
-      this.videoStream$.subscribe((frame) => {
-        const event = new MessageEvent('message', {
-          data: frame,
-        });
-        observer.next(event);
-      });
-    });
-  }
-
-  @Post('stream/stop')
-  stopStream() {
-    console.log('Stop signal received from client');
-    this.stopRecording();
-  }
 }
-
-// ESP32에서 데이터를 HTTP 스트림으로 전달하는 코드를 통해
-// NestJS 서버에서 받아온 후 Subject를 통해 구독하고,
-// 구독한 데이터를 Sse 데코레이터를 사용해 클라이언트로 전달하며,
-// 스트림이 시작될 때 녹화를 시작하고 React에서 요청한 경우 스트림을 중지하고 파일로 저장합니다.
-
-// ESP32에서 데이터를 HTTP 스트림으로 전달하는 코드를 통해
-// NestJS 서버에서 받아온 후 Subject를 통해 구독하고,
-// 구독한 데이터를 Sse 데코레이터를 사용해 클라이언트로 전달하며,
-// 스트림이 시작될 때 녹화를 시작하고 종료 시 파일로 저장합니다.
-
-// ESP32에서 데이터를 HTTP 스트림으로 전달하는 코드를 통해
-// NestJS 서버에서 받아온 후 Subject를 통해 구독하고,
-// 구독한 데이터를 Sse 데코레이터를 사용해 클라이언트로 전달하며,
-// 스트림이 시작될 때 녹화를 시작하고 종료 시 파일로 저장합니다.

@@ -23,9 +23,7 @@ async function bootstrap() {
     //     callback(null, true);
     //   }
     // },
-    origin: [
-      'http://localhost:3000',
-    ],
+    origin: ['http://localhost:3000', 'http://192.168.0.10:3000'],
     credentials: true,
     // methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     // allowedHeaders: 'Content-Type, Accept, Authorization',
