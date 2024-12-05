@@ -6,7 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WorkPlanModule } from './work-plan/work-plan.module';
 import { DriversModule } from './drivers/drivers.module';
-import { Esp32Module } from './esp32/esp32.module';
+import { RecordModule } from './record/record.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { Esp32Module } from './esp32/esp32.module';
     CheckSheetModule,
     WorkPlanModule,
     DriversModule,
-    Esp32Module,
+    RecordModule,
   ],
   controllers: [AppController],
   providers: [AppService],

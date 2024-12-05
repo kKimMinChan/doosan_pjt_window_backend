@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
 import * as passport from 'passport';
+// import * as fs from 'fs';
 
 async function bootstrap() {
   // const httpsOptions = {
@@ -23,7 +24,7 @@ async function bootstrap() {
     //     callback(null, true);
     //   }
     // },
-    origin: ['http://localhost:3000', 'http://192.168.0.10:3000'],
+    origin: '*', // 모든 출처 허용
     credentials: true,
     // methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     // allowedHeaders: 'Content-Type, Accept, Authorization',

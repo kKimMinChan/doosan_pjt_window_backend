@@ -14,7 +14,7 @@ interface CheckSheetInfo {
 }
 
 interface CheckLists {
-  division: '핵심 항목' | '작업전 점검사항(법적)' | '일반항목';
+  division: '핵심 항목' | '작업 전 점검사항(법적)' | '일반 항목';
   number: number;
   check_item: string;
   method: '문서' | '육안' | '기능' | '';

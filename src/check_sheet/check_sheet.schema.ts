@@ -28,7 +28,7 @@ export class CheckSheetInfo {
 export class CheckList {
   @Prop({
     required: true,
-    enum: ['핵심 항목', '작업전 점검사항(법적)', '일반항목'],
+    enum: ['핵심 항목', '작업 전 점검사항(법적)', '일반 항목'],
   })
   division: string;
 
@@ -46,7 +46,7 @@ export class CheckList {
 export class CheckItem {
   @Prop({
     required: true,
-    enum: ['핵심 항목', '작업전 점검사항(법적)', '일반항목'],
+    enum: ['핵심 항목', '작업 전 점검사항(법적)', '일반 항목'],
   })
   division: string;
 

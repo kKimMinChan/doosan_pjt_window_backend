@@ -24,3 +24,18 @@ export async function getBase64Image(
     return null;
   }
 }
+
+export async function getBase64Thumbnail(
+  imageUrl: string,
+): Promise<string | null> {
+  try {
+    if (imageUrl) {
+      const imageBuffer = await readFile(imageUrl);
+      return `data:image/png;base64,${imageBuffer.toString('base64')}`;
+    }
+    return null; // null을 반환하여 일관된 반환값 유지
+  } catch (error) {
+    console.error(`Error reading file at ${imageUrl}: ${error}`);
+    return null;
+  }
+}
