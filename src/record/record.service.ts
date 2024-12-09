@@ -189,7 +189,16 @@ export class RecordService {
             imageFilePath,
           ]);
 
-          res.data.pipe(ffmpegImageCapture.stdin);
+          if (ffmpegImageCapture && ffmpegImageCapture.stdin.writable) {
+            res.data.pipe(ffmpegImageCapture);
+          } else {
+            console.error('FFmpeg stdin is not writable');
+            this.isRecording = false;
+            reject(new Error('FFmpeg stdin is not writable'));
+            return;
+          }
+
+          // res.data.pipe(ffmpegImageCapture.stdin);
 
           ffmpegImageCapture.on('close', (code) => {
             if (code === 0) {
