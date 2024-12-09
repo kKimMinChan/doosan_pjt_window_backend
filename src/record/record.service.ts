@@ -106,6 +106,7 @@ export class RecordService {
 
   private readonly rootFolder = path.join(process.cwd(), 'video_storage');
   private ffmpegProcess: ChildProcess | null = null;
+  private ffmpegImageCapture: ChildProcess | null = null;
   private isRecording = false;
 
   constructor(private readonly httpService: HttpService) {}
@@ -157,7 +158,9 @@ export class RecordService {
       console.log('Image captured successfully');
 
       // 이미지 캡처 후 비디오 녹화 시작
-      await this.startVideoRecording(videoFilePath);
+      setTimeout(() => {
+        this.startVideoRecording(videoFilePath);
+      }, 1000);
     } catch (error) {
       console.error('Error during recording process:', error);
       throw error;
@@ -165,12 +168,15 @@ export class RecordService {
   }
 
   private captureImage(imageFilePath: string): Promise<void> {
+    if (this.ffmpegProcess) {
+      console.error('FFmpeg process is already running.');
+      return Promise.reject(new Error('FFmpeg process is already running.'));
+    }
     return new Promise((resolve, reject) => {
       const response = this.httpService.get(
         'http://192.168.0.14:8080/stream.mjpg',
         {
           responseType: 'stream',
-          timeout: 5000, // HTTP 요청 타임아웃
         },
       );
 
@@ -182,7 +188,7 @@ export class RecordService {
             return;
           }
 
-          const ffmpegImageCapture = spawn('ffmpeg', [
+          this.ffmpegImageCapture = spawn('ffmpeg', [
             '-y', // 덮어쓰기 허용
             '-i',
             'pipe:0',
@@ -191,22 +197,39 @@ export class RecordService {
             imageFilePath,
           ]);
 
+          res.data.on('end', () => {
+            console.log('Stream ended.');
+            if (this.ffmpegImageCapture && !this.ffmpegImageCapture.killed) {
+              this.ffmpegImageCapture.stdin.end(); // 스트림 종료 신호 전송
+            }
+          });
+
+          res.data.on('error', (error) => {
+            console.error('Stream error:', error);
+            if (this.ffmpegImageCapture) {
+              this.ffmpegImageCapture.stdin.destroy(); // 강제 종료
+              this.ffmpegImageCapture.kill(); // 프로세스 종료
+            }
+            reject(error);
+          });
+
           // FFmpeg 프로세스 에러 로그 기록
-          ffmpegImageCapture.stderr.on('data', (data) => {
+          this.ffmpegImageCapture.stderr.on('data', (data) => {
             console.error(`FFmpeg stderr: ${data}`);
           });
 
           // FFmpeg stdin 에러 핸들링
-          ffmpegImageCapture.stdin.on('error', (error) => {
+          this.ffmpegImageCapture.stdin.on('error', (error) => {
             console.error('FFmpeg stdin error:', error);
           });
 
           // 스트림 데이터를 FFmpeg로 전달
-          res.data.pipe(ffmpegImageCapture.stdin);
+          res.data.pipe(this.ffmpegImageCapture.stdin);
 
           // FFmpeg 종료 이벤트 핸들링
-          ffmpegImageCapture.on('close', (code) => {
-            ffmpegImageCapture.stdin.end(); // 명시적으로 stdin 종료
+          this.ffmpegImageCapture.on('close', (code) => {
+            this.ffmpegImageCapture = null;
+            res.data.destroy();
             if (code === 0) {
               console.log('Image capture completed successfully.');
               resolve();
@@ -217,8 +240,9 @@ export class RecordService {
           });
 
           // FFmpeg 프로세스 에러 핸들링
-          ffmpegImageCapture.on('error', (error) => {
+          this.ffmpegImageCapture.on('error', (error) => {
             console.error('FFmpeg process error:', error);
+            this.ffmpegImageCapture.kill(); // 프로세스 강제 종료
             reject(error);
           });
         })
@@ -231,12 +255,13 @@ export class RecordService {
 
   private startVideoRecording(videoFilePath: string): Promise<void> {
     this.isRecording = true; // 녹화 상태 설정
-
+    console.log('##########################################');
     return new Promise((resolve, reject) => {
       const response = this.httpService.get(
         'http://192.168.0.14:8080/stream.mjpg',
         {
           responseType: 'stream',
+          headers: { Connection: 'close' },
         },
       );
 
@@ -263,10 +288,27 @@ export class RecordService {
             videoFilePath, // 출력 비디오 파일 경로
           ]);
 
+          res.data.on('end', () => {
+            console.log('Stream ended.');
+            if (this.ffmpegProcess && !this.ffmpegProcess.killed) {
+              this.ffmpegProcess.stdin.end(); // 스트림 종료 신호 전송
+            }
+          });
+
+          res.data.on('error', (error) => {
+            console.error('Stream error:', error);
+            if (this.ffmpegProcess) {
+              this.ffmpegProcess.stdin.destroy(); // 강제 종료
+              this.ffmpegProcess.kill(); // FFmpeg 프로세스 종료
+            }
+          });
+
           res.data.pipe(this.ffmpegProcess.stdin);
 
           this.ffmpegProcess.on('close', (code) => {
             this.isRecording = false; // 녹화 상태 해제
+            this.ffmpegProcess = null; // 프로세스 상태 초기화
+            res.data.destroy();
             if (code === 0) {
               console.log('Video saved successfully');
               resolve();
@@ -277,8 +319,11 @@ export class RecordService {
           });
 
           this.ffmpegProcess.on('error', (error) => {
-            this.isRecording = false; // 녹화 상태 해제
             console.error('FFmpeg error:', error);
+            if (this.ffmpegProcess) {
+              this.ffmpegProcess.kill(); // FFmpeg 강제 종료
+            }
+            this.isRecording = false; // 녹화 상태 해제
             reject(error);
           });
         })
@@ -297,14 +342,16 @@ export class RecordService {
     if (this.ffmpegProcess && this.isRecording) {
       console.log('Stopping recording...');
       this.ffmpegProcess.stdin.end(); // FFmpeg의 입력 스트림을 종료 (더 이상 데이터 전달되지 않음)
-      setTimeout(() => {
-        if (this.ffmpegProcess) {
-          this.ffmpegProcess.kill(); // FFmpeg 프로세스를 종료
-          this.ffmpegProcess = null; // 프로세스 변수 초기화
-          this.isRecording = false; // 녹화 상태 해제
-          console.log('Recording process terminated.');
-        }
-      }, 5000); // 5초 대기 (필요시 조정 가능)
+      this.ffmpegProcess = null;
+      this.isRecording = false;
+      // setTimeout(() => {
+      //   if (this.ffmpegProcess) {
+      //     this.ffmpegProcess.kill(); // FFmpeg 프로세스를 종료
+      //     this.ffmpegProcess = null; // 프로세스 변수 초기화
+      //     this.isRecording = false; // 녹화 상태 해제
+      //     console.log('Recording process terminated.');
+      //   }
+      // }, 5000); // 5초 대기 (필요시 조정 가능)
     } else {
       console.log('No recording in progress.');
     }
