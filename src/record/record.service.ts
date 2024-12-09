@@ -163,6 +163,7 @@ export class RecordService {
       throw error;
     }
   }
+
   private captureImage(imageFilePath: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const response = this.httpService.get(
@@ -174,7 +175,12 @@ export class RecordService {
 
       firstValueFrom(response)
         .then((res) => {
-          // FFmpeg 프로세스를 사용해 MJPEG 스트림에서 한 프레임을 캡처하여 이미지로 저장
+          if (!res || res.status !== 200) {
+            console.error('Camera stream is unavailable.');
+            reject(new Error('Camera stream is unavailable.'));
+            return;
+          }
+
           const ffmpegImageCapture = spawn('ffmpeg', [
             '-i',
             'pipe:0',
@@ -206,7 +212,7 @@ export class RecordService {
             'Error fetching video stream for image capture:',
             error,
           );
-          reject(error);
+          reject(new Error('Camera is not responding or is turned off.'));
         });
     });
   }
@@ -224,6 +230,13 @@ export class RecordService {
 
       firstValueFrom(response)
         .then((res) => {
+          if (!res || res.status !== 200) {
+            console.error('Camera stream is unavailable.');
+            this.isRecording = false;
+            reject(new Error('Camera stream is unavailable.'));
+            return;
+          }
+
           this.ffmpegProcess = spawn('ffmpeg', [
             '-f',
             'mjpeg',
@@ -238,10 +251,8 @@ export class RecordService {
             videoFilePath, // 출력 비디오 파일 경로
           ]);
 
-          // 스트림 데이터를 FFmpeg의 입력으로 전달
           res.data.pipe(this.ffmpegProcess.stdin);
 
-          // FFmpeg 종료 시 처리
           this.ffmpegProcess.on('close', (code) => {
             this.isRecording = false; // 녹화 상태 해제
             if (code === 0) {
@@ -253,7 +264,6 @@ export class RecordService {
             }
           });
 
-          // FFmpeg 프로세스 오류 시 처리
           this.ffmpegProcess.on('error', (error) => {
             this.isRecording = false; // 녹화 상태 해제
             console.error('FFmpeg error:', error);
@@ -262,8 +272,11 @@ export class RecordService {
         })
         .catch((error) => {
           this.isRecording = false; // 녹화 상태 해제
-          console.error('Error fetching video stream:', error);
-          reject(error);
+          console.error(
+            'Error fetching video stream for video recording:',
+            error,
+          );
+          reject(new Error('Camera is not responding or is turned off.'));
         });
     });
   }
