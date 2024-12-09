@@ -170,7 +170,7 @@ export class RecordService {
         'http://192.168.0.14:8080/stream.mjpg',
         {
           responseType: 'stream',
-          timeout: 5000, // 타임아웃 설정
+          timeout: 5000, // HTTP 요청 타임아웃
         },
       );
 
@@ -191,16 +191,24 @@ export class RecordService {
             imageFilePath,
           ]);
 
-          res.data.pipe(ffmpegImageCapture.stdin);
-
-          ffmpegImageCapture.stdin.on('error', (error) => {
-            console.error('FFmpeg stdin error:', error);
-            reject(error);
+          // FFmpeg 프로세스 에러 로그 기록
+          ffmpegImageCapture.stderr.on('data', (data) => {
+            console.error(`FFmpeg stderr: ${data}`);
           });
 
+          // FFmpeg stdin 에러 핸들링
+          ffmpegImageCapture.stdin.on('error', (error) => {
+            console.error('FFmpeg stdin error:', error);
+          });
+
+          // 스트림 데이터를 FFmpeg로 전달
+          res.data.pipe(ffmpegImageCapture.stdin);
+
+          // FFmpeg 종료 이벤트 핸들링
           ffmpegImageCapture.on('close', (code) => {
-            ffmpegImageCapture.stdin.end(); // 스트림 종료
+            ffmpegImageCapture.stdin.end(); // 명시적으로 stdin 종료
             if (code === 0) {
+              console.log('Image capture completed successfully.');
               resolve();
             } else {
               console.error(`FFmpeg process exited with code ${code}`);
@@ -208,6 +216,7 @@ export class RecordService {
             }
           });
 
+          // FFmpeg 프로세스 에러 핸들링
           ffmpegImageCapture.on('error', (error) => {
             console.error('FFmpeg process error:', error);
             reject(error);
