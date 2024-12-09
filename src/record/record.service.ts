@@ -170,58 +170,52 @@ export class RecordService {
         'http://192.168.0.14:8080/stream.mjpg',
         {
           responseType: 'stream',
+          timeout: 5000, // 타임아웃 설정
         },
       );
 
       firstValueFrom(response)
         .then((res) => {
-          if (!res || res.status !== 200) {
-            console.error('Camera stream is unavailable.');
-            reject(new Error('Camera stream is unavailable.'));
+          if (!res || res.status !== 200 || !res.data) {
+            console.error('Stream is unavailable or invalid.');
+            reject(new Error('Stream is unavailable or invalid.'));
             return;
           }
 
           const ffmpegImageCapture = spawn('ffmpeg', [
+            '-y', // 덮어쓰기 허용
             '-i',
             'pipe:0',
             '-frames:v',
-            '1', // 1 프레임 캡처
+            '1',
             imageFilePath,
           ]);
 
-          if (ffmpegImageCapture && ffmpegImageCapture.stdin.writable) {
-            res.data.pipe(ffmpegImageCapture);
-          } else {
-            console.error('FFmpeg stdin is not writable');
-            this.isRecording = false;
-            reject(new Error('FFmpeg stdin is not writable'));
-            return;
-          }
+          res.data.pipe(ffmpegImageCapture.stdin);
 
-          // res.data.pipe(ffmpegImageCapture.stdin);
+          ffmpegImageCapture.stdin.on('error', (error) => {
+            console.error('FFmpeg stdin error:', error);
+            reject(error);
+          });
 
           ffmpegImageCapture.on('close', (code) => {
+            ffmpegImageCapture.stdin.end(); // 스트림 종료
             if (code === 0) {
               resolve();
             } else {
-              console.error(
-                `FFmpeg image capture process exited with code ${code}`,
-              );
-              reject(new Error('Error during image capture'));
+              console.error(`FFmpeg process exited with code ${code}`);
+              reject(new Error('Error during image capture.'));
             }
           });
 
           ffmpegImageCapture.on('error', (error) => {
-            console.error('FFmpeg error during image capture:', error);
+            console.error('FFmpeg process error:', error);
             reject(error);
           });
         })
         .catch((error) => {
-          console.error(
-            'Error fetching video stream for image capture:',
-            error,
-          );
-          reject(new Error('Camera is not responding or is turned off.'));
+          console.error('Error fetching video stream:', error);
+          reject(new Error('Stream source is not responding or invalid.'));
         });
     });
   }
