@@ -8,7 +8,7 @@ import {
   CheckItem,
   CheckedList,
   // DriversImage,
-} from './check_sheet.schema';
+} from './check-sheet.schema';
 
 export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheet);

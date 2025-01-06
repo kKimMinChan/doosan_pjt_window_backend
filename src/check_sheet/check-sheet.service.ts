@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CheckSheetMongoRepository } from './check_sheet.repository';
-import { CheckedList } from './check_sheet.schema';
+import { CheckSheetMongoRepository } from './check-sheet.repository';
+import { CheckedList } from './check-sheet.schema';
 import * as fs from 'fs';
 import { promisify } from 'util';
 

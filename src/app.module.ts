@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CheckSheetModule } from './check_sheet/check_sheet.module';
+import { CheckSheetModule } from './check_sheet/check-sheet.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WorkPlanModule } from './work-plan/work-plan.module';

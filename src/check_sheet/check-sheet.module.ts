@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { CheckSheetController } from './check_sheet.controller';
-import { CheckSheetService } from './check_sheet.service';
+import { CheckSheetController } from './check-sheet.controller';
+import { CheckSheetService } from './check-sheet.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CheckSheet, CheckSheetSchema } from './check_sheet.schema';
-import { CheckSheetMongoRepository } from './check_sheet.repository';
+import { CheckSheet, CheckSheetSchema } from './check-sheet.schema';
+import { CheckSheetMongoRepository } from './check-sheet.repository';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({

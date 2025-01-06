@@ -12,11 +12,11 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { CheckSheetService } from './check_sheet.service';
+import { CheckSheetService } from './check-sheet.service';
 import { Response } from 'express';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { MulterConfig } from 'multer.config';
-import { CheckedList } from './check_sheet.schema';
+import { CheckedList } from './check-sheet.schema';
 import {
   ApiBody,
   ApiConsumes,
@@ -29,7 +29,7 @@ import {
   CheckSheetOutputDto,
   CreateInputDto,
   UpdateInputDto,
-} from './check_sheet.dto';
+} from './check-sheet.dto';
 
 @Controller('check-sheet')
 export class CheckSheetController {
