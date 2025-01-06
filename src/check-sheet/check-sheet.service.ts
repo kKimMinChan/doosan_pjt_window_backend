@@ -144,14 +144,6 @@ export class CheckSheetService {
     return await this.checkSheetRepository.updateSheet(checkItemDto);
   }
 
-  // async signature(signatureUrl: string, signatureType: string, name?: string) {
-  //   return await this.checkSheetRepository.signature(
-  //     signatureUrl,
-  //     signatureType,
-  //     name,
-  //   );
-  // }
-
   // async login(password: string) {
   //   const checkSheetData = await this.checkSheetRepository.getCheckSheet();
   //   if (checkSheetData.password) {
