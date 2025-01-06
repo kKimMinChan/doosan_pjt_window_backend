@@ -1,14 +1,8 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CheckSheetMongoRepository } from './check_sheet.repository';
-import {
-  CheckSheet,
-  CheckedList,
-  // DriversImage
-} from './check_sheet.schema';
+import { CheckedList } from './check_sheet.schema';
 import * as fs from 'fs';
 import { promisify } from 'util';
-import * as bcrypt from 'bcrypt';
-import { Logger } from '@nestjs/common';
 
 const readFile = promisify(fs.readFile);
 
@@ -36,11 +30,10 @@ export class CheckSheetService {
   async getCheckSheet() {
     try {
       const checkSheetData = await this.checkSheetRepository.getCheckSheet();
-      // console.log(checkSheetData, 'data');
       if (checkSheetData) {
         if (checkSheetData?.image.length > 0) {
-          const imageUrls = checkSheetData?.image?.map(
-            (image, index) => image.image_url,
+          const imageUrls = checkSheetData?.image?.map((image, index) =>
+            image.image_url.replace(/^"|"$/g, ''),
           );
 
           // 모든 이미지 파일을 비동기적으로 읽고 Base64로 인코딩
@@ -60,11 +53,12 @@ export class CheckSheetService {
           checkSheetData.image = imagesBase64.map((base64, _) => base64);
         }
 
-        const plainObject = checkSheetData.toObject
-          ? checkSheetData.toObject()
-          : checkSheetData;
+        // const plainObject = checkSheetData.toObject
+        //   ? checkSheetData.toObject()
+        //   : checkSheetData;
 
-        return plainObject;
+        // return plainObject;
+        return checkSheetData;
       }
       return null;
     } catch (error) {
@@ -73,16 +67,73 @@ export class CheckSheetService {
     }
   }
 
-  async createCheckSheet(checkSheetDto: CheckSheet) {
+  async createCheckSheet(
+    checkSheetInfo: string,
+    checkLists: string,
+    files: Express.Multer.File[],
+  ): Promise<any> {
+    const parsedCheckSheetInfo = JSON.parse(checkSheetInfo);
+    const parsedCheckLists = JSON.parse(checkLists);
+
+    // 이미지 URL 생성
+    const imageUrls = files.map((file) => ({ image_url: file.path }));
+
+    // 검증 로직
+    if (imageUrls.length > 4) {
+      throw new Error('안전 점검표 이미지는 최대 4장까지 업로드 가능합니다.');
+    }
+
+    const checkSheetDto = {
+      checkSheetInfo: parsedCheckSheetInfo,
+      checkLists: parsedCheckLists,
+      image: imageUrls,
+    };
+
     try {
       const checkSheet = await this.checkSheetRepository.createCheckSheet({
         ...checkSheetDto,
       });
       return checkSheet;
     } catch (error) {
-      throw new HttpException('서버 에러', 500);
+      throw new Error(`Service Error: ${error.message}`);
     }
-    // return await this.checkSheetRepository.createCheckSheet(checkSheetDto);
+  }
+
+  async updateCheckSheet(
+    checkSheetInfo: string,
+    checkLists: string,
+    images: string,
+    files: Express.Multer.File[],
+  ): Promise<any> {
+    const parsedCheckSheetInfo = JSON.parse(checkSheetInfo);
+    const parsedCheckLists = JSON.parse(checkLists);
+    const parsedImages = images ? JSON.parse(images) : [];
+
+    // 이미지 URL 생성
+    const imageUrls = files.map((file) => ({ image_url: file.path }));
+
+    const checkSheetDto = {
+      checkSheetInfo: parsedCheckSheetInfo,
+      checkLists: parsedCheckLists,
+      image: imageUrls,
+    };
+
+    if (parsedImages?.length > 0) {
+      checkSheetDto.image = [...parsedImages, ...imageUrls];
+    }
+
+    if (checkSheetDto.image.length > 4) {
+      throw new Error('안전 점검표 이미지는 최대 4장까지 업로드 가능합니다.');
+    }
+
+    try {
+      const checkSheet = await this.checkSheetRepository.createCheckSheet({
+        ...checkSheetDto,
+      });
+      return checkSheet;
+    } catch (error) {
+      throw new Error(`Service Error: ${error.message}`);
+    }
   }
 
   async recordSheet(checkItemDto: CheckedList) {

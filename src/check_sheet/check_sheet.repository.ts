@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -48,12 +48,15 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     }
   }
 
+  // 양호, 불량, 이슈사항 업데이트
   async updateSheet(checkItemDto: CheckedList) {
     try {
       const checkSheet = await this.checkSheetModel.findOne();
       if (!checkSheet) {
-        console.log('CheckSheet not found');
-        return null;
+        throw new HttpException(
+          '안전 점검표 데이터가 없습니다.',
+          HttpStatus.NOT_FOUND,
+        );
       }
       const index = checkSheet.checkedList.findIndex(
         (list) => list.date === checkItemDto.date,
@@ -65,37 +68,44 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
         console.log('체크시트 업데이트 성공');
         return checkSheet; // 업데이트된 체크시트 반환
       } else {
-        console.log('날짜가 같은 체크시트가 없음, 새 데이터 추가 가능');
-        return null;
+        throw new HttpException(
+          '수정할 안전 점검표 데이터가 없습니다.',
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      console.error('Error fetching checkItem: ', error);
-      throw error;
+      throw new Error(`${error.message}`);
     }
   }
 
+  // 양호, 불량, 이슈사항 기록
   async recordSheet(checkItemDto: CheckedList) {
     try {
       const checkSheet = await this.checkSheetModel.findOne();
       if (!checkSheet) {
         console.log('CheckSheet not found');
-        return null;
+        throw new HttpException(
+          '안전 점검표 데이터가 없습니다.',
+          HttpStatus.NOT_FOUND,
+        );
       }
       if (checkSheet.checkedList !== null) {
         const dateExists = checkSheet.checkedList.some(
           (list) => list.date === checkItemDto.date,
         );
         if (dateExists) {
-          console.log('날짜가 같은 체크시트를 두 개 생성할 수 없음');
-          return null;
+          throw new HttpException(
+            '날짜가 같은 체크시트를 두 개 생성할 수 없음, updateSheet 사용바람',
+            HttpStatus.CONFLICT,
+          );
         }
       }
       console.log(checkItemDto, 'dto');
       checkSheet.checkedList.push(checkItemDto);
-      return await checkSheet.save();
+      await checkSheet.save();
+      return checkItemDto;
     } catch (error) {
-      console.error('Error fetching checkItem: ', error);
-      throw error;
+      throw new Error(`${error.message}`);
     }
   }
 

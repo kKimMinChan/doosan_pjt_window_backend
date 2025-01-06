@@ -32,7 +32,6 @@ export class driversMongoRepository implements DriversRepository {
       return drivers.save(); // 변경사항을 데이터베이스에 저장
     } else {
       const drivers = {
-        // WorkPlanList,
         driversImage: [...driversImageDto],
       };
       const createDrivers = new this.driversModel({ ...drivers });

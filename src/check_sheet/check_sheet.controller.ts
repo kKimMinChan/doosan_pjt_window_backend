@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Post,
   Put,
+  Req,
   Res,
   Response as resp,
   UploadedFiles,
@@ -13,19 +14,35 @@ import {
 } from '@nestjs/common';
 import { CheckSheetService } from './check_sheet.service';
 import { Response } from 'express';
-import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { MulterConfig } from 'multer.config';
+import { CheckedList } from './check_sheet.schema';
 import {
-  CheckList,
-  CheckSheetInfo,
-  CheckedList,
-  // DriversImage,
-} from './check_sheet.schema';
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
+
+import {
+  CheckedListDto,
+  CheckSheetOutputDto,
+  CreateInputDto,
+  UpdateInputDto,
+} from './check_sheet.dto';
 
 @Controller('check-sheet')
 export class CheckSheetController {
   constructor(private checkSheetService: CheckSheetService) {}
   @Get()
+  @ApiOperation({
+    summary: '작업 안전 점검표 GET API',
+    description: '작업 안전 점검표',
+  })
+  @ApiCreatedResponse({
+    description: '작업 안전 점검표',
+    type: CheckSheetOutputDto,
+  })
   async getCheckSheet() {
     try {
       const checkSheet = await this.checkSheetService.getCheckSheet();
@@ -48,70 +65,104 @@ export class CheckSheetController {
     }
   }
 
-  @Post('create')
+  @Post()
+  @ApiOperation({
+    summary: '작업 안전 점검표 생성 API',
+    description: '작업 안전 점검표 생성',
+  })
+  @ApiBody({
+    description:
+      'Multipart Form Data로 데이터를 줄 때 객체 데이터는 직렬화 해서 줘야함(JSON.stringify()) 이유:멀티파트 폼 데이터는 바이너리 데이터를 전송하기 위해 설계되었으므로, 객체를 그대로 전송할 수 없음.',
+    type: CreateInputDto,
+  })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(AnyFilesInterceptor(MulterConfig))
-  async createPost(
+  async createCheckSheet(
     @UploadedFiles() files: Express.Multer.File[],
     @Body('checkSheetInfo') checkSheetInfo: string,
     @Body('checkLists') checkLists: string,
-    @Body('originWorkSafetyCheckListPath') images: string[],
     @Res() response: Response,
   ) {
     try {
-      // const checkSheetData = await this.checkSheetService.getCheckSheet();
-
-      const parsedCheckSheetInfo = JSON.parse(checkSheetInfo) as CheckSheetInfo;
-      const parsedCheckLists = JSON.parse(checkLists) as CheckList[];
-
-      const imageUrls = files
-        .filter((file) => file.fieldname === 'newWorkSafetyCheckListFiles')
-        .map((file) => ({ image_url: file.path }));
-
-      const checkSheetDto = {
-        checkSheetInfo: parsedCheckSheetInfo,
-        checkLists: parsedCheckLists,
-        image: imageUrls,
-        checkedList: [],
-      };
-
-      if (images?.length > 0) {
-        checkSheetDto.image = [
-          ...images.map((imgUrl) => ({
-            image_url: imgUrl,
-          })),
-          ...imageUrls,
-        ];
-      }
-
-      if (!checkSheetDto) {
-        return response.status(400).json({ message: 'Bad Request' });
-      }
-
       const createdCheckSheet = await this.checkSheetService.createCheckSheet(
-        checkSheetDto,
+        checkSheetInfo,
+        checkLists,
+        files,
       );
-      // return response.status(401).json({ message: 'error' });
       return response.status(201).json(createdCheckSheet);
     } catch (error) {
-      console.error('Error parsing JSON:', error);
-      return response.status(500).json({ message: 'Internal Server Error' });
+      console.error('Error:', error.message);
+      throw new HttpException(`${error.message}`, HttpStatus.BAD_REQUEST);
     }
   }
 
-  @Post('record')
-  async recordSheet(@Body() body, @Res() response: Response) {
+  @Put()
+  @ApiOperation({
+    summary: '작업 안전 점검표 수정 API',
+    description: '작업 안전 점검표 수정',
+  })
+  @ApiBody({
+    description:
+      'Multipart Form Data로 데이터를 줄 때 객체 데이터는 직렬화 해서 줘야함(JSON.stringify()) 이유:멀티파트 폼 데이터는 바이너리 데이터를 전송하기 위해 설계되었으므로, 객체를 그대로 전송할 수 없음.',
+    type: UpdateInputDto,
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor(MulterConfig))
+  async updateCheckSheet(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body('checkSheetInfo') checkSheetInfo: string,
+    @Body('checkLists') checkLists: string,
+    @Body('originImagePath') images: string,
+    @Res() response: Response,
+  ) {
     try {
-      const checkItemDto: CheckedList = body;
-      const record = await this.checkSheetService.recordSheet(checkItemDto);
-      console.log(record, 'cont');
+      const updatedCheckSheet = await this.checkSheetService.updateCheckSheet(
+        checkSheetInfo,
+        checkLists,
+        images,
+        files,
+      );
+      return response.status(201).json(updatedCheckSheet);
+    } catch (error) {
+      console.error('Error:', error.message);
+      throw new HttpException(`${error.message}`, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('checked-sheet')
+  @ApiOperation({
+    summary: '작업 안전 점검표(양호, 불량, 이슈사항) 작성 API',
+    description: '작업 안전 점검표(양호, 불량, 이슈사항) 작성',
+  })
+  @ApiCreatedResponse({
+    description: '작업 안전 점검표 작성 결과',
+    type: CheckSheetOutputDto,
+  })
+  @ApiBody({
+    type: CheckedListDto,
+  })
+  async recordSheet(@Body() body: CheckedList, @Res() response: Response) {
+    try {
+      const record = await this.checkSheetService.recordSheet(body);
       return response.status(201).json(record);
     } catch (error) {
-      console.error('Error parsing JSON:', error);
-      return response.status(500).json({ message: 'Internal Server Error' });
+      console.error('Error:', error.message);
+      throw new HttpException(`${error.message}`, HttpStatus.BAD_REQUEST);
     }
   }
 
-  @Put('updateSheet')
+  @Put('checked-sheet')
+  @ApiOperation({
+    summary: '작업 안전 점검표(양호, 불량, 이슈사항) 수정 API',
+    description: '작업 안전 점검표(양호, 불량, 이슈사항) 수정',
+  })
+  @ApiCreatedResponse({
+    description: '작업 안전 점검표 수정 결과',
+    type: CheckSheetOutputDto,
+  })
+  @ApiBody({
+    type: CheckedListDto,
+  })
   async updateSheet(@Body() body, @Res() response: Response) {
     try {
       const checkItemDto: CheckedList = body;
@@ -119,7 +170,7 @@ export class CheckSheetController {
       return response.status(201).json(record);
     } catch (error) {
       console.error('Error parsing JSON:', error);
-      return response.status(500).json({ message: 'Internal Server Error' });
+      throw new HttpException(`${error.message}`, HttpStatus.BAD_REQUEST);
     }
   }
 }

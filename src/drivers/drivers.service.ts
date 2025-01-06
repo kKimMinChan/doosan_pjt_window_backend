@@ -7,26 +7,39 @@ import * as path from 'path';
 export class DriversService {
   constructor(private driversRepository: driversMongoRepository) {}
 
-  async updateDriver(
-    files: Express.Multer.File[],
-    originDriversPath: string[],
-  ) {
-    const driverUrls = files
-      .filter((file) => file.fieldname === 'newDriversFiles')
-      .map((file) => {
-        const filePath = file.path;
-        const fileName = path.parse(filePath).name;
-        return {
-          image_url: filePath,
-          name: fileName,
-        };
-      });
-
-    // console.log(driverUrls, 'urls', originDriversPath, 'origin');
-    const existingDriversImage = originDriversPath?.map((image) => {
-      const fileName = path.parse(image).name;
+  async createDriver(files: Express.Multer.File[]) {
+    const driverUrls = files.map((file) => {
+      const filePath = file.path;
+      const fileName = path.parse(filePath).name;
       return {
-        image_url: image,
+        image_url: filePath,
+        name: fileName,
+      };
+    });
+
+    return await this.driversRepository.updateDriver(driverUrls);
+  }
+
+  async updateDriver(files: Express.Multer.File[], originDriverPaths: string) {
+    const parsedOriginDriverPaths = JSON.parse(originDriverPaths);
+
+    const driverUrls = files.map((file) => {
+      const filePath = file.path;
+      const fileName = path.parse(filePath).name;
+      return {
+        image_url: filePath,
+        name: fileName,
+      };
+    });
+
+    console.log(parsedOriginDriverPaths);
+
+    const existingDriversImage = parsedOriginDriverPaths?.map((image) => {
+      console.log(image);
+
+      const fileName = path.parse(image.image_url).name;
+      return {
+        image_url: image.image_url,
         name: fileName,
       };
     });

@@ -3,6 +3,9 @@ import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
 import * as passport from 'passport';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
+import { AllExceptionsFilter } from './\bfilters/all-exceptions.filter';
 // import * as fs from 'fs';
 
 async function bootstrap() {
@@ -31,6 +34,19 @@ async function bootstrap() {
     // preflightContinue: false,
     // optionsSuccessStatus: 204,
   });
+
+  const config = new DocumentBuilder()
+    .setTitle('Doosan API Docs')
+    .setDescription('Doosan API description')
+    .setVersion('1.0')
+    .addTag('Doosan')
+    .build();
+
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
+
+  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.use(cookieParser());
   app.use(

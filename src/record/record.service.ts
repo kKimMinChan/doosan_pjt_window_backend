@@ -8,102 +8,6 @@ import { getBase64Thumbnail } from 'src/lib/getBase64Image';
 
 @Injectable()
 export class RecordService {
-  // private ffmpegProcess: ChildProcess | null = null;
-  // private isRecording = false;
-
-  // constructor(private readonly httpService: HttpService) {}
-
-  // async startRecording(): Promise<void> {
-  //   if (this.isRecording) {
-  //     throw new Error('Recording is already in progress.');
-  //   }
-
-  //   // 오늘 날짜 정보를 가져옴
-  //   const date = new Date();
-  //   const year = date.getFullYear().toString();
-  //   const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  //   const day = date.getDate().toString().padStart(2, '0');
-  //   const folderName = `${year}-${month}-${day}`;
-
-  //   // 저장할 폴더 경로 설정
-  //   const rootFolder = path.join(process.cwd(), 'video_storage');
-  //   const dayFolder = path.join(rootFolder, folderName);
-
-  //   // 폴더가 존재하지 않으면 생성
-  //   if (!fs.existsSync(rootFolder)) {
-  //     fs.mkdirSync(rootFolder);
-  //   }
-  //   if (!fs.existsSync(dayFolder)) {
-  //     fs.mkdirSync(dayFolder, { recursive: true });
-  //   }
-
-  //   // 파일 이름 생성 (날짜와 시간 포함하여 고유하게 설정)
-  //   const fileName = `${date.getHours().toString().padStart(2, '0')}_${date
-  //     .getMinutes()
-  //     .toString()
-  //     .padStart(2, '0')}_${date.getSeconds().toString().padStart(2, '0')}.mp4`;
-
-  //   const filePath = path.join(dayFolder, fileName); // 최종 저장할 파일 경로 설정
-
-  //   console.log(filePath, 'filePath');
-
-  //   this.isRecording = true; // 녹화 상태 설정
-
-  //   return new Promise((resolve, reject) => {
-  //     const response = this.httpService.get(
-  //       'http://192.168.0.14:8080/stream.mjpg',
-  //       {
-  //         responseType: 'stream',
-  //       },
-  //     );
-
-  //     firstValueFrom(response)
-  //       .then((res) => {
-  //         // FFmpeg 프로세스를 사용해 MJPEG 스트림을 MP4로 인코딩
-  //         this.ffmpegProcess = spawn('ffmpeg', [
-  //           '-f',
-  //           'mjpeg',
-  //           '-i',
-  //           'pipe:0', // 입력을 파이프 스트림으로 설정
-  //           '-c:v',
-  //           'libx264', // 비디오 코덱 설정
-  //           '-preset',
-  //           'fast', // 인코딩 속도 설정 (빠르게)
-  //           '-pix_fmt',
-  //           'yuv420p', // 픽셀 형식 설정
-  //           filePath, // 출력 파일 경로
-  //         ]);
-
-  //         // 스트림 데이터를 FFmpeg의 입력으로 전달
-  //         res.data.pipe(this.ffmpegProcess.stdin);
-
-  //         // FFmpeg 종료 시 처리
-  //         this.ffmpegProcess.on('close', (code) => {
-  //           this.isRecording = false; // 녹화 상태 해제
-  //           if (code === 0) {
-  //             console.log('Video saved successfully');
-  //             resolve();
-  //           } else {
-  //             console.error(`FFmpeg process exited with code ${code}`);
-  //             reject(new Error('Error during video conversion'));
-  //           }
-  //         });
-
-  //         // FFmpeg 프로세스 오류 시 처리
-  //         this.ffmpegProcess.on('error', (error) => {
-  //           this.isRecording = false; // 녹화 상태 해제
-  //           console.error('FFmpeg error:', error);
-  //           reject(error);
-  //         });
-  //       })
-  //       .catch((error) => {
-  //         this.isRecording = false; // 녹화 상태 해제
-  //         console.error('Error fetching video stream:', error);
-  //         reject(error);
-  //       });
-  //   });
-  // }
-
   private readonly rootFolder = path.join(process.cwd(), 'video_storage');
   private ffmpegProcess: ChildProcess | null = null;
   private ffmpegImageCapture: ChildProcess | null = null;
@@ -174,7 +78,7 @@ export class RecordService {
     }
     return new Promise((resolve, reject) => {
       const response = this.httpService.get(
-        'http://192.168.0.14:8080/stream.mjpg',
+        'http://192.168.0.45:8080/stream.mjpg',
         {
           responseType: 'stream',
         },
@@ -247,8 +151,9 @@ export class RecordService {
           });
         })
         .catch((error) => {
-          console.error('Error fetching video stream:', error);
-          reject(new Error('Stream source is not responding or invalid.'));
+          console.error('Error fetching video stream:', error.message);
+          reject(new Error(error.message));
+          // reject(new Error('Stream source is not responding or invalid.'));
         });
     });
   }
@@ -258,7 +163,7 @@ export class RecordService {
     console.log('##########################################');
     return new Promise((resolve, reject) => {
       const response = this.httpService.get(
-        'http://192.168.0.14:8080/stream.mjpg',
+        'http://192.168.0.45:8080/stream.mjpg',
         {
           responseType: 'stream',
           headers: { Connection: 'close' },
@@ -353,7 +258,9 @@ export class RecordService {
       //   }
       // }, 5000); // 5초 대기 (필요시 조정 가능)
     } else {
-      console.log('No recording in progress.');
+      throw new Error('No recording in progress.');
+
+      // console.log('No recording in progress.');
     }
   }
 

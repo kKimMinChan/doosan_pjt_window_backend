@@ -6,9 +6,6 @@ export type CheckSheetDocument = CheckSheet & Document;
 @Schema()
 export class CheckSheetInfo {
   @Prop({ required: true })
-  title: string;
-
-  @Prop({ required: true })
   factory_name: string;
 
   @Prop({ required: true })
@@ -88,7 +85,7 @@ export class CheckSheet {
   image: Image[];
 
   @Prop({ type: [CheckedList], required: false })
-  checkedList: CheckedList[];
+  checkedList?: CheckedList[];
 }
 
 export const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);
