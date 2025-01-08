@@ -34,7 +34,7 @@ import {
 @Controller('check-sheet')
 export class CheckSheetController {
   constructor(private checkSheetService: CheckSheetService) {}
-  @Get()
+  @Get('/info')
   @ApiOperation({
     summary: '작업 안전 점검표 GET API',
     description: '작업 안전 점검표',
@@ -65,7 +65,7 @@ export class CheckSheetController {
     }
   }
 
-  @Post()
+  @Post('/info')
   @ApiOperation({
     summary: '작업 안전 점검표 생성 API',
     description: '작업 안전 점검표 생성',
@@ -96,7 +96,7 @@ export class CheckSheetController {
     }
   }
 
-  @Put()
+  @Put('/info')
   @ApiOperation({
     summary: '작업 안전 점검표 수정 API',
     description: '작업 안전 점검표 수정',
@@ -172,5 +172,10 @@ export class CheckSheetController {
       console.error('Error parsing JSON:', error);
       throw new HttpException(`${error.message}`, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @Get('checked-lists/all')
+  async findAll() {
+    // return await this.checkedListsService.findAll();
   }
 }

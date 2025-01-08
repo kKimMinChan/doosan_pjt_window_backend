@@ -7,7 +7,7 @@ export class InputImageFileDto {
     format: 'binary',
     required: true,
   })
-  workPlanFile: File;
+  workPlanFile: Express.Multer.File;
 }
 export class InputSignatureDto {
   @ApiProperty({
@@ -16,7 +16,7 @@ export class InputSignatureDto {
     format: 'binary',
     required: true,
   })
-  file: File;
+  file: Express.Multer.File;
 
   @ApiProperty({
     description: '[draft, authorization, approval, driver] type은 이중 하나',

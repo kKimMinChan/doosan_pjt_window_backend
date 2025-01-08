@@ -7,6 +7,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WorkPlanModule } from './work-plan/work-plan.module';
 import { DriversModule } from './drivers/drivers.module';
 import { RecordModule } from './record/record.module';
+import { CheckedListsController } from './checked-lists/checked-lists.controller';
+import { CheckedListsService } from './checked-lists/checked-lists.service';
+import { CheckedListsModule } from './checked-lists/checked-lists.module';
 
 @Module({
   imports: [
@@ -22,6 +25,7 @@ import { RecordModule } from './record/record.module';
     WorkPlanModule,
     DriversModule,
     RecordModule,
+    CheckedListsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -35,7 +35,7 @@ export class CheckList {
   @Prop({ required: true })
   check_item: string;
 
-  @Prop({ required: true, enum: ['문서', '육안', '기능', ''] })
+  @Prop({ required: true, enum: ['문서', '육안', '기능'] })
   method: string;
 }
 
@@ -47,7 +47,7 @@ export class CheckItem {
   })
   division: string;
 
-  @Prop({ required: true, enum: ['문서', '육안', '기능', ''] })
+  @Prop({ required: true, enum: ['문서', '육안', '기능'] })
   method: string;
 
   @Prop({ required: true })

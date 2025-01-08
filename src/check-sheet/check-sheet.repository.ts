@@ -14,7 +14,22 @@ export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheet);
   recordSheet(checkItemDto: CheckedList);
   updateSheet(checkItemDto: CheckedList);
+  checkedListsFindAll();
   // signature(signatureUrl: string, signatureType: string, name: string);
+}
+
+export class DuplicateDateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DuplicateDateError';
+  }
+}
+
+export class ResourceNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ResourceNotFoundError';
+  }
 }
 
 @Injectable()
@@ -107,6 +122,20 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     } catch (error) {
       throw new Error(`${error.message}`);
     }
+  }
+
+  async checkedListsFindAll() {
+    // try {
+    //   const checkedLists = await this.checkedListsModel.findOne().lean();
+    //   if (!checkedLists)
+    //     throw new ResourceNotFoundError(
+    //       'CheckedLists 데이터가 존재하지 않습니다.',
+    //     );
+    //   return checkedLists;
+    // } catch (error) {
+    //   console.error('Repository Error:', error.message);
+    //   throw error;
+    // }
   }
 
   // async signature(signatureUrl: string, signatureType: string, name: string) {

@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { CheckSheetMongoRepository } from './check-sheet.repository';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  CheckSheetMongoRepository,
+  ResourceNotFoundError,
+} from './check-sheet.repository';
 import { CheckedList } from './check-sheet.schema';
 import * as fs from 'fs';
 import { promisify } from 'util';
@@ -153,4 +156,19 @@ export class CheckSheetService {
   //   }
   //   return null;
   // }
+
+  async checkedListsFindAll() {
+    // try {
+    //   return (await this.checkSheetRepository.checkedListsFindAll())
+    //     .checkedLists;
+    // } catch (error) {
+    //   if (error instanceof ResourceNotFoundError) {
+    //     throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    //   }
+    //   throw new HttpException(
+    //     'Unexpected error occurred',
+    //     HttpStatus.INTERNAL_SERVER_ERROR,
+    //   );
+    // }
+  }
 }
