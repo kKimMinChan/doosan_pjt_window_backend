@@ -33,9 +33,9 @@ export class CheckList {
   number: number;
 
   @Prop({ required: true })
-  check_item: string;
+  content: string;
 
-  @Prop({ required: true, enum: ['문서', '육안', '기능', ''] })
+  @Prop({ required: true, enum: ['문서', '육안', '기능'] })
   method: string;
 }
 
@@ -47,24 +47,41 @@ export class CheckItem {
   })
   division: string;
 
-  @Prop({ required: true, enum: ['문서', '육안', '기능', ''] })
+  @Prop({ required: true, enum: ['문서', '육안', '기능'] })
   method: string;
 
   @Prop({ required: true })
-  check_item: string;
+  content: string;
 
   @Prop({ required: true })
   number: number;
 
-  @Prop({ required: true })
+  @Prop({ default: true })
   check: boolean;
 }
 
 @Schema()
 export class CheckedList {
-  item: CheckItem[];
+  @Prop({
+    required: true,
+    type: [CheckItem],
+  })
+  checkedItem: CheckItem[];
+
+  @Prop({
+    required: true,
+    validate: {
+      validator: (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value),
+      message: (props) =>
+        `${props.value}는 유효한 날짜 형식이 아닙니다. (YYYY-MM-DD 형식)`,
+    },
+  })
   date: string;
+
+  @Prop({ required: false })
   issue?: string;
+
+  _id?: string;
 }
 
 @Schema()
@@ -85,7 +102,7 @@ export class CheckSheet {
   image: Image[];
 
   @Prop({ type: [CheckedList], required: false })
-  checkedList?: CheckedList[];
+  checkedLists?: CheckedList[];
 }
 
 export const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);

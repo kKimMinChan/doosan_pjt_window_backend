@@ -12,11 +12,11 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { CheckSheetService } from './check_sheet.service';
+import { CheckSheetService } from './check-sheet.service';
 import { Response } from 'express';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { MulterConfig } from 'multer.config';
-import { CheckedList } from './check_sheet.schema';
+import { CheckedList } from './check-sheet.schema';
 import {
   ApiBody,
   ApiConsumes,
@@ -29,12 +29,12 @@ import {
   CheckSheetOutputDto,
   CreateInputDto,
   UpdateInputDto,
-} from './check_sheet.dto';
+} from './check-sheet.dto';
 
 @Controller('check-sheet')
 export class CheckSheetController {
   constructor(private checkSheetService: CheckSheetService) {}
-  @Get()
+  @Get('/info')
   @ApiOperation({
     summary: '작업 안전 점검표 GET API',
     description: '작업 안전 점검표',
@@ -65,7 +65,7 @@ export class CheckSheetController {
     }
   }
 
-  @Post()
+  @Post('/info')
   @ApiOperation({
     summary: '작업 안전 점검표 생성 API',
     description: '작업 안전 점검표 생성',
@@ -96,7 +96,7 @@ export class CheckSheetController {
     }
   }
 
-  @Put()
+  @Put('/info')
   @ApiOperation({
     summary: '작업 안전 점검표 수정 API',
     description: '작업 안전 점검표 수정',
@@ -172,5 +172,26 @@ export class CheckSheetController {
       console.error('Error parsing JSON:', error);
       throw new HttpException(`${error.message}`, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @Post('/checked-lists/item')
+  @ApiOperation({
+    summary: '안전 점검표 데이터 저장',
+    description: '안전 점검표 데이터 저장',
+  })
+  @ApiBody({
+    type: CheckedListDto,
+  })
+  async createCheckedList(@Body() createCheckedListDto: CheckedListDto) {
+    const item = await this.checkSheetService.createCheckedList(
+      createCheckedListDto,
+    );
+    console.log(item);
+    return item;
+  }
+
+  @Get('checked-lists/all')
+  async checkedListsFindAll() {
+    return await this.checkSheetService.checkedListsFindAll();
   }
 }
