@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
   IsBoolean,
   IsIn,
   IsNumber,
@@ -43,6 +44,9 @@ export class CheckedListDto {
   @ApiProperty({ description: '점검 항목 목록', type: [CheckedItem] })
   @ValidateNested({ each: true }) // 배열 요소에 대해 각각 유효성 검사 수행
   @Type(() => CheckedItem) // 배열 요소의 타입 지정
+  @ArrayNotEmpty({
+    message: '점검 항목 목록(checkedItem)은 비어 있을 수 없습니다.',
+  }) // 배열이 비어 있는지 확인
   checkedItem: CheckedItem[];
 
   @ApiProperty({ description: '점검 날짜', example: '2024-01-05' })

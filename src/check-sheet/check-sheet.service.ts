@@ -1,11 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   CheckSheetMongoRepository,
+  DuplicateDateError,
   ResourceNotFoundError,
 } from './check-sheet.repository';
 import { CheckedList } from './check-sheet.schema';
 import * as fs from 'fs';
 import { promisify } from 'util';
+import { CheckedListDto } from './check-sheet.dto';
 
 const readFile = promisify(fs.readFile);
 
@@ -157,18 +159,29 @@ export class CheckSheetService {
   //   return null;
   // }
 
+  async createCheckedList(createCheckedListDto: CheckedListDto) {
+    try {
+      return await this.checkSheetRepository.createCheckedList(
+        createCheckedListDto,
+      );
+    } catch (error) {
+      if (error instanceof DuplicateDateError) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
+
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async checkedListsFindAll() {
-    // try {
-    //   return (await this.checkSheetRepository.checkedListsFindAll())
-    //     .checkedLists;
-    // } catch (error) {
-    //   if (error instanceof ResourceNotFoundError) {
-    //     throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-    //   }
-    //   throw new HttpException(
-    //     'Unexpected error occurred',
-    //     HttpStatus.INTERNAL_SERVER_ERROR,
-    //   );
-    // }
+    try {
+      return (await this.checkSheetRepository.checkedListsFindAll())
+        .checkedLists;
+    } catch (error) {
+      if (error instanceof ResourceNotFoundError) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

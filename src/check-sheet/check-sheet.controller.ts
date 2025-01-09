@@ -174,8 +174,24 @@ export class CheckSheetController {
     }
   }
 
+  @Post('/checked-lists/item')
+  @ApiOperation({
+    summary: '안전 점검표 데이터 저장',
+    description: '안전 점검표 데이터 저장',
+  })
+  @ApiBody({
+    type: CheckedListDto,
+  })
+  async createCheckedList(@Body() createCheckedListDto: CheckedListDto) {
+    const item = await this.checkSheetService.createCheckedList(
+      createCheckedListDto,
+    );
+    console.log(item);
+    return item;
+  }
+
   @Get('checked-lists/all')
-  async findAll() {
-    // return await this.checkedListsService.findAll();
+  async checkedListsFindAll() {
+    return await this.checkSheetService.checkedListsFindAll();
   }
 }
