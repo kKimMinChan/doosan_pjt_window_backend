@@ -6,6 +6,9 @@ import * as passport from 'passport';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './\bfilters/all-exceptions.filter';
+import { ResponseInterceptor } from './response/response.interceptor';
+import { NestExpressApplication } from '@nestjs/platform-express';
+
 // import * as fs from 'fs';
 
 async function bootstrap() {
@@ -14,8 +17,13 @@ async function bootstrap() {
   //   cert: fs.readFileSync('/Users/kimminchan/localhost.pem'),
   // };
 
-  const app = await NestFactory.create(AppModule, {
-    // httpsOptions,
+  // const app = await NestFactory.create(AppModule, {
+  //   // httpsOptions,
+  // });
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useStaticAssets('uploads', {
+    prefix: '/uploads/',
   });
 
   app.enableCors({
@@ -43,10 +51,23 @@ async function bootstrap() {
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  SwaggerModule.setup('api', app, documentFactory, {
+    swaggerOptions: {
+      persistAuthorization: true, // 인증 정보 유지
+      docExpansion: 'none', // 기본적으로 문서 접힘 상태
+      showCommonExtensions: true, // 공통 확장 정보 표시
+      supportedSubmitMethods: ['get', 'post', 'put', 'delete'], // 활성화할 HTTP 메서드
+      syntaxHighlight: {
+        activate: true,
+        theme: 'monokai',
+      },
+      deepLinking: true, // URL로 직접 이동 가능
+    },
+  });
 
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.use(cookieParser());
   app.use(

@@ -5,17 +5,18 @@ import {
   CheckSheet as SCheckSheet,
   CheckSheetDocument,
   CheckSheet,
-  CheckItem,
   CheckedList,
   // DriversImage,
 } from './check-sheet.schema';
 
 export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheet);
-  recordSheet(checkItemDto: CheckedList);
-  updateSheet(checkItemDto: CheckedList);
-  checkedListsFindAll();
+  findCheckedLists();
   createCheckedList(checkedListDto: CheckedList);
+  findCheckedList(date: string);
+  updateCheckedList(_id: string, checkedListDto: CheckedList);
+  removeCheckedLists();
+  removeCheckedList(_id: string);
   // signature(signatureUrl: string, signatureType: string, name: string);
 }
 
@@ -41,13 +42,11 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   ) {}
 
   async getCheckSheet() {
-    try {
-      const checkSheet = await this.checkSheetModel.findOne();
-      return checkSheet;
-    } catch (error) {
-      console.error('Error fetching CheckSheet:', error);
-      throw error;
-    }
+    const checkSheet = await this.checkSheetModel
+      .findOne()
+      .select('-checkedLists')
+      .lean();
+    return checkSheet;
   }
 
   async createCheckSheet(checkSheetDto: CheckSheet) {
@@ -55,73 +54,14 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     if (checkSheet) {
       checkSheet.checkSheetInfo = checkSheetDto.checkSheetInfo;
       checkSheet.checkLists = checkSheetDto.checkLists;
-      checkSheet.image = checkSheetDto.image;
+      checkSheet.imageUrls = checkSheetDto.imageUrls;
 
-      return await checkSheet.save();
+      await checkSheet.save();
+      return await this.getCheckSheet();
     } else {
       const createCheckSheet = new this.checkSheetModel({ ...checkSheetDto });
-      return await createCheckSheet.save();
-    }
-  }
-
-  // 양호, 불량, 이슈사항 업데이트
-  async updateSheet(checkItemDto: CheckedList) {
-    try {
-      const checkSheet = await this.checkSheetModel.findOne();
-      if (!checkSheet) {
-        throw new HttpException(
-          '안전 점검표 데이터가 없습니다.',
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      const index = checkSheet.checkedLists.findIndex(
-        (list) => list.date === checkItemDto.date,
-      );
-
-      if (index !== -1) {
-        checkSheet.checkedLists[index] = checkItemDto;
-        await checkSheet.save(); // 변경사항을 데이터베이스에 저장
-        console.log('체크시트 업데이트 성공');
-        return checkSheet; // 업데이트된 체크시트 반환
-      } else {
-        throw new HttpException(
-          '수정할 안전 점검표 데이터가 없습니다.',
-          HttpStatus.NOT_FOUND,
-        );
-      }
-    } catch (error) {
-      throw new Error(`${error.message}`);
-    }
-  }
-
-  // 양호, 불량, 이슈사항 기록
-  async recordSheet(checkItemDto: CheckedList) {
-    try {
-      const checkSheet = await this.checkSheetModel.findOne();
-      if (!checkSheet) {
-        console.log('CheckSheet not found');
-        throw new HttpException(
-          '안전 점검표 데이터가 없습니다.',
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      if (checkSheet.checkedLists !== null) {
-        const dateExists = checkSheet.checkedLists.some(
-          (list) => list.date === checkItemDto.date,
-        );
-        if (dateExists) {
-          throw new HttpException(
-            '날짜가 같은 체크시트를 두 개 생성할 수 없음, updateSheet 사용바람',
-            HttpStatus.CONFLICT,
-          );
-        }
-      }
-      console.log(checkItemDto, 'dto');
-      checkSheet.checkedLists.push(checkItemDto);
-      await checkSheet.save();
-      return checkItemDto;
-    } catch (error) {
-      throw new Error(`${error.message}`);
+      await createCheckSheet.save();
+      return await this.getCheckSheet();
     }
   }
 
@@ -142,78 +82,88 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   }
 
   async createCheckedList(checkedListDto: CheckedList) {
-    try {
-      await this.validateDuplicateDate(checkedListDto);
-      const result = await this.checkSheetModel.updateOne(
-        {},
-        { $push: { checkedLists: checkedListDto } },
-        { upsert: true },
+    await this.validateDuplicateDate(checkedListDto);
+    const result = await this.checkSheetModel.findOneAndUpdate(
+      {},
+      {
+        $push: { checkedLists: checkedListDto },
+        $set: { todayCheckedList: checkedListDto },
+      },
+      { upsert: true, new: true, projection: { todayCheckedList: 1 } }, // 없으면 생성(upsert), 새 데이터 반환(new)
+    );
+
+    if (!result) {
+      throw new ResourceNotFoundError(
+        '문서 업데이트 실패: 조건에 맞는 문서를 찾지 못했습니다.',
       );
-      if (!result.acknowledged) {
-        throw new Error('날짜가 같은 체크리스트는 생성할 수 없습니다.'); // 데이터베이스 예외
-      }
-      return checkedListDto;
-    } catch (error) {
-      console.error('Repository Error:', error.message);
-      throw error; // 예외를 서비스로 전파
     }
+
+    return result?.todayCheckedList;
   }
 
-  async checkedListsFindAll() {
-    try {
-      const checkedLists = await this.checkSheetModel
-        .findOne({}, 'checkedLists') //조건 없이 첫 번째 문서에서 checkedLists 필드만 선택
-        .lean();
-      if (!checkedLists)
-        throw new ResourceNotFoundError(
-          'CheckedLists 데이터가 존재하지 않습니다.',
-        );
-      console.log(checkedLists);
-      return checkedLists;
-    } catch (error) {
-      console.error('Repository Error:', error.message);
-      throw error;
-    }
+  async findCheckedLists() {
+    const checkedLists = await this.checkSheetModel
+      .findOne({}, 'checkedLists') //조건 없이 첫 번째 문서에서 checkedLists 필드만 선택
+      .lean();
+
+    return checkedLists;
   }
 
-  // async signature(signatureUrl: string, signatureType: string, name: string) {
-  //   try {
-  //     const checkSheet = await this.checkSheetModel.findOne();
-  //     if (!checkSheet) {
-  //       console.log('CheckSheet not found');
-  //       return null;
-  //     }
+  async findCheckedList(date: string) {
+    const findList = await this.checkSheetModel.findOne(
+      {
+        'checkedLists.date': date,
+      },
+      { checkedLists: { $elemMatch: { date } } }, //배열에서 조건에 맞는 첫 번째 요소를 반환
+    );
+    return findList.checkedLists[0];
+  }
 
-  //     const len = checkSheet.workPlan.length;
+  async updateCheckedList(_id: string, checkedListDto: CheckedList) {
+    checkedListDto._id = _id;
+    const result = await this.checkSheetModel.findOneAndUpdate(
+      { 'checkedLists._id': _id }, // 조건: checkedLists 배열 내 특정 _id
+      {
+        $set: {
+          'checkedLists.$': checkedListDto, // 조건에 맞는 배열 요소를 업데이트
+          todayCheckedList: checkedListDto,
+        },
+      },
+      { new: true, projection: { todayCheckedList: 1 } },
+    );
 
-  //     if (name) {
-  //       const driverIdx = checkSheet.workPlan[
-  //         len - 1
-  //       ].signature.driver.findIndex((driver) => driver.name === name);
+    if (!result) {
+      throw new ResourceNotFoundError(
+        '문서 업데이트 실패: 조건에 맞는 문서를 찾지 못했습니다.',
+      );
+    }
 
-  //       // const newDrivers = checkSheet.workPlan[0].signature.driver;
-  //       // newDrivers[driverIdx]
-  //       checkSheet.workPlan[len - 1].signature.driver[
-  //         driverIdx
-  //       ].signatureImage.image_url = signatureUrl;
-  //       checkSheet.markModified(
-  //         `workPlan.0.signature.driver.${driverIdx}.signatureImage.image_url`,
-  //       );
-  //       console.log(checkSheet.workPlan[len - 1].signature.driver);
-  //     } else {
-  //       checkSheet.workPlan[len - 1].signature[signatureType] =
-  //         checkSheet.workPlan[len - 1].signature[signatureType] || {};
-  //       checkSheet.workPlan[len - 1].signature[signatureType].image_url =
-  //         signatureUrl;
-  //     }
+    return result.todayCheckedList;
+  }
 
-  //     // checkSheet.workPlan[0].signature[signatureType].image_url = signatureUrl;
-  //     checkSheet.markModified('workPlan');
-  //     await checkSheet.save();
-  //     return checkSheet;
-  //   } catch (error) {
-  //     console.error('Error fetching checkItem: ', error);
-  //     throw error;
-  //   }
-  // }
+  async removeCheckedLists() {
+    const result = await this.checkSheetModel.updateMany(
+      {}, // 조건: 모든 문서
+      { $unset: { checkedLists: '' } }, // `checkedLists` 필드를 제거
+    );
+    if (!result.acknowledged) {
+      throw new Error(
+        'repository Error:  checkedLists 전체 삭제 과정에서 에러 발생',
+      );
+    }
+    return 'checkedLists 필드가 삭제되었습니다.';
+  }
+
+  async removeCheckedList(_id: string) {
+    const result = await this.checkSheetModel.updateMany(
+      {},
+      { $pull: { checkedLists: { _id: _id } } },
+    );
+    if (!result.modifiedCount) {
+      throw new ResourceNotFoundError(
+        '제거할 CheckedLists 데이터가 존재하지 않습니다.',
+      );
+    }
+    return '해당 항목이 삭제되었습니다.';
+  }
 }

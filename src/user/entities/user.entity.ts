@@ -2,13 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export type UsersDocument = Users & Document;
 
-@Schema()
-export class DriversImage {
-  name?: string;
-  base64?: string;
-  image_url?: string;
-}
-
 @Schema({ timestamps: true })
 export class UserInfo {
   @Prop({ required: true })
@@ -32,8 +25,6 @@ export class UserInfo {
 
 @Schema()
 export class Users {
-  @Prop({ type: [DriversImage], required: true })
-  driversImage: DriversImage[];
   @Prop({ type: [UserInfo], required: true })
   users: UserInfo[];
 }

@@ -10,6 +10,7 @@ import { RecordModule } from './record/record.module';
 import { CheckedListsController } from './checked-lists/checked-lists.controller';
 import { CheckedListsService } from './checked-lists/checked-lists.service';
 import { CheckedListsModule } from './checked-lists/checked-lists.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CheckedListsModule } from './checked-lists/checked-lists.module';
     DriversModule,
     RecordModule,
     CheckedListsModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

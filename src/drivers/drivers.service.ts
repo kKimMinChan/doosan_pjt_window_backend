@@ -3,51 +3,57 @@ import { driversMongoRepository } from './drivers.repository';
 import { getBase64Image } from 'src/lib/getBase64Image';
 import { DriversImage } from './drviers.schema';
 import * as path from 'path';
+import { UserRequest } from './driverinfo.request.dto';
 @Injectable()
 export class DriversService {
   constructor(private driversRepository: driversMongoRepository) {}
 
-  async createDriver(files: Express.Multer.File[]) {
-    const driverUrls = files.map((file) => {
-      const filePath = file.path;
-      const fileName = path.parse(filePath).name;
-      return {
-        image_url: filePath,
-        name: fileName,
-      };
-    });
+  async createUser(userInfo: UserRequest, UserFile: Express.Multer.File) {
+    // const driverUrls = files.map((file) => {
+    //   const filePath = file.path;
+    //   const fileName = path.parse(filePath).name;
+    //   return {
+    //     image_url: filePath,
+    //     name: fileName,
+    //   };
+    // });
 
-    return await this.driversRepository.updateDriver(driverUrls);
+    const { file, ...rest } = {
+      ...userInfo,
+      imageUrl: UserFile.path,
+    };
+
+    return await this.driversRepository.createUser(rest);
   }
 
-  async updateDriver(files: Express.Multer.File[], originDriverPaths: string) {
-    const parsedOriginDriverPaths = JSON.parse(originDriverPaths);
+  // async updateDriver(files: Express.Multer.File[], originDriverPaths: string) {
+  //   const parsedOriginDriverPaths = JSON.parse(originDriverPaths);
 
-    const driverUrls = files.map((file) => {
-      const filePath = file.path;
-      const fileName = path.parse(filePath).name;
-      return {
-        image_url: filePath,
-        name: fileName,
-      };
-    });
+  //   const driverUrls = files.map((file) => {
+  //     const filePath = file.path;
+  //     const fileName = path.parse(filePath).name;
+  //     return {
+  //       image_url: filePath,
+  //       name: fileName,
+  //     };
+  //   });
 
-    console.log(parsedOriginDriverPaths);
+  //   console.log(parsedOriginDriverPaths);
 
-    const existingDriversImage = parsedOriginDriverPaths?.map((image) => {
-      console.log(image);
+  //   const existingDriversImage = parsedOriginDriverPaths?.map((image) => {
+  //     console.log(image);
 
-      const fileName = path.parse(image.image_url).name;
-      return {
-        image_url: image.image_url,
-        name: fileName,
-      };
-    });
+  //     const fileName = path.parse(image.image_url).name;
+  //     return {
+  //       image_url: image.image_url,
+  //       name: fileName,
+  //     };
+  //   });
 
-    const combinedDrivers = [...driverUrls, ...(existingDriversImage || [])];
+  //   const combinedDrivers = [...driverUrls, ...(existingDriversImage || [])];
 
-    return await this.driversRepository.updateDriver(combinedDrivers);
-  }
+  //   return await this.driversRepository.updateDriver(combinedDrivers);
+  // }
 
   async getDriverImages() {
     try {

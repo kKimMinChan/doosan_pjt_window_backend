@@ -85,7 +85,7 @@ export class CheckedList {
 }
 
 @Schema()
-export class Image {
+export class ImageUrl {
   base64?: string;
   image_url?: string;
 }
@@ -98,11 +98,14 @@ export class CheckSheet {
   @Prop({ type: [CheckList], required: true })
   checkLists: CheckList[];
 
-  @Prop({ type: [Image], required: false })
-  image: Image[];
+  @Prop({ type: [ImageUrl], required: false })
+  imageUrls: ImageUrl[];
 
   @Prop({ type: [CheckedList], required: false })
   checkedLists?: CheckedList[];
+
+  @Prop({ type: CheckedList, required: false })
+  todayCheckedList?: CheckedList;
 }
 
 export const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);
