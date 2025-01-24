@@ -2,7 +2,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export type UsersDocument = Users & Document;
 
-@Schema({ timestamps: true })
+@Schema({
+  timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
+      delete ret._id; // _id 제거
+      delete ret.__v; // __v 제거
+    },
+  },
+})
 export class UserInfo {
   @Prop({ required: true })
   name: string;
@@ -18,9 +27,6 @@ export class UserInfo {
 
   @Prop({ required: false, default: true })
   isActive?: boolean;
-
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 @Schema()

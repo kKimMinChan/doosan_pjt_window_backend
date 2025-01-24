@@ -7,10 +7,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { WorkPlanModule } from './work-plan/work-plan.module';
 import { DriversModule } from './drivers/drivers.module';
 import { RecordModule } from './record/record.module';
-import { CheckedListsController } from './checked-lists/checked-lists.controller';
-import { CheckedListsService } from './checked-lists/checked-lists.service';
 import { CheckedListsModule } from './checked-lists/checked-lists.module';
-import { UserModule } from './user/user.module';
+import { UserModule } from './admin/user/user.module';
+import { FileStorageModule } from './file-storage/file-storage.module';
 
 @Module({
   imports: [
@@ -28,6 +27,7 @@ import { UserModule } from './user/user.module';
     RecordModule,
     CheckedListsModule,
     UserModule,
+    FileStorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { UserRequest } from './dto/request.dto';
+import { UpdateUserRequest, UserRequest } from './dto/request.dto';
 import { usersMongoRepository } from './user.repository';
-import { promisify } from 'util';
-import * as fs from 'fs';
-const readFile = promisify(fs.readFile);
+import { UserInfo } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -18,8 +16,12 @@ export class UserService {
   }
 
   async findAll() {
-    const users = await this.usersRepository.findAll();
-    return users;
+    try {
+      const users = await this.usersRepository.findAll();
+      return users;
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async findOne(id: string) {
@@ -28,14 +30,14 @@ export class UserService {
 
   async update(
     id: string,
-    userInfo: UserRequest,
+    userInfo: UpdateUserRequest,
     UserFile: Express.Multer.File,
   ) {
     const { file, ...rest } = {
       ...userInfo,
       imageUrl: UserFile.path,
     };
-    return await this.usersRepository.update(id, rest);
+    return await this.usersRepository.update(id, rest as UserInfo);
   }
 
   async remove(id: string) {
