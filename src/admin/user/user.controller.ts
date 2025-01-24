@@ -12,16 +12,23 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { MulterConfig } from 'multer.config';
-import { UserRequest } from './dto/request.dto';
+import { UpdateUserRequest, UserRequest } from './dto/request.dto';
 import { UserResponse } from './dto/response.dto';
 
-@Controller('users')
+@ApiTags('[관리자] 사용자 관리')
+@Controller('admin')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post('user')
+  @Post('users')
   @UseInterceptors(FileInterceptor('file', MulterConfig))
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
@@ -34,15 +41,17 @@ export class UserController {
     return await this.userService.createUser(body, file);
   }
 
-  @Get()
+  @Get('users')
   @ApiResponse({
     type: [UserResponse],
   })
   async findAll() {
-    return this.userService.findAll();
+    const users = await this.userService.findAll();
+    console.log(users);
+    return users;
   }
 
-  @Get(':id')
+  @Get('users/:id')
   @ApiParam({
     name: 'id', // 경로 파라미터 이름
     description: 'User ID', // 설명
@@ -55,7 +64,7 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-  @Put(':id')
+  @Put('users/:id')
   @UseInterceptors(FileInterceptor('file', MulterConfig))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -72,7 +81,7 @@ export class UserController {
     return await this.userService.update(id, body, file);
   }
 
-  @Delete(':id')
+  @Delete('users/:id')
   async remove(@Param('id') id: string) {
     return await this.userService.remove(id);
   }

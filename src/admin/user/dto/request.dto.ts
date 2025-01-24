@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class UserRequest {
@@ -34,4 +34,14 @@ export class UserRequest {
     required: false,
   })
   file?: any; // 파일 필드 추가
+}
+
+export class UpdateUserRequest extends PartialType(UserRequest) {
+  @ApiProperty({
+    description: '이미지 주소',
+    example: '/uploads/kim',
+    required: false,
+  })
+  @IsString()
+  imageUrl?: string;
 }
