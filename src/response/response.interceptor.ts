@@ -28,14 +28,15 @@ export class ResponseInterceptor<T>
         const response = context.switchToHttp().getResponse();
         const statusCode = response.statusCode;
 
-        console.log(statusCode);
         const result = statusCode >= 200 && statusCode < 400;
         const message = data?.message || '요청이 성공적으로 처리되었습니다.';
         const translate = data?.translate || undefined;
-        if (data?.message) {
+        if (data?.message || data?.translate) {
           delete data.message;
           delete data.translate;
         }
+
+        console.log(translate);
 
         return {
           statusCode,

@@ -43,8 +43,15 @@ export class FileStorageController {
     // return this.fileStorageService.update(+id, updateFileStorageDto);
   }
 
+  @Delete('all')
+  async removeAll() {
+    return {
+      translate: await this.fileStorageService.removeAll(),
+    };
+  }
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.fileStorageService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.fileStorageService.remove(id);
   }
 }

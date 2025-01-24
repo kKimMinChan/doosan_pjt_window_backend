@@ -27,7 +27,11 @@ export class FileStorageService {
   //   return `This action updates a #${id} fileStorage`;
   // }
 
-  remove(id: number) {
-    return `This action removes a #${id} fileStorage`;
+  async remove(id: string) {
+    return await this.fileStorageRepository.remove(id);
+  }
+
+  async removeAll() {
+    return await this.fileStorageRepository.removeAll();
   }
 }
