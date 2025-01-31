@@ -34,7 +34,7 @@ export class UserController {
   @UseInterceptors(FileInterceptor('file', MulterConfig))
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '사용자 생성', 'users'),
+    SwaggerHelper.getApiResponseSchema(UserResponse, '사용자 생성'),
   )
   async createUser(
     @UploadedFile() file: Express.Multer.File,
@@ -42,18 +42,15 @@ export class UserController {
   ) {
     const users = await this.userService.createUser(body, file);
     return {
-      users,
       translate: '요청이 성공적으로 처리되었습니다.',
     };
   }
 
   @Get('users')
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '', 'users'),
-  )
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
   async findAll() {
     const users = await this.userService.findAll();
-    return { users };
+    return users;
   }
 
   @Get('users/:id')
@@ -62,14 +59,10 @@ export class UserController {
     description: 'User ID', // 설명
     required: true, // 필수 여부
   })
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '', 'users'),
-  )
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
   async findOne(@Param('id') id: string) {
     const users = await this.userService.findOne(id);
-    return {
-      users,
-    };
+    return users;
   }
 
   @Put('users/:id')
@@ -78,9 +71,7 @@ export class UserController {
   @ApiBody({
     type: UserRequest,
   })
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '', 'users'),
-  )
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
   async update(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -91,9 +82,7 @@ export class UserController {
   }
 
   @Delete('users/:id')
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '', 'users'),
-  )
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
   @ApiResponse({ type: UserResponse })
   async remove(@Param('id') id: string) {
     return await this.userService.remove(id);

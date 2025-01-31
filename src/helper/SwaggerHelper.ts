@@ -1,11 +1,7 @@
 import { getSchemaPath } from '@nestjs/swagger';
 
 export class SwaggerHelper {
-  static getApiResponseSchema(
-    dto?: any,
-    description = '',
-    dynamicKey = 'data',
-  ) {
+  static getApiResponseSchema(dto?: any, description = '') {
     return {
       description,
       schema: {
@@ -31,15 +27,7 @@ export class SwaggerHelper {
             description: '추가 설명',
             example: '',
           },
-          data: {
-            type: 'object',
-            properties: {
-              [dynamicKey]: {
-                type: 'array',
-                items: { $ref: getSchemaPath(dto) },
-              },
-            },
-          },
+          data: { type: 'array', items: { $ref: getSchemaPath(dto) } },
         },
       },
     };
