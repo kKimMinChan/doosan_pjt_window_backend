@@ -9,6 +9,8 @@ import {
   UseInterceptors,
   UploadedFile,
   Put,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -66,16 +68,17 @@ export class UserController {
   }
 
   @Put('users/:id')
+  @UsePipes(new ValidationPipe({ transform: true })) // 문자열을 boolean으로 변환
   @UseInterceptors(FileInterceptor('file', MulterConfig))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-    type: UserRequest,
+    type: UpdateUserRequest,
   })
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
   async update(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: UserRequest,
+    @Body() body: UpdateUserRequest,
   ) {
     await this.userService.update(id, body, file);
     return {

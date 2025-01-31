@@ -64,16 +64,12 @@ export class UserService {
     userFile: Express.Multer.File,
   ) {
     try {
-      if (!userFile)
-        throw new HttpException(
-          '프로필 이미지를 업로드해야 합니다.',
-          HttpStatus.BAD_REQUEST,
-        );
-      const { file, ...rest } = {
+      const updateData = {
         ...userInfo,
-        imageUrl: userFile.path,
+        ...(userFile && { imageUrl: userFile.path }),
       };
-      const result = await this.usersRepository.update(id, rest as UserInfo);
+
+      const result = await this.usersRepository.update(id, updateData as any);
 
       if (!result) {
         throw new HttpException(
