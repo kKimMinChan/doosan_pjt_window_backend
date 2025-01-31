@@ -34,7 +34,6 @@ export class usersMongoRepository implements UsersRepository {
   async findOne(id: string) {
     const usersDocument = await this.usersModel
       .findOne({ 'users._id': id }, { 'users.$': 1 })
-      .lean() // 순수 JavaScript 객체 반환
       .then((result) => result?.users); // 결과에서 첫 번째 배열 요소 추출
     console.log(usersDocument);
     return usersDocument;
@@ -65,7 +64,6 @@ export class usersMongoRepository implements UsersRepository {
         },
         { new: true },
       )
-      .lean()
       .then((result) => result?.users);
 
     return updatedDocument;
@@ -78,7 +76,6 @@ export class usersMongoRepository implements UsersRepository {
         { $pull: { users: { _id: id } } },
         { new: true },
       )
-      .lean()
       .then((result) => result?.users);
 
     if (!removeDocument) {

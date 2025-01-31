@@ -1,41 +1,41 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+// import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-export type UsersDocument = Users & Document;
+// export type UsersDocument = Users & Document;
 
-@Schema()
-export class DriversImage {
-  name?: string;
-  base64?: string;
-  image_url?: string;
-}
+// @Schema()
+// export class DriversImage {
+//   name?: string;
+//   base64?: string;
+//   image_url?: string;
+// }
 
-@Schema({ timestamps: true })
-export class UserInfo {
-  @Prop({ required: true })
-  name: string;
+// @Schema({ timestamps: true })
+// export class UserInfo {
+//   @Prop({ required: true })
+//   name: string;
 
-  @Prop({ required: true })
-  department: string;
+//   @Prop({ required: true })
+//   department: string;
 
-  @Prop({ required: true })
-  imageUrl: string;
+//   @Prop({ required: true })
+//   imageUrl: string;
 
-  @Prop({ required: true, enum: ['운전자', '점검자', '확인자', '관리자'] })
-  role: string;
+//   @Prop({ required: true, enum: ['운전자', '점검자', '확인자', '관리자'] })
+//   role: string;
 
-  @Prop({ required: false, default: true })
-  isActive?: boolean;
+//   @Prop({ required: false, default: true })
+//   isActive?: boolean;
 
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+//   createdAt?: Date;
+//   updatedAt?: Date;
+// }
 
-@Schema()
-export class Users {
-  @Prop({ type: [DriversImage], required: true })
-  driversImage: DriversImage[];
-  @Prop({ type: [UserInfo], required: true })
-  users: UserInfo[];
-}
+// @Schema()
+// export class Users {
+//   @Prop({ type: [DriversImage], required: true })
+//   driversImage: DriversImage[];
+//   @Prop({ type: [UserInfo], required: true })
+//   users: UserInfo[];
+// }
 
-export const UsersSchema = SchemaFactory.createForClass(Users);
+// export const UsersSchema = SchemaFactory.createForClass(Users);
