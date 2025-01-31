@@ -40,7 +40,7 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: UserRequest,
   ) {
-    const users = await this.userService.createUser(body, file);
+    await this.userService.createUser(body, file);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };
@@ -77,14 +77,19 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: UserRequest,
   ) {
-    const users = await this.userService.update(id, body, file);
-    return { users };
+    await this.userService.update(id, body, file);
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
   }
 
   @Delete('users/:id')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
   @ApiResponse({ type: UserResponse })
   async remove(@Param('id') id: string) {
-    return await this.userService.remove(id);
+    await this.userService.remove(id);
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
   }
 }

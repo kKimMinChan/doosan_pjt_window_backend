@@ -27,44 +27,47 @@ export class ResponseInterceptor<T>
       map((data) => {
         const response = context.switchToHttp().getResponse();
         const request = context.switchToHttp().getRequest();
-        const statusCode = response.statusCode;
+        let statusCode = response.statusCode;
 
         const result = statusCode >= 200 && statusCode < 400;
 
         const method = request.method;
         let message: string;
 
-        switch (method) {
-          case 'GET':
-            message =
-              Array.isArray(data) && data.length === 0 ? 'No Content' : 'OK';
-            break;
-          case 'POST':
-            message =
-              Array.isArray(data) && data.length === 0
-                ? 'No Content'
-                : 'Created';
-            break;
-          case 'PUT':
-            message =
-              Array.isArray(data) && data.length === 0
-                ? 'No Content'
-                : 'Updated';
-            break;
-          case 'DELETE':
-            message =
-              Array.isArray(data) && data.length === 0
-                ? 'No Content'
-                : 'Deleted';
-            break;
-          default:
-            message = '요청이 성공적으로 처리되었습니다.';
+        const translate = data?.translate || undefined;
+        if (data?.translate) {
+          delete data.translate;
         }
 
-        const translate = data?.translate || undefined;
-        if (data?.message || data?.translate) {
-          delete data.message;
-          delete data.translate;
+        // 데이터가 비어 있는지 확인 (배열, 객체 모두 검사)
+        const isEmpty =
+          data === undefined ||
+          data === null ||
+          (Array.isArray(data) && data.length === 0) ||
+          (typeof data === 'object' && Object.keys(data).length === 0);
+
+        // 데이터가 비어 있으면 204 상태 코드로 변경
+        if (isEmpty) {
+          statusCode = 204;
+          message = 'No Content';
+        } else {
+          // 메서드별 메시지 설정
+          switch (method) {
+            case 'GET':
+              message = 'OK';
+              break;
+            case 'POST':
+              message = 'Created';
+              break;
+            case 'PUT':
+              message = 'Updated';
+              break;
+            case 'DELETE':
+              message = 'Deleted';
+              break;
+            default:
+              message = '요청이 성공적으로 처리되었습니다.';
+          }
         }
 
         return {

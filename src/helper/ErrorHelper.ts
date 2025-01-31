@@ -1,8 +1,18 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import {
-  DuplicateDateError,
-  ResourceNotFoundError,
-} from 'src/check-sheet/check-sheet.repository';
+
+export class DuplicateDateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DuplicateDateError';
+  }
+}
+
+export class ResourceNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ResourceNotFoundError';
+  }
+}
 
 export class ErrorHelper {
   static handleError(error: unknown): never {

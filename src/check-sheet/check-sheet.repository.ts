@@ -8,6 +8,10 @@ import {
   CheckedList,
   // DriversImage,
 } from './check-sheet.schema';
+import {
+  DuplicateDateError,
+  ResourceNotFoundError,
+} from 'src/helper/ErrorHelper';
 
 export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheet);
@@ -18,20 +22,6 @@ export interface CheckSheetRepository {
   removeCheckedLists();
   removeCheckedList(_id: string);
   // signature(signatureUrl: string, signatureType: string, name: string);
-}
-
-export class DuplicateDateError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'DuplicateDateError';
-  }
-}
-
-export class ResourceNotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ResourceNotFoundError';
-  }
 }
 
 @Injectable()
