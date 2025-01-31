@@ -4,45 +4,44 @@ export class SwaggerHelper {
   static getApiResponseSchema(
     dto?: any,
     description = '',
-    isArray = false,
-    isMessageOnly = false,
+    dynamicKey = 'data',
   ) {
     return {
       description,
-      schema: isMessageOnly
-        ? {
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: {
+            type: 'number',
+            description: 'HTTP 상태 코드',
+            example: 201,
+          },
+          message: {
+            type: 'string',
+            description: '응답 메시지',
+            example: '요청이 성공적으로 처리되었습니다.',
+          },
+          result: {
+            type: 'boolean',
+            description: 'api 성공 여부',
+            example: true,
+          },
+          translate: {
+            type: 'string',
+            description: '추가 설명',
+            example: '',
+          },
+          data: {
             type: 'object',
             properties: {
-              statusCode: {
-                type: 'number',
-                description: 'HTTP 상태 코드',
-                example: 201,
+              [dynamicKey]: {
+                type: 'array',
+                items: { $ref: getSchemaPath(dto) },
               },
-              message: {
-                type: 'string',
-                description: '응답 메시지',
-                example: '요청이 성공적으로 처리되었습니다.',
-              },
-            },
-          }
-        : {
-            type: 'object',
-            properties: {
-              statusCode: {
-                type: 'number',
-                description: 'HTTP 상태 코드',
-                example: 201,
-              },
-              message: {
-                type: 'string',
-                description: '응답 메시지',
-                example: '요청이 성공적으로 처리되었습니다.',
-              },
-              data: isArray
-                ? { type: 'array', items: { $ref: getSchemaPath(dto) } }
-                : { $ref: getSchemaPath(dto) }, // 특정 DTO를 참조
             },
           },
+        },
+      },
     };
   }
 }

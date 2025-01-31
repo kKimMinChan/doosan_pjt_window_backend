@@ -130,11 +130,7 @@ export class CheckSheetController {
     description: '모든 날짜의 안전 점검표 항목 체크 데이터(양호, 불량) GET',
   })
   @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(
-      CheckedListResponse,
-      '작업 안전 점검표',
-      true,
-    ),
+    SwaggerHelper.getApiResponseSchema(CheckedListResponse, '작업 안전 점검표'),
   )
   async findCheckedLists() {
     return await this.checkSheetService.findCheckedLists();
@@ -169,12 +165,12 @@ export class CheckSheetController {
     description: '안전 점검표 항목 체크 데이터(양호, 불량) 전체 삭제',
   })
   @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(null, '데이터 삭제 완료', false, true),
+    SwaggerHelper.getApiResponseSchema(null, '데이터 삭제 완료'),
   )
   async removeCheckedLists() {
-    const message = await this.checkSheetService.removeCheckedLists();
+    const translate = await this.checkSheetService.removeCheckedLists();
     return {
-      message,
+      translate,
     };
   }
 
@@ -182,11 +178,11 @@ export class CheckSheetController {
   @ApiOperation({
     summary: '해당 _id를 가진 안전 점검표 항목 체크 데이터(양호, 불량) 삭제',
   })
-  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(null, '', false, true))
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(null, ''))
   async removeCheckedList(@Param('_id') _id: string) {
-    const message = await this.checkSheetService.removeCheckedList(_id);
+    const translate = await this.checkSheetService.removeCheckedList(_id);
     return {
-      message,
+      translate,
     };
   }
 }

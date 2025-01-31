@@ -26,17 +26,46 @@ export class ResponseInterceptor<T>
     return next.handle().pipe(
       map((data) => {
         const response = context.switchToHttp().getResponse();
+        const request = context.switchToHttp().getRequest();
         const statusCode = response.statusCode;
 
         const result = statusCode >= 200 && statusCode < 400;
-        const message = data?.message || '요청이 성공적으로 처리되었습니다.';
+
+        const method = request.method;
+        let message: string;
+
+        switch (method) {
+          case 'GET':
+            message =
+              Array.isArray(data) && data.length === 0 ? 'No Content' : 'OK';
+            break;
+          case 'POST':
+            message =
+              Array.isArray(data) && data.length === 0
+                ? 'No Content'
+                : 'Created';
+            break;
+          case 'PUT':
+            message =
+              Array.isArray(data) && data.length === 0
+                ? 'No Content'
+                : 'Updated';
+            break;
+          case 'DELETE':
+            message =
+              Array.isArray(data) && data.length === 0
+                ? 'No Content'
+                : 'Deleted';
+            break;
+          default:
+            message = '요청이 성공적으로 처리되었습니다.';
+        }
+
         const translate = data?.translate || undefined;
         if (data?.message || data?.translate) {
           delete data.message;
           delete data.translate;
         }
-
-        console.log(translate);
 
         return {
           statusCode,

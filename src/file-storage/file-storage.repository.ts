@@ -8,7 +8,7 @@ import {
 import { Model } from 'mongoose';
 
 export interface FileStorageRepository {
-  create(imageUrl: FileInfo);
+  create(imageUrls: string[]);
   findAll();
   remove(id: string);
   removeAll();
@@ -21,13 +21,13 @@ export class fileStorageMongoRepository implements FileStorageRepository {
     private fileStorageModel: Model<FileStorageDocument>,
   ) {}
 
-  async create(imageUrl: FileInfo) {
+  async create(imageUrls: string[]) {
     const updatedDocument = await this.fileStorageModel.findOneAndUpdate(
       {},
       {
         $push: {
           files: {
-            $each: [imageUrl], // 새로운 파일 추가
+            $each: imageUrls, // 새로운 파일 추가
           },
         },
       },
@@ -38,6 +38,23 @@ export class fileStorageMongoRepository implements FileStorageRepository {
 
     return updatedDocument.files;
   }
+  // async create(imageUrl: FileInfo) {
+  //   const updatedDocument = await this.fileStorageModel.findOneAndUpdate(
+  //     {},
+  //     {
+  //       $push: {
+  //         files: {
+  //           $each: [imageUrl], // 새로운 파일 추가
+  //         },
+  //       },
+  //     },
+  //     { upsert: true, new: true },
+  //   );
+
+  //   console.log(updatedDocument);
+
+  //   return updatedDocument.files;
+  // }
 
   async findAll() {
     return (await this.fileStorageModel.findOne()).files;

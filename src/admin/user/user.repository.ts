@@ -22,8 +22,8 @@ export class usersMongoRepository implements UsersRepository {
     try {
       const usersDocument = await this.usersModel
         .findOne()
-        .lean()
         .then((result) => result?.users);
+
       return usersDocument;
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -35,7 +35,7 @@ export class usersMongoRepository implements UsersRepository {
     const usersDocument = await this.usersModel
       .findOne({ 'users._id': id }, { 'users.$': 1 })
       .lean() // 순수 JavaScript 객체 반환
-      .then((result) => result?.users?.[0]); // 결과에서 첫 번째 배열 요소 추출
+      .then((result) => result?.users); // 결과에서 첫 번째 배열 요소 추출
     console.log(usersDocument);
     return usersDocument;
   }
@@ -48,7 +48,7 @@ export class usersMongoRepository implements UsersRepository {
       { upsert: true, new: true }, // 문서가 없으면 생성, 업데이트된 문서 반환
     );
 
-    return updatedUser;
+    return updatedUser.users;
   }
 
   async update(id: string, userInfo: UserInfo) {
@@ -66,7 +66,7 @@ export class usersMongoRepository implements UsersRepository {
         { new: true },
       )
       .lean()
-      .then((result) => result?.users?.[0]);
+      .then((result) => result?.users);
 
     return updatedDocument;
   }
