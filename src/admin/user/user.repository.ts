@@ -37,7 +37,6 @@ export class usersMongoRepository implements UsersRepository {
     const usersDocument = await this.usersModel
       .findOne({ 'users._id': id }, { 'users.$': 1 })
       .then((result) => result?.users); // 결과에서 첫 번째 배열 요소 추출
-    console.log(usersDocument);
     if (!usersDocument)
       throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
     return usersDocument;
