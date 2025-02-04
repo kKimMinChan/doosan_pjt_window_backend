@@ -1,11 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserInfo, Users, UsersDocument } from './entities/user.entity';
+import { UserInfo, UsersDocument } from './entities/user.entity';
 import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
 
 export interface UsersRepository {
-  findAll();
+  findAll(skip: number, limit: number);
+  countUsers();
   findOne(id: string);
   createUser(userInfo: UserInfo);
   update(id: string, userInfo: UserInfo);
@@ -15,56 +16,62 @@ export interface UsersRepository {
 @Injectable()
 export class usersMongoRepository implements UsersRepository {
   constructor(
-    @InjectModel(Users.name)
+    @InjectModel(UserInfo.name)
     private usersModel: Model<UsersDocument>,
   ) {}
 
-  async findAll() {
+  async findAll(skip: number, limit: number) {
     try {
-      const usersDocument = await this.usersModel
-        .findOne()
-        .then((result) => result?.users);
-      if (!usersDocument)
-        throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
-      return usersDocument;
+      return (await this.usersModel.find().skip(skip).limit(limit)).reverse();
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
     }
   }
 
+  async countUsers() {
+    return this.usersModel.countDocuments().exec();
+  }
+
+  // async findAll() {
+  //   try {
+  //     const usersDocument = await this.usersModel
+  //       .findOne()
+  //       .then((result) => result?.users);
+  //     if (!usersDocument)
+  //       throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
+  //     return usersDocument;
+  //   } catch (error) {
+  //     console.error('Error fetching users:', error);
+  //     throw error;
+  //   }
+  // }
+
   async findOne(id: string) {
-    const usersDocument = await this.usersModel
-      .findOne({ 'users._id': id }, { 'users.$': 1 })
-      .then((result) => result?.users); // 결과에서 첫 번째 배열 요소 추출
-    if (!usersDocument)
+    const userDocument = await this.usersModel.findOne({ _id: id });
+    if (!userDocument)
       throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
-    return usersDocument;
+    return userDocument;
   }
 
   async createUser(userInfo: UserInfo) {
-    const result = await this.usersModel.updateOne(
-      {}, // 조건: 첫 번째 문서를 대상으로 업데이트
-      { $push: { users: userInfo } }, // 배열 필드에 userInfo 추가
-      { upsert: true }, // 문서가 없으면 생성
-    );
+    const newUser = new this.usersModel(userInfo);
+    return await newUser.save(); // 개별 문서로 저장
 
-    if (result.modifiedCount > 0) return result;
+    // if (result.modifiedCount > 0) return result;
 
-    return null;
+    // return null;
   }
 
   async update(id: string, userInfo: UserInfo) {
+    const updateFields: Partial<UserInfo> = {};
     // 업데이트할 필드만 동적으로 추가
-    const updateFields: any = {};
-
-    if (userInfo.name) updateFields['users.$.name'] = userInfo.name;
-    if (userInfo.department)
-      updateFields['users.$.department'] = userInfo.department;
-    if (userInfo.role) updateFields['users.$.role'] = userInfo.role;
-    if (userInfo.imageUrl) updateFields['users.$.imageUrl'] = userInfo.imageUrl;
+    if (userInfo.name) updateFields['name'] = userInfo.name;
+    if (userInfo.department) updateFields['department'] = userInfo.department;
+    if (userInfo.role) updateFields['role'] = userInfo.role;
+    if (userInfo.imageUrl) updateFields['imageUrl'] = userInfo.imageUrl;
     if (typeof userInfo.isActive !== 'undefined')
-      updateFields['users.$.isActive'] = userInfo.isActive;
+      updateFields['isActive'] = userInfo.isActive;
 
     // 업데이트할 값이 없으면 바로 반환
     if (Object.keys(updateFields).length === 0) {
@@ -74,10 +81,8 @@ export class usersMongoRepository implements UsersRepository {
     console.log(updateFields);
 
     const result = await this.usersModel.updateOne(
-      { 'users._id': id },
-      {
-        $set: updateFields,
-      },
+      { _id: id }, // 바로 해당 사용자의 ID로 업데이트
+      { $set: updateFields },
       { new: true },
     );
 
@@ -111,13 +116,9 @@ export class usersMongoRepository implements UsersRepository {
   // );
 
   async remove(id: string) {
-    const result = await this.usersModel.updateOne(
-      { 'users._id': id },
-      { $pull: { users: { _id: id } } },
-      { new: true },
-    );
+    const result = await this.usersModel.deleteOne({ _id: id });
 
-    if (result.modifiedCount > 0) return result;
+    if (result.deletedCount > 0) return result;
 
     return null;
   }

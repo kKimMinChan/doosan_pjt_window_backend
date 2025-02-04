@@ -27,7 +27,9 @@ export class SwaggerHelper {
             description: '추가 설명',
             example: '',
           },
-          data: { type: 'array', items: { $ref: getSchemaPath(dto) } },
+          data: dto
+            ? { type: 'array', items: { $ref: getSchemaPath(dto) } }
+            : '',
         },
       },
     };

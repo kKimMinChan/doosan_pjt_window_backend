@@ -11,6 +11,7 @@ import {
   Put,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -26,6 +27,7 @@ import { MulterConfig } from 'multer.config';
 import { UpdateUserRequest, UserRequest } from './dto/request.dto';
 import { UserResponse } from './dto/response.dto';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
+import { PaginationDto } from 'src/common-dto/pagenation.dto';
 
 @ApiTags('[관리자] 사용자 관리')
 @Controller('admin')
@@ -35,9 +37,7 @@ export class UserController {
   @Post('users')
   @UseInterceptors(FileInterceptor('file', MulterConfig))
   @ApiConsumes('multipart/form-data')
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '사용자 생성'),
-  )
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(null, '사용자 생성'))
   async createUser(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: UserRequest,
@@ -50,8 +50,9 @@ export class UserController {
 
   @Get('users')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
-  async findAll() {
-    const users = await this.userService.findAll();
+  @ApiResponse({ type: UserResponse })
+  async findAll(@Query() paginationDto: PaginationDto) {
+    const users = await this.userService.findAll(paginationDto);
     return users;
   }
 
@@ -63,8 +64,8 @@ export class UserController {
   })
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
   async findOne(@Param('id') id: string) {
-    const users = await this.userService.findOne(id);
-    return users;
+    const user = await this.userService.findOne(id);
+    return { data: [user] };
   }
 
   @Put('users/:id')
@@ -74,7 +75,7 @@ export class UserController {
   @ApiBody({
     type: UpdateUserRequest,
   })
-  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async update(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -87,8 +88,7 @@ export class UserController {
   }
 
   @Delete('users/:id')
-  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
-  @ApiResponse({ type: UserResponse })
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async remove(@Param('id') id: string) {
     await this.userService.remove(id);
     return {

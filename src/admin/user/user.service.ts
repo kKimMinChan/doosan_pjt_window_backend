@@ -4,6 +4,7 @@ import { usersMongoRepository } from './user.repository';
 import { UserInfo } from './entities/user.entity';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
+import { PaginationDto } from 'src/common-dto/pagenation.dto';
 
 @Injectable()
 export class UserService {
@@ -21,7 +22,7 @@ export class UserService {
       };
 
       const result = await this.usersRepository.createUser(rest);
-
+      console.log(result, 'result');
       if (!result) {
         throw new HttpException(
           '사용자 생성에 실패했습니다.',
@@ -35,10 +36,24 @@ export class UserService {
     }
   }
 
-  async findAll() {
+  async findAll(paginationDto: PaginationDto) {
     try {
-      const users = await this.usersRepository.findAll();
-      return users;
+      const { limit, page } = paginationDto;
+
+      const skip = (page - 1) * limit;
+
+      const [data, totalCount] = await Promise.all([
+        this.usersRepository.findAll(skip, limit),
+        this.usersRepository.countUsers(),
+      ]);
+
+      return {
+        pageSize: limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        page,
+        data,
+      };
     } catch (error) {
       ErrorHelper.handleError(error);
     }

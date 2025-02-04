@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-export type UsersDocument = Users & Document;
+export type UsersDocument = UserInfo & Document;
 
 @Schema({
   timestamps: true,
@@ -29,10 +29,4 @@ export class UserInfo {
   isActive?: boolean;
 }
 
-@Schema()
-export class Users {
-  @Prop({ type: [UserInfo], required: true })
-  users: UserInfo[];
-}
-
-export const UsersSchema = SchemaFactory.createForClass(Users);
+export const UsersSchema = SchemaFactory.createForClass(UserInfo);
