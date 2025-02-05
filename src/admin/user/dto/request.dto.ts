@@ -35,6 +35,14 @@ export class UserRequest {
     required: false,
   })
   file?: any; // 파일 필드 추가
+
+  @ApiProperty({
+    description: '중장비 id',
+    example: '67a2fc0c89ca50f1cee44e03',
+    required: true,
+  })
+  @IsString()
+  heavyEquipmentId: string;
 }
 
 export class UpdateUserRequest extends PartialType(UserRequest) {

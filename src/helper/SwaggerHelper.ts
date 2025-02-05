@@ -1,7 +1,32 @@
 import { getSchemaPath } from '@nestjs/swagger';
 
 export class SwaggerHelper {
-  static getApiResponseSchema(dto?: any, description = '') {
+  static getApiResponseSchema(dto?: any, description = '', pagination = false) {
+    const paginationProperties = pagination
+      ? {
+          totalCount: {
+            type: 'number',
+            description: '총 아이템 수',
+            example: 15,
+          },
+          totalPages: {
+            type: 'number',
+            description: '총 페이지 수',
+            example: 2,
+          },
+          page: {
+            type: 'number',
+            description: '현재 페이지',
+            example: 1,
+          },
+          pageSize: {
+            type: 'number',
+            description: '페이지 내 아이템 수',
+            example: 10,
+          },
+        }
+      : {};
+
     return {
       description,
       schema: {
@@ -10,7 +35,7 @@ export class SwaggerHelper {
           statusCode: {
             type: 'number',
             description: 'HTTP 상태 코드',
-            example: 201,
+            example: 204,
           },
           message: {
             type: 'string',
@@ -27,6 +52,7 @@ export class SwaggerHelper {
             description: '추가 설명',
             example: '',
           },
+          ...paginationProperties,
           data: dto
             ? { type: 'array', items: { $ref: getSchemaPath(dto) } }
             : '',

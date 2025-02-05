@@ -27,6 +27,17 @@ export class UserInfo {
 
   @Prop({ required: false, default: true })
   isActive?: boolean;
+
+  @Prop({ required: true })
+  heavyEquipmentId: string;
 }
 
 export const UsersSchema = SchemaFactory.createForClass(UserInfo);
+
+UsersSchema.index(
+  { role: 1, heavyEquipmentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { role: { $in: ['점검자', '확인자'] } },
+  },
+);

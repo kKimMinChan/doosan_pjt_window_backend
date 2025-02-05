@@ -42,6 +42,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const method = request.method;
     let cause;
 
+    console.log(exception);
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
@@ -81,7 +83,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       result,
-      method,
       message: finalMessage,
       translate: finalTranslate,
     });

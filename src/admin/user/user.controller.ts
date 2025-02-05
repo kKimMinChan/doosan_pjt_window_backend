@@ -27,7 +27,7 @@ import { MulterConfig } from 'multer.config';
 import { UpdateUserRequest, UserRequest } from './dto/request.dto';
 import { UserResponse } from './dto/response.dto';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
-import { PaginationDto } from 'src/common-dto/pagenation.dto';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 @ApiTags('[관리자] 사용자 관리')
 @Controller('admin')
@@ -49,7 +49,9 @@ export class UserController {
   }
 
   @Get('users')
-  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(UserResponse, '', true),
+  )
   @ApiResponse({ type: UserResponse })
   async findAll(@Query() paginationDto: PaginationDto) {
     const users = await this.userService.findAll(paginationDto);

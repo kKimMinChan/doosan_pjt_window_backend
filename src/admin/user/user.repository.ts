@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserInfo, UsersDocument } from './entities/user.entity';
@@ -55,6 +60,19 @@ export class usersMongoRepository implements UsersRepository {
   }
 
   async createUser(userInfo: UserInfo) {
+    if (userInfo.role === '점검자' || userInfo.role === '확인자') {
+      const existingUser = await this.usersModel.findOne({
+        role: userInfo.role,
+        heavyEquipmentId: userInfo.heavyEquipmentId,
+      });
+
+      if (existingUser) {
+        throw new BadRequestException(
+          `${userInfo.role}는 이미 할당된 상태입니다. 중복 할당은 불가능합니다.`,
+        );
+      }
+    }
+
     const newUser = new this.usersModel(userInfo);
     return await newUser.save(); // 개별 문서로 저장
 
@@ -100,20 +118,6 @@ export class usersMongoRepository implements UsersRepository {
 
     return null;
   }
-
-  // result = await this.usersModel.updateOne(
-  //   { 'users._id': id },
-  //   {
-  //     $set: {
-  //       'users.$.name': userInfo.name,
-  //       'users.$.department': userInfo.department,
-  //       'users.$.role': userInfo.role,
-  //       'users.$.imageUrl': userInfo.imageUrl,
-  //       'users.$.isActive': userInfo.isActive,
-  //     },
-  //   },
-  //   { new: true },
-  // );
 
   async remove(id: string) {
     const result = await this.usersModel.deleteOne({ _id: id });

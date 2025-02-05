@@ -4,7 +4,7 @@ import { usersMongoRepository } from './user.repository';
 import { UserInfo } from './entities/user.entity';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
-import { PaginationDto } from 'src/common-dto/pagenation.dto';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 @Injectable()
 export class UserService {

@@ -81,7 +81,7 @@ export class ResponseInterceptor<T>
           }
         }
         const { totalCount, totalPages, page, pageSize, data } = responseData;
-
+        console.log(responseData);
         return {
           statusCode,
           message,

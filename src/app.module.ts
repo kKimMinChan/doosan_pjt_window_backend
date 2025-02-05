@@ -10,6 +10,7 @@ import { RecordModule } from './record/record.module';
 import { CheckedListsModule } from './checked-lists/checked-lists.module';
 import { UserModule } from './admin/user/user.module';
 import { FileStorageModule } from './file-storage/file-storage.module';
+import { HeavyEquipmentModule } from './heavy-equipment/heavy-equipment.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { FileStorageModule } from './file-storage/file-storage.module';
     CheckedListsModule,
     UserModule,
     FileStorageModule,
+    HeavyEquipmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
