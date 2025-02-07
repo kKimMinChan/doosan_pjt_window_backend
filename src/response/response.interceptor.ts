@@ -80,8 +80,8 @@ export class ResponseInterceptor<T>
               message = '요청이 성공적으로 처리되었습니다.';
           }
         }
+
         const { totalCount, totalPages, page, pageSize, data } = responseData;
-        console.log(responseData);
         return {
           statusCode,
           message,

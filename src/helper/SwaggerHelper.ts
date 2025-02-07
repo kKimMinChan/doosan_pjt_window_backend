@@ -40,7 +40,7 @@ export class SwaggerHelper {
           message: {
             type: 'string',
             description: '응답 메시지',
-            example: '요청이 성공적으로 처리되었습니다.',
+            example: 'No Content',
           },
           result: {
             type: 'boolean',
@@ -50,7 +50,7 @@ export class SwaggerHelper {
           translate: {
             type: 'string',
             description: '추가 설명',
-            example: '',
+            example: '요청이 성공적으로 처리되었습니다.',
           },
           ...paginationProperties,
           data: dto

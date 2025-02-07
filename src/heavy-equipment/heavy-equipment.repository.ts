@@ -49,8 +49,8 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
       updateFields['equipmentNumber'] = heavyEquipmentInfo.equipmentNumber;
     if (heavyEquipmentInfo.factoryName)
       updateFields['factoryName'] = heavyEquipmentInfo.factoryName;
-    if (heavyEquipmentInfo.isActive)
-      updateFields['isActive'] = heavyEquipmentInfo.isActive;
+    if (heavyEquipmentInfo.isDeleted)
+      updateFields['isActive'] = heavyEquipmentInfo.isDeleted;
     if (heavyEquipmentInfo.type) updateFields['type'] = heavyEquipmentInfo.type;
 
     if (Object.keys(updateFields).length === 0) {
@@ -60,12 +60,11 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
     const result = await this.heavyEquipmentModel.updateOne(
       { _id: id },
       { $set: updateFields },
-      { new: true },
     );
 
     if (result.modifiedCount === 0) {
       throw new HttpException(
-        '같은 데이터를 입력하여 업데이트가 이루어지지 않았습니다.',
+        '업데이트가 이루어지지 않았습니다.',
         HttpStatus.CONFLICT,
       );
     }

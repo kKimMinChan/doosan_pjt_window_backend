@@ -3,25 +3,15 @@ import { Document } from 'mongoose';
 
 export type CheckSheetDocument = CheckSheet & Document;
 
-@Schema()
-export class CheckSheetInfo {
-  @Prop({ required: true })
-  factory_name: string;
-
-  @Prop({ required: true })
-  equipment_name: string;
-
-  @Prop({ required: true })
-  equipment_number: string;
-
-  @Prop({ required: true })
-  inspector: string;
-
-  @Prop({ required: true })
-  checker: string;
-}
-
-@Schema()
+@Schema({
+  _id: false, // _id 필드 생성 비활성화
+  timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      delete ret.__v; // __v 제거
+    },
+  },
+})
 export class CheckList {
   @Prop({
     required: true,
@@ -90,22 +80,25 @@ export class ImageUrl {
   image_url?: string;
 }
 
-@Schema()
+@Schema({
+  timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
+      delete ret._id; // _id 제거
+      delete ret.__v; // __v 제거
+    },
+  },
+})
 export class CheckSheet {
-  @Prop({ type: CheckSheetInfo, required: true })
-  checkSheetInfo: CheckSheetInfo;
-
   @Prop({ type: [CheckList], required: true })
   checkLists: CheckList[];
 
-  @Prop({ type: [ImageUrl], required: false })
-  imageUrls: ImageUrl[];
+  @Prop({ required: false })
+  imageUrls: string[];
 
-  @Prop({ type: [CheckedList], required: false })
-  checkedLists?: CheckedList[];
-
-  @Prop({ type: CheckedList, required: false })
-  todayCheckedList?: CheckedList;
+  @Prop({ required: true })
+  heavyEquipmentId: string;
 }
 
 export const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);

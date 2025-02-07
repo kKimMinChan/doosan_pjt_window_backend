@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
+import mongoose from 'mongoose';
 
 export class DuplicateDateError extends Error {
   constructor(message: string) {
@@ -25,6 +26,13 @@ export class ErrorHelper {
     }
     if (error instanceof ResourceNotFoundError) {
       throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
+
+    if (error instanceof mongoose.Error.CastError && error.path === '_id') {
+      throw new HttpException(
+        '잘못된 ID 형식입니다. 유효한 ObjectId를 제공해주세요.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     // 기본 에러 처리

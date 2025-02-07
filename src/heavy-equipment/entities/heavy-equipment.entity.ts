@@ -23,8 +23,8 @@ export class HeavyEquipment {
   @Prop({ required: true })
   equipmentNumber: string;
 
-  @Prop({ required: false, default: true })
-  isActive?: boolean;
+  @Prop({ default: false })
+  isDeleted?: boolean;
 }
 
 export const HeavyEquipmentSchema =

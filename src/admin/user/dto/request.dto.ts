@@ -34,12 +34,12 @@ export class UserRequest {
     format: 'binary',
     required: false,
   })
-  file?: any; // 파일 필드 추가
+  file?: Express.Multer.File; // 파일 필드 추가
 
   @ApiProperty({
     description: '중장비 id',
     example: '67a2fc0c89ca50f1cee44e03',
-    required: true,
+    required: false,
   })
   @IsString()
   heavyEquipmentId: string;
@@ -57,5 +57,5 @@ export class UpdateUserRequest extends PartialType(UserRequest) {
     return value; // 변환할 수 없는 경우 그대로 반환
   })
   @IsBoolean()
-  isActive?: boolean;
+  isDeleted?: boolean;
 }

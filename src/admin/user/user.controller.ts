@@ -42,6 +42,7 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: UserRequest,
   ) {
+    console.log(body, 'users');
     await this.userService.createUser(body, file);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',

@@ -29,5 +29,5 @@ export class UpdateHeavyEquipmentRequest extends PartialType(
   })
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean;
+  isDeleted?: boolean;
 }

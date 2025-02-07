@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
 
 export type UsersDocument = UserInfo & Document;
 
@@ -25,10 +26,14 @@ export class UserInfo {
   @Prop({ required: true, enum: ['운전자', '점검자', '확인자', '관리자'] })
   role: string;
 
-  @Prop({ required: false, default: true })
-  isActive?: boolean;
+  @Prop({ default: false })
+  isDeleted?: boolean;
 
-  @Prop({ required: true })
+  @Prop({
+    type: mongoose.Schema.ObjectId,
+    ref: 'HeavyEquipment',
+    required: false,
+  })
   heavyEquipmentId: string;
 }
 
