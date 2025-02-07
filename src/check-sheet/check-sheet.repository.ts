@@ -8,9 +8,17 @@ import {
   CheckedList,
   // DriversImage,
 } from './check-sheet.schema';
+import {
+  DuplicateDateError,
+  ResourceNotFoundError,
+} from 'src/helper/ErrorHelper';
 
 export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheet);
+  findAll(skip: number, limit: number);
+  findOne(id: string);
+  update(id: string, checkSheetDto: CheckSheet);
+  isCheckSheet(id: string);
   findCheckedLists();
   createCheckedList(checkedListDto: CheckedList);
   findCheckedList(date: string);
@@ -20,20 +28,6 @@ export interface CheckSheetRepository {
   // signature(signatureUrl: string, signatureType: string, name: string);
 }
 
-export class DuplicateDateError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'DuplicateDateError';
-  }
-}
-
-export class ResourceNotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ResourceNotFoundError';
-  }
-}
-
 @Injectable()
 export class CheckSheetMongoRepository implements CheckSheetRepository {
   constructor(
@@ -41,64 +35,99 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     private checkSheetModel: Model<CheckSheetDocument>,
   ) {}
 
-  async getCheckSheet() {
-    const checkSheet = await this.checkSheetModel
-      .findOne()
-      .select('-checkedLists')
-      .lean();
+  async findAll(skip: number, limit: number) {
+    const checkSheet = (
+      await this.checkSheetModel.find().skip(skip).limit(limit)
+    ).reverse();
+
     return checkSheet;
   }
 
+  async countCheckSheet() {
+    return await this.checkSheetModel.countDocuments().exec();
+  }
+
+  async findOne(id: string) {
+    return await this.checkSheetModel.findOne({ _id: id });
+  }
+
+  async isCheckSheet(id: string) {
+    const checkSheet = await this.checkSheetModel.findOne({
+      heavyEquipmentId: id,
+    });
+    if (checkSheet) return true;
+    return false;
+  }
+
   async createCheckSheet(checkSheetDto: CheckSheet) {
-    const checkSheet = await this.checkSheetModel.findOne();
-    if (checkSheet) {
-      checkSheet.checkSheetInfo = checkSheetDto.checkSheetInfo;
-      checkSheet.checkLists = checkSheetDto.checkLists;
-      checkSheet.imageUrls = checkSheetDto.imageUrls;
-
-      await checkSheet.save();
-      return await this.getCheckSheet();
-    } else {
-      const createCheckSheet = new this.checkSheetModel({ ...checkSheetDto });
-      await createCheckSheet.save();
-      return await this.getCheckSheet();
-    }
+    const createCheckSheet = new this.checkSheetModel({ ...checkSheetDto });
+    const result = await createCheckSheet.save();
+    return result;
   }
 
-  async validateDuplicateDate(createCheckedListDto: CheckedList) {
-    const lastCheckedList = await this.checkSheetModel
-      .findOne({}, { checkedLists: { $slice: -1 } })
-      .lean();
-
-    if (lastCheckedList && lastCheckedList.checkedLists?.length > 0) {
-      // 제일 마지막에 있는 리스트가 제일 최신 리스트
-      const prevCheckedList = lastCheckedList.checkedLists[0];
-      if (prevCheckedList.date === createCheckedListDto.date) {
-        throw new DuplicateDateError(
-          '날짜가 같은 체크리스트는 생성할 수 없습니다.',
-        );
-      }
+  async update(id: string, checkSheetDto: Partial<CheckSheet>) {
+    const updateFields: Partial<CheckSheet> = {};
+    if (checkSheetDto.checkLists) {
+      updateFields['checkLists'] = checkSheetDto.checkLists;
     }
-  }
+    if (checkSheetDto.imageUrls) {
+      updateFields['imageUrls'] = checkSheetDto.imageUrls;
+    }
 
-  async createCheckedList(checkedListDto: CheckedList) {
-    await this.validateDuplicateDate(checkedListDto);
-    const result = await this.checkSheetModel.findOneAndUpdate(
-      {},
-      {
-        $push: { checkedLists: checkedListDto },
-        $set: { todayCheckedList: checkedListDto },
-      },
-      { upsert: true, new: true, projection: { todayCheckedList: 1 } }, // 없으면 생성(upsert), 새 데이터 반환(new)
+    if (Object.keys(updateFields).length === 0) {
+      throw new Error('변경할 데이터가 없습니다.');
+    }
+
+    const result = await this.checkSheetModel.updateOne(
+      { _id: id },
+      { $set: updateFields },
     );
 
-    if (!result) {
-      throw new ResourceNotFoundError(
-        '문서 업데이트 실패: 조건에 맞는 문서를 찾지 못했습니다.',
+    console.log(updateFields, result);
+
+    if (result.modifiedCount === 0) {
+      throw new HttpException(
+        '업데이트가 이루어지지 않았습니다.',
+        HttpStatus.CONFLICT,
       );
     }
 
-    return result?.todayCheckedList;
+    if (result.modifiedCount > 0) return result;
+    return null;
+  }
+
+  // async validateDuplicateDate(createCheckedListDto: CheckedList) {
+  //   const lastCheckedList = await this.checkSheetModel
+  //     .findOne({}, { checkedLists: { $slice: -1 } })
+  //     .lean();
+
+  //   if (lastCheckedList && lastCheckedList.checkedLists?.length > 0) {
+  //     // 제일 마지막에 있는 리스트가 제일 최신 리스트
+  //     const prevCheckedList = lastCheckedList.checkedLists[0];
+  //     if (prevCheckedList.date === createCheckedListDto.date) {
+  //       throw new DuplicateDateError(
+  //         '날짜가 같은 체크리스트는 생성할 수 없습니다.',
+  //       );
+  //     }
+  //   }
+  // }
+
+  async createCheckedList(checkedListDto: CheckedList) {
+    // await this.validateDuplicateDate(checkedListDto);
+    // const result = await this.checkSheetModel.findOneAndUpdate(
+    //   {},
+    //   {
+    //     $push: { checkedLists: checkedListDto },
+    //     $set: { todayCheckedList: checkedListDto },
+    //   },
+    //   { upsert: true, new: true, projection: { todayCheckedList: 1 } }, // 없으면 생성(upsert), 새 데이터 반환(new)
+    // );
+    // if (!result) {
+    //   throw new ResourceNotFoundError(
+    //     '문서 업데이트 실패: 조건에 맞는 문서를 찾지 못했습니다.',
+    //   );
+    // }
+    // return result?.todayCheckedList;
   }
 
   async findCheckedLists() {
@@ -116,7 +145,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       },
       { checkedLists: { $elemMatch: { date } } }, //배열에서 조건에 맞는 첫 번째 요소를 반환
     );
-    return findList.checkedLists[0];
+    // return findList.checkedLists[0];
   }
 
   async updateCheckedList(_id: string, checkedListDto: CheckedList) {
@@ -138,7 +167,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       );
     }
 
-    return result.todayCheckedList;
+    // return result.todayCheckedList;
   }
 
   async removeCheckedLists() {

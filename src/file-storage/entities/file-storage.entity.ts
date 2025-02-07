@@ -31,8 +31,8 @@ export const FileInfoSchema = SchemaFactory.createForClass(FileInfo);
   },
 })
 export class FileStorage {
-  @Prop({ type: [FileInfoSchema], required: true }) // FileInfoSchema 참조
-  files: FileInfo[];
+  @Prop({ type: [], required: true }) // FileInfoSchema 참조
+  files: string[];
 }
 
 export const FileStorageSchema = SchemaFactory.createForClass(FileStorage);

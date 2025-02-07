@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
 
-export type UsersDocument = Users & Document;
+export type UsersDocument = UserInfo & Document;
 
 @Schema({
   timestamps: true,
@@ -25,14 +26,23 @@ export class UserInfo {
   @Prop({ required: true, enum: ['운전자', '점검자', '확인자', '관리자'] })
   role: string;
 
-  @Prop({ required: false, default: true })
-  isActive?: boolean;
+  @Prop({ default: false })
+  isDeleted?: boolean;
+
+  @Prop({
+    type: mongoose.Schema.ObjectId,
+    ref: 'HeavyEquipment',
+    required: false,
+  })
+  heavyEquipmentId: string;
 }
 
-@Schema()
-export class Users {
-  @Prop({ type: [UserInfo], required: true })
-  users: UserInfo[];
-}
+export const UsersSchema = SchemaFactory.createForClass(UserInfo);
 
-export const UsersSchema = SchemaFactory.createForClass(Users);
+UsersSchema.index(
+  { role: 1, heavyEquipmentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { role: { $in: ['점검자', '확인자'] } },
+  },
+);

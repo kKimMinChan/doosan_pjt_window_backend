@@ -4,12 +4,13 @@ import { AppService } from './app.service';
 import { CheckSheetModule } from './check-sheet/check-sheet.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { WorkPlanModule } from './work-plan/work-plan.module';
-import { DriversModule } from './drivers/drivers.module';
+// import { WorkPlanModule } from './work-plan/work-plan.module';
+// import { DriversModule } from './drivers/drivers.module';
 import { RecordModule } from './record/record.module';
-import { CheckedListsModule } from './checked-lists/checked-lists.module';
+import { CheckedSheetModule } from './checked-items/checked-sheet.module';
 import { UserModule } from './admin/user/user.module';
 import { FileStorageModule } from './file-storage/file-storage.module';
+import { HeavyEquipmentModule } from './heavy-equipment/heavy-equipment.module';
 
 @Module({
   imports: [
@@ -22,12 +23,12 @@ import { FileStorageModule } from './file-storage/file-storage.module';
       inject: [ConfigService],
     }),
     CheckSheetModule,
-    WorkPlanModule,
-    DriversModule,
+    // WorkPlanModule,
     RecordModule,
-    CheckedListsModule,
+    CheckedSheetModule,
     UserModule,
     FileStorageModule,
+    HeavyEquipmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

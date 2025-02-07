@@ -5,12 +5,21 @@ import { FileInfoResponse } from './dto/response.dto';
 @Injectable()
 export class FileStorageService {
   constructor(private fileStorageRepository: fileStorageMongoRepository) {}
-  async create(file: Express.Multer.File) {
-    const imageUrl = file.path;
+  // async create(file: Express.Multer.File) {
+  //   const imageUrl = file.path;
 
-    const createDocument = await this.fileStorageRepository.create({
-      imageUrl,
-    });
+  //   const createDocument = await this.fileStorageRepository.create({
+  //     imageUrl,
+  //   });
+
+  //   return createDocument;
+  // }
+  async create(files: Express.Multer.File[]) {
+    const imageUrls = files.map((file, _) => file.path);
+
+    console.log(imageUrls, 'urls');
+
+    const createDocument = await this.fileStorageRepository.create(imageUrls);
 
     return createDocument;
   }
@@ -27,7 +36,11 @@ export class FileStorageService {
   //   return `This action updates a #${id} fileStorage`;
   // }
 
-  remove(id: number) {
-    return `This action removes a #${id} fileStorage`;
+  async remove(id: string) {
+    return await this.fileStorageRepository.remove(id);
+  }
+
+  async removeAll() {
+    return await this.fileStorageRepository.removeAll();
   }
 }

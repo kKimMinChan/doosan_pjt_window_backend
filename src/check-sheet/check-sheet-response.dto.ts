@@ -102,32 +102,23 @@ export class CheckedListResponse {
 }
 
 export class CheckSheetResponse {
-  @ApiProperty({
-    description: '작업 안전 점검표 정보',
-    type: CheckSheetInfo,
-  })
-  checkSheetInfo: CheckSheetInfo;
-
   @ApiProperty({ description: '작업 점검 목록', type: [CheckList] })
   checkLists: CheckList[];
 
   @ApiProperty({
     description: '이미지 목록',
     type: [Image],
-    required: false,
   })
   image: Image[];
 
   @ApiProperty({
-    description: '',
-    type: CheckedListResponse,
-    required: false,
+    description: '중장비 id',
   })
-  todayCheckedList?: CheckedListResponse;
+  heavyEquipmentId: string;
 
   @ApiProperty({
-    description: 'Mongoose ObjectId',
+    description: 'ObjectId',
     example: '64c75aebc9c70e27d8b5a9d2',
   })
-  _id: Types.ObjectId;
+  id: string;
 }

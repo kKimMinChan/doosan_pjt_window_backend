@@ -8,10 +8,11 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { FileStorageService } from './file-storage.service';
-import { FileRequest } from './dto/create-file-storage.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileRequest, FilesRequest } from './dto/create-file-storage.dto';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileStorageMulterConfig } from 'storage-multer.config';
 import { FileInfoResponse } from './dto/response.dto';
@@ -20,12 +21,21 @@ import { FileInfoResponse } from './dto/response.dto';
 export class FileStorageController {
   constructor(private readonly fileStorageService: FileStorageService) {}
 
+  // @Post()
+  // @UseInterceptors(FileInterceptor('file', FileStorageMulterConfig))
+  // @ApiConsumes('multipart/form-data')
+  // @ApiBody({ type: FileRequest })
+  // create(@UploadedFile() file: Express.Multer.File) {
+  //   return this.fileStorageService.create(file);
+  // }
+
   @Post()
-  @UseInterceptors(FileInterceptor('file', FileStorageMulterConfig))
+  @ApiBody({ type: FilesRequest })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: FileRequest })
-  create(@UploadedFile() file: Express.Multer.File) {
-    return this.fileStorageService.create(file);
+  @UseInterceptors(AnyFilesInterceptor(FileStorageMulterConfig))
+  async DriverImage(@UploadedFiles() files: Express.Multer.File[]) {
+    const aaa = await this.fileStorageService.create(files);
+    return aaa;
   }
 
   @Get()
@@ -43,8 +53,15 @@ export class FileStorageController {
     // return this.fileStorageService.update(+id, updateFileStorageDto);
   }
 
+  @Delete('all')
+  async removeAll() {
+    return {
+      translate: await this.fileStorageService.removeAll(),
+    };
+  }
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.fileStorageService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.fileStorageService.remove(id);
   }
 }

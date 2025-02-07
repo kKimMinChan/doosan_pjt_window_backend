@@ -1,10 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UserInfo, Users, UsersDocument } from './entities/user.entity';
+import { UserInfo, UsersDocument } from './entities/user.entity';
+import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
 
 export interface UsersRepository {
-  findAll();
+  findAll(skip: number, limit: number);
+  countUsers();
   findOne(id: string);
   createUser(userInfo: UserInfo);
   update(id: string, userInfo: UserInfo);
@@ -14,77 +21,109 @@ export interface UsersRepository {
 @Injectable()
 export class usersMongoRepository implements UsersRepository {
   constructor(
-    @InjectModel(Users.name)
+    @InjectModel(UserInfo.name)
     private usersModel: Model<UsersDocument>,
   ) {}
 
-  async findAll() {
+  async findAll(skip: number, limit: number) {
     try {
-      const usersDocument = await this.usersModel
-        .findOne()
-        .lean()
-        .then((result) => result?.users);
-      return usersDocument;
+      return (await this.usersModel.find().skip(skip).limit(limit)).reverse();
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
     }
   }
 
+  async countUsers() {
+    return this.usersModel.countDocuments().exec();
+  }
+
+  // async findAll() {
+  //   try {
+  //     const usersDocument = await this.usersModel
+  //       .findOne()
+  //       .then((result) => result?.users);
+  //     if (!usersDocument)
+  //       throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
+  //     return usersDocument;
+  //   } catch (error) {
+  //     console.error('Error fetching users:', error);
+  //     throw error;
+  //   }
+  // }
+
   async findOne(id: string) {
-    const usersDocument = await this.usersModel
-      .findOne({ 'users._id': id }, { 'users.$': 1 })
-      .lean() // 순수 JavaScript 객체 반환
-      .then((result) => result?.users?.[0]); // 결과에서 첫 번째 배열 요소 추출
-    console.log(usersDocument);
-    return usersDocument;
+    const userDocument = await this.usersModel.findOne({ _id: id });
+    if (!userDocument)
+      throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
+    return userDocument;
   }
 
   async createUser(userInfo: UserInfo) {
-    // 기존 문서가 존재하는지 확인 및 업데이트 또는 새로 생성
-    const updatedUser = await this.usersModel.findOneAndUpdate(
-      {}, // 조건: 문서를 찾을 기준 (여기서는 첫 번째 문서만 확인)
-      { $push: { users: userInfo } }, // 배열 필드에 userInfo 추가
-      { upsert: true, new: true }, // 문서가 없으면 생성, 업데이트된 문서 반환
-    );
+    if (userInfo.role === '점검자' || userInfo.role === '확인자') {
+      const existingUser = await this.usersModel.findOne({
+        role: userInfo.role,
+        heavyEquipmentId: userInfo.heavyEquipmentId,
+      });
 
-    return updatedUser;
+      if (existingUser) {
+        throw new BadRequestException(
+          `${userInfo.role}는 이미 할당된 상태입니다. 중복 할당은 불가능합니다.`,
+        );
+      }
+    }
+
+    const newUser = new this.usersModel(userInfo);
+    return await newUser.save(); // 개별 문서로 저장
+
+    // if (result.modifiedCount > 0) return result;
+
+    // return null;
   }
 
   async update(id: string, userInfo: UserInfo) {
-    const updatedDocument = await this.usersModel
-      .findOneAndUpdate(
-        { 'users._id': id },
-        {
-          $set: {
-            'users.$.name': userInfo.name,
-            'users.$.department': userInfo.department,
-            'users.$.role': userInfo.role,
-            'users.$.imageUrl': userInfo.imageUrl,
-          },
-        },
-        { new: true },
-      )
-      .lean()
-      .then((result) => result?.users?.[0]);
+    const updateFields: Partial<UserInfo> = {};
+    // 업데이트할 필드만 동적으로 추가
+    if (userInfo.name) updateFields['name'] = userInfo.name;
+    if (userInfo.department) updateFields['department'] = userInfo.department;
+    if (userInfo.role) updateFields['role'] = userInfo.role;
+    if (userInfo.imageUrl) updateFields['imageUrl'] = userInfo.imageUrl;
+    if (typeof userInfo.isDeleted !== 'undefined')
+      updateFields['isActive'] = userInfo.isDeleted;
 
-    return updatedDocument;
+    // 업데이트할 값이 없으면 바로 반환
+    if (Object.keys(updateFields).length === 0) {
+      throw new Error('변경할 데이터가 없습니다.');
+    }
+
+    console.log(updateFields);
+
+    const result = await this.usersModel.updateOne(
+      { _id: id }, // 바로 해당 사용자의 ID로 업데이트
+      { $set: updateFields },
+      { new: true },
+    );
+
+    console.log(result, 'result');
+
+    // 업데이트가 이루어지지 않은 경우 (같은 데이터로 인해 변경되지 않음)
+    if (result.modifiedCount === 0) {
+      throw new HttpException(
+        '같은 데이터를 입력하여 업데이트가 이루어지지 않았습니다.',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    if (result.modifiedCount > 0) return result;
+
+    return null;
   }
 
   async remove(id: string) {
-    const removeDocument = await this.usersModel
-      .findOneAndUpdate(
-        { 'users._id': id },
-        { $pull: { users: { _id: id } } },
-        { new: true },
-      )
-      .lean()
-      .then((result) => result?.users);
+    const result = await this.usersModel.deleteOne({ _id: id });
 
-    if (!removeDocument) {
-      throw new Error('User not found');
-    }
+    if (result.deletedCount > 0) return result;
 
-    return removeDocument;
+    return null;
   }
 }
