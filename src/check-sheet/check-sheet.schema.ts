@@ -5,7 +5,6 @@ export type CheckSheetDocument = CheckSheet & Document;
 
 @Schema({
   _id: false, // _id 필드 생성 비활성화
-  timestamps: true,
   toJSON: {
     transform: (doc, ret) => {
       delete ret.__v; // __v 제거

@@ -28,26 +28,47 @@ import { UpdateUserRequest, UserRequest } from './dto/request.dto';
 import { UserResponse } from './dto/response.dto';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
+import { ConfigService } from '@nestjs/config';
+import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
+import { multerOptionsFactory } from 'multer.s3';
 
 @ApiTags('[관리자] 사용자 관리')
 @Controller('admin')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('users')
-  @UseInterceptors(FileInterceptor('file', MulterConfig))
+  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(null, '사용자 생성'))
   async createUser(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.MulterS3.File,
     @Body() body: UserRequest,
   ) {
-    console.log(body, 'users');
+    console.log(body, 'users', file);
     await this.userService.createUser(body, file);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };
   }
+
+  // @Post('users')
+  // @UseInterceptors(FileInterceptor('file', MulterConfig))
+  // @ApiConsumes('multipart/form-data')
+  // @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(null, '사용자 생성'))
+  // async createUser(
+  //   @UploadedFile() file: Express.Multer.File,
+  //   @Body() body: UserRequest,
+  // ) {
+  //   console.log(body, 'users');
+  //   await this.userService.createUser(body, file);
+  //   return {
+  //     translate: '요청이 성공적으로 처리되었습니다.',
+  //   };
+  // }
 
   @Get('users')
   @ApiCreatedResponse(
@@ -73,7 +94,7 @@ export class UserController {
 
   @Put('users/:id')
   @UsePipes(new ValidationPipe({ transform: true })) // 문자열을 boolean으로 변환
-  @UseInterceptors(FileInterceptor('file', MulterConfig))
+  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     type: UpdateUserRequest,
@@ -89,6 +110,24 @@ export class UserController {
       translate: '요청이 성공적으로 처리되었습니다.',
     };
   }
+  // @Put('users/:id')
+  // @UsePipes(new ValidationPipe({ transform: true })) // 문자열을 boolean으로 변환
+  // @UseInterceptors(FileInterceptor('file', MulterConfig))
+  // @ApiConsumes('multipart/form-data')
+  // @ApiBody({
+  //   type: UpdateUserRequest,
+  // })
+  // @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
+  // async update(
+  //   @Param('id') id: string,
+  //   @UploadedFile() file: Express.Multer.File,
+  //   @Body() body: UpdateUserRequest,
+  // ) {
+  //   await this.userService.update(id, body, file);
+  //   return {
+  //     translate: '요청이 성공적으로 처리되었습니다.',
+  //   };
+  // }
 
   @Delete('users/:id')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())

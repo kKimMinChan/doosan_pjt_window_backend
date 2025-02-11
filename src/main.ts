@@ -65,7 +65,12 @@ async function bootstrap() {
     },
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // DTO로 변환 활성화
+      whitelist: true, // DTO에 정의되지 않은 값은 거부
+    }),
+  );
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 

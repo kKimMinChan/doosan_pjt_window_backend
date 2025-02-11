@@ -16,6 +16,7 @@ export interface UsersRepository {
   createUser(userInfo: UserInfo);
   update(id: string, userInfo: UserInfo);
   remove(id: string);
+  findRole(id: string, role: '점검자' | '확인자');
 }
 
 @Injectable()
@@ -57,6 +58,14 @@ export class usersMongoRepository implements UsersRepository {
     if (!userDocument)
       throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
     return userDocument;
+  }
+
+  async findRole(id: string, role: '점검자' | '확인자') {
+    return await this.usersModel.findOne({
+      heavyEquipmentId: id,
+      role,
+      isDeleted: false,
+    });
   }
 
   async createUser(userInfo: UserInfo) {

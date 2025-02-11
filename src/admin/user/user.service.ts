@@ -9,7 +9,7 @@ import { PaginationDto } from 'src/common-dto/pagination.dto';
 @Injectable()
 export class UserService {
   constructor(private usersRepository: usersMongoRepository) {}
-  async createUser(userInfo: UserRequest, userFile: Express.Multer.File) {
+  async createUser(userInfo: UserRequest, userFile: Express.MulterS3.File) {
     try {
       if (!userFile)
         throw new HttpException(
@@ -18,7 +18,7 @@ export class UserService {
         );
       const { file, ...rest } = {
         ...userInfo,
-        imageUrl: userFile.path,
+        imageUrl: userFile.location,
       };
 
       const result = await this.usersRepository.createUser(rest);

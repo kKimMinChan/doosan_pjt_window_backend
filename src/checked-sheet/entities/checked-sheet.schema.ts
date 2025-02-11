@@ -3,7 +3,14 @@ import mongoose, { Date, Types } from 'mongoose';
 
 export type CheckedListsDocument = CheckedSheet & Document;
 
-@Schema()
+@Schema({
+  _id: false, // _id 필드 생성 비활성화
+  toJSON: {
+    transform: (doc, ret) => {
+      delete ret.__v; // __v 제거
+    },
+  },
+})
 export class CheckedItem {
   @Prop({
     required: true,
@@ -24,29 +31,16 @@ export class CheckedItem {
   check: boolean;
 }
 
-// @Schema()
-// export class CheckedList {
-//   @Prop({
-//     required: true,
-//     type: [CheckedItem],
-//   })
-//   checkedItem: CheckedItem[];
-
-//   @Prop({
-//     required: true,
-//   })
-//   date: Date;
-
-//   @Prop({ required: false })
-//   issue?: string;
-
-//   @Prop({ required: true })
-//   checkSheetId: string;
-// }
-
-// export const CheckedListSchema = SchemaFactory.createForClass(CheckedList);
-
-@Schema()
+@Schema({
+  timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
+      delete ret._id; // _id 제거
+      delete ret.__v; // __v 제거
+    },
+  },
+})
 export class CheckedSheet {
   @Prop({
     required: true,
@@ -56,9 +50,8 @@ export class CheckedSheet {
 
   @Prop({
     required: true,
-    type: Date,
   })
-  date: Date;
+  date: string;
 
   @Prop({ required: false })
   issue?: string;

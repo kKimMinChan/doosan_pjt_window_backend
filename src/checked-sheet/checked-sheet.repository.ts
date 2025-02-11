@@ -21,10 +21,11 @@ export class ResourceNotFoundError extends Error {
 }
 
 export interface CheckedSheetRepository {
-  create(id: string, createCheckedListDto: CheckedSheet);
+  create(createCheckedListDto: CheckedSheet);
 
-  // findAll();
-  // findOne(date: string);
+  findAll(skip: number, limit: number);
+  findOne(id: string);
+  countCheckedSheet();
   // update(_id: string, createCheckedListDto: CheckedList);
   // remove(id: string);
   // removeAll();
@@ -37,22 +38,19 @@ export class CheckedSheetMongoRepository implements CheckedSheetRepository {
     private checkedListsModel: Model<CheckedListsDocument>,
   ) {}
 
-  async create(id: string, createCheckedListDto: CheckedSheet) {
-    try {
-      // await this.validateDuplicateDate(createCheckedListDto);
-      const result = await this.checkedListsModel.updateOne(
-        {},
-        { $push: { checkedLists: createCheckedListDto } },
-        { upsert: true },
-      );
-      if (!result.acknowledged) {
-        throw new Error('날짜가 같은 체크리스트는 생성할 수 없습니다.'); // 데이터베이스 예외
-      }
-      return createCheckedListDto;
-    } catch (error) {
-      console.error('Repository Error:', error.message);
-      throw error; // 예외를 서비스로 전파
-    }
+  async create(createCheckedListDto: CheckedSheet) {
+    // // await this.validateDuplicateDate(createCheckedListDto);
+    // const result = await this.checkedListsModel.updateOne(
+    //   {},
+    //   { $push: { checkedLists: createCheckedListDto } },
+    //   { upsert: true },
+    // );
+    // if (!result.acknowledged) {
+    //   throw new Error('날짜가 같은 체크리스트는 생성할 수 없습니다.'); // 데이터베이스 예외
+    // }
+    // return createCheckedListDto;
+    const newCheckedSheet = new this.checkedListsModel(createCheckedListDto);
+    return newCheckedSheet.save();
   }
 
   // async validateDuplicateDate(createCheckedListDto: CheckedList) {
@@ -69,19 +67,15 @@ export class CheckedSheetMongoRepository implements CheckedSheetRepository {
   //   }
   // }
 
-  // async findAll() {
-  //   try {
-  //     const checkedLists = await this.checkedListsModel.findOne().lean();
-  //     if (!checkedLists)
-  //       throw new ResourceNotFoundError(
-  //         'CheckedLists 데이터가 존재하지 않습니다.',
-  //       );
-  //     return checkedLists;
-  //   } catch (error) {
-  //     console.error('Repository Error:', error.message);
-  //     throw error;
-  //   }
-  // }
+  async findAll(skip: number, limit: number) {
+    return (
+      await this.checkedListsModel.find().skip(skip).limit(limit)
+    ).reverse();
+  }
+
+  async countCheckedSheet() {
+    return this.checkedListsModel.countDocuments().exec();
+  }
 
   // async update(_id: string, checkedListDto: CheckedList) {
   //   const lastCheckedList = await this.checkedListsModel
@@ -132,25 +126,10 @@ export class CheckedSheetMongoRepository implements CheckedSheetRepository {
   //   // }
   // }
 
-  // async findOne(date: string) {
-  //   const checkedLists = await this.checkedListsModel.findOne();
-  //   if (checkedLists) {
-  //     const findList = checkedLists.checkedLists.filter(
-  //       (list) => list.date === date,
-  //     );
-  //     if (findList.length > 0) {
-  //       return findList;
-  //     } else {
-  //       throw new ResourceNotFoundError(
-  //         '해당 날짜의 CheckedLists 데이터가 존재하지 않습니다.',
-  //       );
-  //     }
-  //   } else {
-  //     throw new ResourceNotFoundError(
-  //       'CheckedLists 데이터가 존재하지 않습니다.',
-  //     );
-  //   }
-  // }
+  async findOne(id: string) {
+    const checkedSheet = await this.checkedListsModel.findOne({ _id: id });
+    return checkedSheet;
+  }
 
   // async remove(_id: string) {
   //   const checkedLists = await this.checkedListsModel.findOne();

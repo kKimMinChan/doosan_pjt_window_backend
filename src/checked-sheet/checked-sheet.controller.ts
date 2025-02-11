@@ -19,6 +19,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 @ApiTags('[관리자] 점검된 항목')
 @Controller('checked-items')
@@ -33,29 +34,21 @@ export class CheckedSheetController {
   @ApiBody({
     type: CheckedItemRequest,
   })
-  async create(
-    @Param('id') id: string,
-    @Body() createCheckedListDto: CheckedItemRequest,
-  ) {
-    // console.log(createCheckedListDto);
-    // const item = await this.checkedSheetService.create(
-    //   id,
-    //   createCheckedListDto,
-    // );
-    // console.log(item);
-    // return item;
+  async create(@Param('id') id: string, @Body() body: CheckedItemRequest) {
+    const item = await this.checkedSheetService.create(id, body);
+    return { data: item };
   }
 
-  // @Get('all')
-  // async findAll() {
-  //   return await this.checkedSheetService.findAll();
-  // }
+  @Get()
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return await this.checkedSheetService.findAll(paginationDto);
+  }
 
-  // @Get('item/:date')
-  // findOne(@Param('date') date: string) {
-  //   console.log(date);
-  //   return this.checkedSheetService.findOne(date);
-  // }
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const checkedSheet = await this.checkedSheetService.findOne(id);
+    return { data: [checkedSheet] };
+  }
 
   // @Get(':id')
   // findOne(@Param('id') id: string) {

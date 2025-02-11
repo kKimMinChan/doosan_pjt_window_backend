@@ -4,6 +4,7 @@ import {
   ArrayNotEmpty,
   IsBoolean,
   IsDate,
+  IsDateString,
   IsIn,
   IsNumber,
   IsString,
@@ -49,18 +50,6 @@ export class CheckedItemRequest {
     message: '점검 항목 목록(checkedItem)은 비어 있을 수 없습니다.',
   }) // 배열이 비어 있는지 확인
   checkedItems: CheckedItem[];
-
-  @ApiProperty({
-    description: '점검 날짜 ex) new Date().toISOString();',
-    example: '2025-02-05T05:30:15.000Z',
-  })
-  @IsDate()
-  date: Date;
-  // @ApiProperty({ description: '점검 날짜', example: '2024-01-05' })
-  // @Matches(/^\d{4}-\d{2}-\d{2}$/, {
-  //   message: '날짜 형식은 YYYY-MM-DD이어야 합니다.',
-  // })
-  // date: string;
 
   @ApiProperty({
     description: '이슈 내용',
