@@ -23,7 +23,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { CheckSheetRequest, UpdateCheckItem } from './check-sheet-request.dto';
+import {
+  CheckItemRequest,
+  CheckItemsRequest,
+  CheckSheetRequest,
+  UpdateCheckItem,
+} from './check-sheet-request.dto';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
 import { PaginationDto } from 'src/common-dto/pagination.dto';
@@ -63,6 +68,54 @@ export class CheckSheetController {
     };
   }
 
+  @Post('/checkItems/:type')
+  @ApiOperation({
+    summary: '중장비 유형별 안전 점검표 항목 생성 API',
+    description: '중장비 유형별 안전 점검표 항목 생성',
+  })
+  @ApiBody({
+    type: CheckItemsRequest,
+  })
+  @ApiParam({
+    name: 'type',
+    required: true,
+    enum: ['지게차', '대차', '크레인'],
+    description: '중장비의 유형 (지게차, 대차, 크레인 중 하나)',
+  })
+  async createCheckItems(
+    @Body() body: CheckItemsRequest,
+    @Param('type') type: '지게차' | '대차' | '크레인',
+  ) {
+    await this.checkSheetService.createCheckItems(type, body);
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
+  }
+
+  @Put('/checkItems/:type')
+  @ApiOperation({
+    summary: '중장비 유형별 안전 점검표 항목 수정',
+    description: '중장비 유형별 안전 점검표 항목 수정',
+  })
+  @ApiBody({
+    type: CheckItemsRequest,
+  })
+  @ApiParam({
+    name: 'type',
+    required: true,
+    enum: ['지게차', '대차', '크레인'],
+    description: '중장비의 유형 (지게차, 대차, 크레인 중 하나)',
+  })
+  async updateCheckItems(
+    @Body() body: CheckItemsRequest,
+    @Param('type') type: '지게차' | '대차' | '크레인',
+  ) {
+    await this.checkSheetService.createCheckItems(type, body);
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
+  }
+
   @Get()
   @ApiOperation({
     summary: '작업 안전 점검표 GET API',
@@ -94,7 +147,7 @@ export class CheckSheetController {
     return { data: [checkSheetInfo] };
   }
 
-  @Get('/checkItems/:type')
+  @Get('/checkItems/type/:type')
   @ApiParam({
     name: 'type',
     required: true,
@@ -104,6 +157,27 @@ export class CheckSheetController {
   async findAllCheckItems(@Param('type') type: '지게차' | '대차' | '크레인') {
     const checkItems = await this.checkSheetService.findAllCheckItems(type);
     return { data: [checkItems] };
+  }
+
+  @Post('/checkItems/item/:type')
+  @ApiParam({
+    name: 'type',
+    required: true,
+    enum: ['지게차', '대차', '크레인'],
+    description: '중장비의 유형 (지게차, 대차, 크레인 중 하나)',
+  })
+  async createCheckItem(
+    @Param('type') type: '지게차' | '대차' | '크레인',
+    @Body() checkItemDto: CheckItemRequest,
+  ) {
+    const checkItem = await this.checkSheetService.createCheckItem(
+      type,
+      checkItemDto,
+    );
+
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
   }
 
   @Get('/checkItems/:id')
@@ -134,6 +208,18 @@ export class CheckSheetController {
       checkItemDto,
     );
 
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
+  }
+
+  @Delete('/checkItems/:id')
+  @ApiParam({
+    name: 'id',
+    required: true,
+  })
+  async removeCheckItem(@Param('id') id: string) {
+    await this.checkSheetService.removeCheckItem(id);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };

@@ -4,9 +4,12 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
 import {
+  CheckItemRequest,
+  CheckItemsRequest,
   CheckSheetRequest,
   DateDto,
   UpdateCheckItem,
@@ -47,6 +50,30 @@ export class CheckSheetService {
 
   async updateOneCheckItem(id: string, checkItemDto: UpdateCheckItem) {
     try {
+      await this.checkSheetRepository.updateOneCheckItem(id, checkItemDto);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async createCheckItem(
+    type: '지게차' | '대차' | '크레인',
+    checkItemDto: CheckItemRequest,
+  ) {
+    try {
+      const result = await this.checkSheetRepository.createCheckItem(
+        type,
+        checkItemDto,
+      );
+      return result;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async removeCheckItem(id: string) {
+    try {
+      const result = await this.checkSheetRepository.removeCheckItem(id);
     } catch (error) {
       ErrorHelper.handleError(error);
     }
@@ -90,12 +117,81 @@ export class CheckSheetService {
     }
   }
 
+  async createCheckItems(
+    type: '지게차' | '대차' | '크레인',
+    body: CheckItemsRequest,
+  ) {
+    try {
+      const exist = await this.checkSheetRepository.isExistType(type);
+      if (exist) {
+        throw new ConflictException(`이미 존재하는 유형입니다: ${type}`);
+      }
+      const checkItems = JSON.parse(JSON.stringify(body.checkItems, null, 2));
+
+      // 유효성 검사
+      const errors = await validate(checkItems);
+      if (errors.length > 0) {
+        console.error('유효성 검사 실패:', errors);
+        throw new BadRequestException('유효성 검사에 실패했습니다.');
+      }
+
+      const checkSheetDto = {
+        checkItems,
+        type,
+      };
+
+      const CreatedCheckSheet =
+        await this.checkSheetRepository.createCheckSheet({
+          ...checkSheetDto,
+        });
+      return CreatedCheckSheet;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async updateCheckItems(
+    type: '지게차' | '대차' | '크레인',
+    body: CheckItemsRequest,
+  ) {
+    try {
+      const exist = await this.checkSheetRepository.isExistType(type);
+      if (!exist) {
+        throw new NotFoundException(
+          `데이터가 존재하지 않습니다. 요청한 유형: ${type}`,
+        );
+      }
+      const checkItems = JSON.parse(JSON.stringify(body.checkItems, null, 2));
+
+      // 유효성 검사
+      const errors = await validate(checkItems);
+      if (errors.length > 0) {
+        console.error('유효성 검사 실패:', errors);
+        throw new BadRequestException('유효성 검사에 실패했습니다.');
+      }
+
+      const checkSheetDto = {
+        checkItems,
+        type,
+      };
+
+      const CreatedCheckSheet =
+        await this.checkSheetRepository.createCheckSheet({
+          ...checkSheetDto,
+        });
+      return CreatedCheckSheet;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
   async createCheckSheetInfo(
     type: '지게차' | '대차' | '크레인',
     body: any,
     files: Express.Multer.File[],
   ): Promise<any> {
     try {
+      console.log(body.checkItems);
       await this.checkSheetRepository.isExistType(type);
       // JSON 문자열 파싱
       let parsedCheckItems =
@@ -117,15 +213,15 @@ export class CheckSheetService {
         throw new BadRequestException('유효성 검사에 실패했습니다.');
       }
 
-      const existingIndexes = new Set();
-      for (const item of parsedCheckItems) {
-        if (existingIndexes.has(item.index)) {
-          throw new ConflictException(
-            `중복된 index 값이 존재합니다: ${item.index}`,
-          );
-        }
-        existingIndexes.add(item.index);
-      }
+      // const existingIndexes = new Set();
+      // for (const item of parsedCheckItems) {
+      //   if (existingIndexes.has(item.index)) {
+      //     throw new ConflictException(
+      //       `중복된 index 값이 존재합니다: ${item.index}`,
+      //     );
+      //   }
+      //   existingIndexes.add(item.index);
+      // }
 
       // const isHeavyEquipment = await this.heavyEquipmentRepository.findOne(
       //   heavyEquipmentId,

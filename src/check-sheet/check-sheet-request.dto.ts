@@ -13,7 +13,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class CheckItem {
+export class CheckItemRequest {
   @ApiProperty({
     description: '항목 구분',
     enum: ['핵심 항목', '작업 전 점검사항(법적)', '일반 항목'],
@@ -33,16 +33,9 @@ export class CheckItem {
   @ApiProperty({ description: '점검 항목 이름', example: '안전장비 상태 확인' })
   @IsString()
   content: string;
-
-  @ApiProperty({
-    description: '인덱스',
-    example: 1,
-  })
-  @IsNumber()
-  index: number;
 }
 
-export class UpdateCheckItem extends PartialType(CheckItem) {
+export class UpdateCheckItem extends PartialType(CheckItemRequest) {
   @ApiProperty({ description: '선택', example: true })
   @IsBoolean()
   isOk: boolean;
@@ -87,45 +80,40 @@ export class DateDto {
 export class CheckSheetRequest {
   @ApiProperty({
     description: '작업 점검 목록',
-    type: [CheckItem],
+    type: [CheckItemRequest],
     required: true,
     example: [
       {
         type: '핵심 항목',
         content: '차량계 하역운반 작업계획서를 작성하였는가?',
         method: '문서',
-        index: 1,
       },
       {
         type: '핵심 항목',
         content: '작업계획서의 내용을 작업자에게 설명/교육하였는가?',
         method: '문서',
-        index: 2,
       },
       {
         type: '핵심 항목',
         content: '작업 지휘자가 지정되어 작업계획서에 따라 작얼을 지휘하는가?',
         method: '육안',
-        index: 3,
       },
       {
         type: '작업 전 점검사항(법적)',
         content: '제동장치 및 조종장치 기능은 이상없는가?',
         method: '육안',
-        index: 4,
       },
       {
         type: '일반 항목',
         content: '제동장치 및 조종장치 기능은 이상없는가?',
         method: '기능',
-        index: 6,
       },
     ],
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CheckItem)
-  checkItems: CheckItem[];
+  @Type(() => CheckItemRequest)
+  checkItems: CheckItemRequest[];
 
   @ApiProperty({
     description:
@@ -134,6 +122,45 @@ export class CheckSheetRequest {
     required: false,
   })
   files?: Express.Multer.File[];
+}
+
+export class CheckItemsRequest {
+  @ApiProperty({
+    description: '작업 점검 목록',
+    type: [CheckItemRequest],
+    required: true,
+    example: [
+      {
+        type: '핵심 항목',
+        content: '차량계 하역운반 작업계획서를 작성하였는가?',
+        method: '문서',
+      },
+      {
+        type: '핵심 항목',
+        content: '작업계획서의 내용을 작업자에게 설명/교육하였는가?',
+        method: '문서',
+      },
+      {
+        type: '핵심 항목',
+        content: '작업 지휘자가 지정되어 작업계획서에 따라 작얼을 지휘하는가?',
+        method: '육안',
+      },
+      {
+        type: '작업 전 점검사항(법적)',
+        content: '제동장치 및 조종장치 기능은 이상없는가?',
+        method: '육안',
+      },
+      {
+        type: '일반 항목',
+        content: '제동장치 및 조종장치 기능은 이상없는가?',
+        method: '기능',
+      },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CheckItemRequest)
+  checkItems: CheckItemRequest[];
 }
 
 // export class UpdateCheckSheetRequest {

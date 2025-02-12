@@ -20,10 +20,10 @@ export class CheckItem {
   })
   type: string;
 
-  @Prop({
-    required: true,
-  })
-  index: number;
+  // @Prop({
+  //   required: true,
+  // })
+  // index: number;
 
   @Prop({ required: true, enum: ['문서', '육안', '기능'] })
   method: string;
@@ -53,7 +53,7 @@ export class CheckSheetInfo {
   checkItems: CheckItem[];
 
   @Prop({ required: false })
-  imageUrls: string[];
+  imageUrls?: string[];
 }
 
 export const CheckSheetInfoSchema =

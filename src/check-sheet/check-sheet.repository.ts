@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -18,12 +19,15 @@ import {
 
 export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheetInfo);
+  createCheckItem(type: '지게차' | '대차' | '크레인', checkItemDto: CheckItem);
   isExistType(type);
   findAll(skip: number, limit: number);
   findAllCheckItems(type: '지게차' | '대차' | '크레인');
   findOne(type: '지게차' | '대차' | '크레인');
   findOneCheckItem(id: string);
   updateOneCheckItem(id: string, checkItemDto: CheckItem);
+  updateCheckItems(checkSheetDto: CheckSheetInfo);
+  removeCheckItem(id: string);
   // update(id: string, checkSheetDto: CheckSheet);
   // isCheckSheet(id: string);
   // findCheckedLists();
@@ -48,8 +52,6 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       { checkItems: 1 },
     );
 
-    console.log(checkItems);
-
     return checkItems.checkItems;
   }
 
@@ -70,6 +72,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       { 'checkItems._id': id },
       { 'checkItems.$': 1 },
     );
+
     return checkItem.checkItems[0];
   }
 
@@ -95,27 +98,66 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
 
   async isExistType(type: '지게차' | '대차' | '크레인') {
     const exist = await this.checkSheetModel.exists({ type });
-    if (exist) {
-      throw new ConflictException(`이미 존재하는 유형입니다: ${type}`);
-    }
+
     return exist;
   }
 
-  async updateOneCheckItem(id: string, checkItemDto: CheckItem) {
+  async createCheckItem(
+    type: '지게차' | '대차' | '크레인',
+    checkItemDto: CheckItem,
+  ) {
+    const result = await this.checkSheetModel.updateOne(
+      { type },
+      { $push: { checkItems: checkItemDto } },
+    );
+    return result;
+  }
+
+  async updateOneCheckItem(id: string, checkItemDto: Partial<CheckItem>) {
     const updateFields: Partial<CheckItem> = {};
+
     if (checkItemDto.content) {
-      updateFields['content'] = checkItemDto.content;
+      updateFields['checkItems.$[elem].content'] = checkItemDto.content;
     }
     if (checkItemDto.type) {
-      updateFields['type'] = checkItemDto.type;
+      updateFields['checkItems.$[elem].type'] = checkItemDto.type;
     }
     if (checkItemDto.method) {
-      updateFields['method'] = checkItemDto.method;
+      updateFields['checkItems.$[elem].method'] = checkItemDto.method;
     }
-    if (checkItemDto.isOk) {
-      updateFields['isOk'] = checkItemDto.isOk;
+    if (checkItemDto.isOk !== undefined) {
+      updateFields['checkItems.$[elem].isOk'] = checkItemDto.isOk;
     }
+
+    console.log(updateFields);
+
+    const result = await this.checkSheetModel.updateOne(
+      { 'checkItems._id': id }, // ✅ 배열 내부 특정 `_id` 값을 가진 요소 찾기
+      { $set: updateFields }, // ✅ 업데이트할 필드 적용
+      { arrayFilters: [{ 'elem._id': id }] }, // ✅ 배열 내 특정 요소만 업데이트
+    );
+
+    console.log(result, 'result');
+
+    return result;
   }
+
+  async removeCheckItem(id: string) {
+    const result = await this.checkSheetModel.updateOne(
+      { 'checkItems._id': id }, // ✅ `checkItems` 내부에서 해당 `_id`를 가진 문서 찾기
+      { $pull: { checkItems: { _id: id } } }, // ✅ 해당 `_id`를 가진 항목을 `checkItems` 배열에서 제거
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new NotFoundException(
+        `해당 ID(${id})의 점검 항목을 찾을 수 없습니다.`,
+      );
+    }
+
+    return result;
+  }
+
+  async updateCheckItems(checkSheetDto: CheckSheetInfo) {}
 
   // async update(id: string, checkSheetDto: Partial<CheckSheet>) {
   //   const updateFields: Partial<CheckSheet> = {};
