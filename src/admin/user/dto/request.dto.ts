@@ -35,7 +35,9 @@ export class UserRequest {
     required: false,
   })
   file?: Express.Multer.File; // 파일 필드 추가
+}
 
+export class UpdateUserRequest extends PartialType(UserRequest) {
   @ApiProperty({
     description: '중장비 id',
     example: '67a2fc0c89ca50f1cee44e03',
@@ -43,9 +45,7 @@ export class UserRequest {
   })
   @IsString()
   heavyEquipmentId: string;
-}
 
-export class UpdateUserRequest extends PartialType(UserRequest) {
   @ApiProperty({
     description: '사용자 활성화',
     example: true,

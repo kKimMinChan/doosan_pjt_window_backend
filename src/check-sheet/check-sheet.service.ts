@@ -59,14 +59,16 @@ export class CheckSheetService {
         data,
       };
     } catch (error) {
-      console.error(error);
       ErrorHelper.handleError(error);
     }
   }
 
   async findAllCheckItems(type: '지게차' | '대차' | '크레인') {
     try {
-    } catch (error) {}
+      return await this.checkSheetRepository.findAllCheckItems(type);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async createCheckSheetInfo(

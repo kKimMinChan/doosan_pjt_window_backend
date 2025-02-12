@@ -16,6 +16,7 @@ export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheetInfo);
   isExistType(type);
   findAll(skip: number, limit: number);
+  findAllCheckItems(type: '지게차' | '대차' | '크레인');
   findOne(type: '지게차' | '대차' | '크레인');
   // update(id: string, checkSheetDto: CheckSheet);
   // isCheckSheet(id: string);
@@ -34,6 +35,17 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     @InjectModel(CheckSheetInfo.name)
     private checkSheetModel: Model<CheckSheetInfoDocument>,
   ) {}
+
+  async findAllCheckItems(type: '지게차' | '대차' | '크레인') {
+    const checkItems = await this.checkSheetModel.findOne(
+      { type },
+      { checkItems: 1 },
+    );
+
+    console.log(checkItems);
+
+    return checkItems;
+  }
 
   async findAll(skip: number, limit: number) {
     const checkSheet = (

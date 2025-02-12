@@ -34,7 +34,7 @@ export class UserInfo {
     ref: 'HeavyEquipment',
     required: false,
   })
-  heavyEquipmentId: string;
+  heavyEquipmentId?: string;
 }
 
 export const UsersSchema = SchemaFactory.createForClass(UserInfo);
