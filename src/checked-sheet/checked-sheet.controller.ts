@@ -26,18 +26,18 @@ import { PaginationDto } from 'src/common-dto/pagination.dto';
 export class CheckedSheetController {
   constructor(private readonly checkedSheetService: CheckedSheetService) {}
 
-  @Post(':id')
-  @ApiOperation({
-    summary: '안전 점검표 데이터 저장 (id는 checkSheet id)',
-    description: '안전 점검표 데이터 저장',
-  })
-  @ApiBody({
-    type: CheckedItemRequest,
-  })
-  async create(@Param('id') id: string, @Body() body: CheckedItemRequest) {
-    const item = await this.checkedSheetService.create(id, body);
-    return { data: item };
-  }
+  // @Post(':id')
+  // @ApiOperation({
+  //   summary: '안전 점검표 데이터 저장 (id는 checkSheet id)',
+  //   description: '안전 점검표 데이터 저장',
+  // })
+  // @ApiBody({
+  //   type: CheckedItemRequest,
+  // })
+  // async create(@Param('id') id: string, @Body() body: CheckedItemRequest) {
+  //   const item = await this.checkedSheetService.create(id, body);
+  //   return { data: item };
+  // }
 
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {

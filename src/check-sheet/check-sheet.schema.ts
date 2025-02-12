@@ -1,40 +1,29 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type CheckSheetDocument = CheckSheet & Document;
+export type CheckSheetInfoDocument = CheckSheetInfo & Document;
 
 @Schema({
-  _id: false, // _id 필드 생성 비활성화
+  timestamps: true,
   toJSON: {
     transform: (doc, ret) => {
+      ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
+      delete ret._id; // _id 제거
       delete ret.__v; // __v 제거
     },
   },
 })
-export class CheckList {
-  @Prop({
-    required: true,
-    enum: ['핵심 항목', '작업 전 점검사항(법적)', '일반 항목'],
-  })
-  division: string;
-
-  @Prop({ required: true })
-  number: number;
-
-  @Prop({ required: true })
-  content: string;
-
-  @Prop({ required: true, enum: ['문서', '육안', '기능'] })
-  method: string;
-}
-
-@Schema()
 export class CheckItem {
   @Prop({
     required: true,
     enum: ['핵심 항목', '작업 전 점검사항(법적)', '일반 항목'],
   })
-  division: string;
+  type: string;
+
+  @Prop({
+    required: true,
+  })
+  index: number;
 
   @Prop({ required: true, enum: ['문서', '육안', '기능'] })
   method: string;
@@ -42,41 +31,8 @@ export class CheckItem {
   @Prop({ required: true })
   content: string;
 
-  @Prop({ required: true })
-  number: number;
-
-  @Prop({ default: true })
-  check: boolean;
-}
-
-@Schema()
-export class CheckedList {
-  @Prop({
-    required: true,
-    type: [CheckItem],
-  })
-  checkedItem: CheckItem[];
-
-  @Prop({
-    required: true,
-    validate: {
-      validator: (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value),
-      message: (props) =>
-        `${props.value}는 유효한 날짜 형식이 아닙니다. (YYYY-MM-DD 형식)`,
-    },
-  })
-  date: string;
-
-  @Prop({ required: false })
-  issue?: string;
-
-  _id?: string;
-}
-
-@Schema()
-export class ImageUrl {
-  base64?: string;
-  image_url?: string;
+  @Prop({ default: null })
+  isOk?: boolean | null;
 }
 
 @Schema({
@@ -89,15 +45,16 @@ export class ImageUrl {
     },
   },
 })
-export class CheckSheet {
-  @Prop({ type: [CheckList], required: true })
-  checkLists: CheckList[];
+export class CheckSheetInfo {
+  @Prop({ required: true, enum: ['지게차', '대차', '크레인'], unique: true })
+  type: string;
+
+  @Prop({ type: [CheckItem], required: true })
+  checkItems: CheckItem[];
 
   @Prop({ required: false })
   imageUrls: string[];
-
-  @Prop({ required: true })
-  heavyEquipmentId: string;
 }
 
-export const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);
+export const CheckSheetInfoSchema =
+  SchemaFactory.createForClass(CheckSheetInfo);

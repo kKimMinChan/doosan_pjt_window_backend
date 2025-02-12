@@ -20,52 +20,52 @@ export class CheckedSheetService {
     private usersRepository: usersMongoRepository,
   ) {}
 
-  async create(id: string, body: CheckedItemRequest) {
-    try {
-      const checkSheet = await this.checkSheetRepository.findOne(id);
-      if (!checkSheet) {
-        throw new HttpException(
-          '해당 체크 시트를 찾을 수 없습니다.',
-          HttpStatus.NOT_FOUND,
-        );
-      }
+  // async create(id: string, body: CheckedItemRequest) {
+  //   try {
+  //     const checkSheet = await this.checkSheetRepository.findOne(id);
+  //     if (!checkSheet) {
+  //       throw new HttpException(
+  //         '해당 체크 시트를 찾을 수 없습니다.',
+  //         HttpStatus.NOT_FOUND,
+  //       );
+  //     }
 
-      const heavyEquipmentId = checkSheet.heavyEquipmentId;
+  //     const heavyEquipmentId = checkSheet.heavyEquipmentId;
 
-      const inspector = await this.usersRepository.findRole(
-        heavyEquipmentId,
-        '점검자',
-      );
-      const reviewer = await this.usersRepository.findRole(
-        heavyEquipmentId,
-        '확인자',
-      );
+  //     const inspector = await this.usersRepository.findRole(
+  //       heavyEquipmentId,
+  //       '점검자',
+  //     );
+  //     const reviewer = await this.usersRepository.findRole(
+  //       heavyEquipmentId,
+  //       '확인자',
+  //     );
 
-      console.log(inspector, reviewer);
+  //     console.log(inspector, reviewer);
 
-      if (!inspector || !reviewer) {
-        throw new HttpException(
-          '점검자 또는 확인자를 찾을 수 없습니다.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+  //     if (!inspector || !reviewer) {
+  //       throw new HttpException(
+  //         '점검자 또는 확인자를 찾을 수 없습니다.',
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
 
-      const newCheckedSheet = {
-        checkedItems: body.checkedItems,
-        issue: body.issue,
-        date: new Date().toISOString(),
-        checkSheetId: id,
-        inspectorId: inspector.id as string,
-        reviewerId: reviewer.id as string,
-      };
+  //     const newCheckedSheet = {
+  //       checkedItems: body.checkedItems,
+  //       issue: body.issue,
+  //       date: new Date().toISOString(),
+  //       checkSheetId: id,
+  //       inspectorId: inspector.id as string,
+  //       reviewerId: reviewer.id as string,
+  //     };
 
-      console.log(newCheckedSheet, 'checksheet');
+  //     console.log(newCheckedSheet, 'checksheet');
 
-      return await this.checkedSheetRepository.create(newCheckedSheet);
-    } catch (error) {
-      ErrorHelper.handleError(error);
-    }
-  }
+  //     return await this.checkedSheetRepository.create(newCheckedSheet);
+  //   } catch (error) {
+  //     ErrorHelper.handleError(error);
+  //   }
+  // }
 
   async findAll(paginationDto: PaginationDto) {
     try {

@@ -18,8 +18,8 @@ import { HeavyEquipmentModule } from './heavy-equipment/heavy-equipment.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (ConfigService: ConfigService) => ({
-        uri: ConfigService.get<string>('MONGO_URI'),
-        // uri: ConfigService.get<string>('MONGODB_CHECK_SHEET_URL'),
+        // uri: ConfigService.get<string>('MONGO_URI'),
+        uri: ConfigService.get<string>('MONGODB_CHECK_SHEET_URL'),
       }),
       inject: [ConfigService],
     }),

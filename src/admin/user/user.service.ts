@@ -18,7 +18,7 @@ export class UserService {
         );
       const { file, ...rest } = {
         ...userInfo,
-        imageUrl: userFile.location,
+        imageUrl: userFile.key,
       };
 
       const result = await this.usersRepository.createUser(rest);

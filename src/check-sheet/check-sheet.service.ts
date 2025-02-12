@@ -1,15 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
-import {
-  CheckedListDto,
-  CheckSheetRequest,
-  DateDto,
-} from './check-sheet-request.dto';
+import { CheckSheetRequest, DateDto } from './check-sheet-request.dto';
 import { validate, validateSync } from 'class-validator';
 import mongoose from 'mongoose';
 import {
@@ -28,16 +25,10 @@ export class CheckSheetService {
     private heavyEquipmentRepository: HeavyEquipmentMongoRepository,
   ) {}
 
-  async findOne(id: string) {
+  async findOne(type: string) {
     try {
-      return await this.checkSheetRepository.findOne(id);
+      return await this.checkSheetRepository.findOne(type);
     } catch (error) {
-      if (error instanceof mongoose.Error.CastError && error.path === '_id') {
-        throw new HttpException(
-          '잘못된 ID 형식입니다. 유효한 ObjectId를 제공해주세요.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
       ErrorHelper.handleError(error);
     }
   }
@@ -73,26 +64,31 @@ export class CheckSheetService {
     }
   }
 
-  async createCheckSheet(
+  async findAllCheckItems(type: '지게차' | '대차' | '크레인') {
+    try {
+    } catch (error) {}
+  }
+
+  async createCheckSheetInfo(
+    type: '지게차' | '대차' | '크레인',
     body: any,
     files: Express.Multer.File[],
   ): Promise<any> {
     try {
+      await this.checkSheetRepository.isExistType(type);
       // JSON 문자열 파싱
-      const parsedCheckLists =
-        typeof body.checkLists === 'string'
-          ? JSON.parse(body.checkLists)
-          : body.checkLists;
-
-      const heavyEquipmentId = body.heavyEquipmentId;
+      let parsedCheckItems =
+        typeof body.checkItems === 'string'
+          ? JSON.parse(body.checkItems)
+          : body.checkItems;
 
       // DTO 인스턴스로 변환
       const requestInstance = plainToInstance(CheckSheetRequest, {
-        checkLists: parsedCheckLists,
-        files: files,
-        heavyEquipmentId,
+        checkItems: parsedCheckItems,
+        files,
+        type,
       });
-
+      console.log(parsedCheckItems);
       // 유효성 검사
       const errors = await validate(requestInstance);
       if (errors.length > 0) {
@@ -100,27 +96,37 @@ export class CheckSheetService {
         throw new BadRequestException('유효성 검사에 실패했습니다.');
       }
 
-      const isHeavyEquipment = await this.heavyEquipmentRepository.findOne(
-        heavyEquipmentId,
-      );
-
-      if (!isHeavyEquipment) {
-        throw new HttpException(
-          '해당 id의 중장비가 존재하지 않습니다.',
-          HttpStatus.BAD_REQUEST,
-        );
+      const existingIndexes = new Set();
+      for (const item of parsedCheckItems) {
+        if (existingIndexes.has(item.index)) {
+          throw new ConflictException(
+            `중복된 index 값이 존재합니다: ${item.index}`,
+          );
+        }
+        existingIndexes.add(item.index);
       }
 
-      const isCheckSheet = await this.checkSheetRepository.isCheckSheet(
-        heavyEquipmentId,
-      );
+      // const isHeavyEquipment = await this.heavyEquipmentRepository.findOne(
+      //   heavyEquipmentId,
+      // );
 
-      if (isCheckSheet) {
-        throw new HttpException(
-          '해당 id로 생성된 체크 시트가 존재합니다.',
-          HttpStatus.CONFLICT,
-        );
-      }
+      // if (!isHeavyEquipment) {
+      //   throw new HttpException(
+      //     '해당 id의 중장비가 존재하지 않습니다.',
+      //     HttpStatus.BAD_REQUEST,
+      //   );
+      // }
+
+      // const isCheckSheet = await this.checkSheetRepository.isCheckSheet(
+      //   heavyEquipmentId,
+      // );
+
+      // if (isCheckSheet) {
+      //   throw new HttpException(
+      //     '해당 id로 생성된 체크 시트가 존재합니다.',
+      //     HttpStatus.CONFLICT,
+      //   );
+      // }
 
       // 이미지 URL 생성
       const imageUrls = files.map((file) => file.path);
@@ -131,98 +137,100 @@ export class CheckSheetService {
         );
       }
       const checkSheetDto = {
-        checkLists: parsedCheckLists,
+        checkItems: parsedCheckItems,
         imageUrls,
-        heavyEquipmentId,
+        type,
       };
+
       const CreatedCheckSheet =
         await this.checkSheetRepository.createCheckSheet({
           ...checkSheetDto,
         });
       return CreatedCheckSheet;
     } catch (error) {
-      ErrorHelper.handleError(error);
-    }
-  }
-
-  async updateCheckSheet(
-    id: string,
-    body: any,
-    files: Express.Multer.File[],
-  ): Promise<any> {
-    try {
-      // const parsedCheckSheetInfo = JSON.parse(checkSheetInfo);
-      // const parsedCheckLists = JSON.parse(checkLists);
-      // const parsedImages = images ? JSON.parse(images) : [];
-      const parsedCheckLists =
-        typeof body.checkLists === 'string'
-          ? JSON.parse(body.checkLists)
-          : body.checkLists;
-
-      // const parsedImages: string[] = JSON.parse(body.imageUrls);
-      const parsedImages: string[] =
-        body.imageUrls && typeof body.imageUrls === 'string'
-          ? body.imageUrls.split(',')
-          : body.imageUrls
-          ? JSON.parse(body.imageUrls)
-          : [];
-
-      // 이미지 URL 생성
-      const imageUrls = files.map((file) => file.path);
-
-      const checkSheetDto: any = {
-        checkLists: parsedCheckLists,
-      };
-
-      checkSheetDto.imageUrls = [...parsedImages, ...imageUrls];
-
-      // parsedImages와 imageUrls 둘 다 없으면 필드 제거
-      if (checkSheetDto.imageUrls.length === 0) {
-        delete checkSheetDto.imageUrls;
-      }
-
-      if (checkSheetDto?.imageUrls?.length > 4) {
-        throw new HttpException(
-          '안전 점검표 이미지는 최대 4장까지 업로드 가능합니다.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      const isCheckSheet = await this.findOne(id);
-
-      if (!isCheckSheet) {
-        throw new HttpException(
-          '해당 id의 체크 시트가 존재하지 않습니다.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      const result = await this.checkSheetRepository.update(id, checkSheetDto);
-
-      return result;
-    } catch (error) {
-      ErrorHelper.handleError(error);
-    }
-  }
-
-  async createCheckedList(createCheckedListDto: CheckedListDto) {
-    try {
-      return await this.checkSheetRepository.createCheckedList(
-        createCheckedListDto,
-      );
-    } catch (error) {
       console.error(error);
-
-      if (error instanceof DuplicateDateError) {
-        throw new HttpException(error.message, HttpStatus.CONFLICT);
-      }
-      if (error instanceof ResourceNotFoundError) {
-        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-      }
-
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      ErrorHelper.handleError(error);
     }
   }
+
+  // async updateCheckSheet(
+  //   id: string,
+  //   body: any,
+  //   files: Express.Multer.File[],
+  // ): Promise<any> {
+  //   try {
+  //     // const parsedCheckSheetInfo = JSON.parse(checkSheetInfo);
+  //     // const parsedCheckLists = JSON.parse(checkLists);
+  //     // const parsedImages = images ? JSON.parse(images) : [];
+  //     const parsedCheckLists =
+  //       typeof body.checkLists === 'string'
+  //         ? JSON.parse(body.checkLists)
+  //         : body.checkLists;
+
+  //     // const parsedImages: string[] = JSON.parse(body.imageUrls);
+  //     const parsedImages: string[] =
+  //       body.imageUrls && typeof body.imageUrls === 'string'
+  //         ? body.imageUrls.split(',')
+  //         : body.imageUrls
+  //           ? JSON.parse(body.imageUrls)
+  //           : [];
+
+  //     // 이미지 URL 생성
+  //     const imageUrls = files.map((file) => file.path);
+
+  //     const checkSheetDto: any = {
+  //       checkLists: parsedCheckLists,
+  //     };
+
+  //     checkSheetDto.imageUrls = [...parsedImages, ...imageUrls];
+
+  //     // parsedImages와 imageUrls 둘 다 없으면 필드 제거
+  //     if (checkSheetDto.imageUrls.length === 0) {
+  //       delete checkSheetDto.imageUrls;
+  //     }
+
+  //     if (checkSheetDto?.imageUrls?.length > 4) {
+  //       throw new HttpException(
+  //         '안전 점검표 이미지는 최대 4장까지 업로드 가능합니다.',
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
+
+  //     const isCheckSheet = await this.findOne(id);
+
+  //     if (!isCheckSheet) {
+  //       throw new HttpException(
+  //         '해당 id의 체크 시트가 존재하지 않습니다.',
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
+
+  //     const result = await this.checkSheetRepository.update(id, checkSheetDto);
+
+  //     return result;
+  //   } catch (error) {
+  //     ErrorHelper.handleError(error);
+  //   }
+  // }
+
+  // async createCheckedList(createCheckedListDto: CheckedListDto) {
+  //   try {
+  //     return await this.checkSheetRepository.createCheckedList(
+  //       createCheckedListDto,
+  //     );
+  //   } catch (error) {
+  //     console.error(error);
+
+  //     if (error instanceof DuplicateDateError) {
+  //       throw new HttpException(error.message, HttpStatus.CONFLICT);
+  //     }
+  //     if (error instanceof ResourceNotFoundError) {
+  //       throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+  //     }
+
+  //     throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+  //   }
+  // }
 
   async findCheckedLists() {
     try {
@@ -287,31 +295,31 @@ export class CheckSheetService {
     }
   }
 
-  async updateCheckedList(_id: string, checkedListDto: CheckedListDto) {
-    try {
-      return await this.checkSheetRepository.updateCheckedList(
-        _id,
-        checkedListDto,
-      );
-    } catch (error) {
-      console.error(error.message, error);
-      if (
-        error instanceof ResourceNotFoundError ||
-        error.name === 'ResourceNotFoundError'
-      ) {
-        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
-      }
+  // async updateCheckedList(_id: string, checkedListDto: CheckedListDto) {
+  //   try {
+  //     return await this.checkSheetRepository.updateCheckedList(
+  //       _id,
+  //       checkedListDto,
+  //     );
+  //   } catch (error) {
+  //     console.error(error.message, error);
+  //     if (
+  //       error instanceof ResourceNotFoundError ||
+  //       error.name === 'ResourceNotFoundError'
+  //     ) {
+  //       throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+  //     }
 
-      if (error instanceof mongoose.Error.CastError && error.path === '_id') {
-        throw new HttpException(
-          '잘못된 ID 형식입니다. 유효한 ObjectId를 제공해주세요.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+  //     if (error instanceof mongoose.Error.CastError && error.path === '_id') {
+  //       throw new HttpException(
+  //         '잘못된 ID 형식입니다. 유효한 ObjectId를 제공해주세요.',
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
 
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
+  //     throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+  //   }
+  // }
 
   async removeCheckedLists() {
     try {

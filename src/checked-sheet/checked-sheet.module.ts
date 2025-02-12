@@ -8,8 +8,8 @@ import {
 } from './entities/checked-sheet.schema';
 import { CheckedSheetMongoRepository } from './checked-sheet.repository';
 import {
-  CheckSheet,
-  CheckSheetSchema,
+  CheckSheetInfo,
+  CheckSheetInfoSchema,
 } from 'src/check-sheet/check-sheet.schema';
 import { UserInfo, UsersSchema } from 'src/admin/user/entities/user.entity';
 import { CheckSheetMongoRepository } from 'src/check-sheet/check-sheet.repository';
@@ -19,7 +19,7 @@ import { usersMongoRepository } from 'src/admin/user/user.repository';
   imports: [
     MongooseModule.forFeature([
       { name: CheckedSheet.name, schema: CheckedSheetSchema },
-      { name: CheckSheet.name, schema: CheckSheetSchema },
+      { name: CheckSheetInfo.name, schema: CheckSheetInfoSchema },
       { name: UserInfo.name, schema: UsersSchema },
     ]),
   ],
