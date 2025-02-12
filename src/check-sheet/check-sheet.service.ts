@@ -6,7 +6,11 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
-import { CheckSheetRequest, DateDto } from './check-sheet-request.dto';
+import {
+  CheckSheetRequest,
+  DateDto,
+  UpdateCheckItem,
+} from './check-sheet-request.dto';
 import { validate, validateSync } from 'class-validator';
 import mongoose from 'mongoose';
 import {
@@ -28,6 +32,21 @@ export class CheckSheetService {
   async findOne(type: string) {
     try {
       return await this.checkSheetRepository.findOne(type);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async findOneCheckItem(id: string) {
+    try {
+      return await this.checkSheetRepository.findOneCheckItem(id);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async updateOneCheckItem(id: string, checkItemDto: UpdateCheckItem) {
+    try {
     } catch (error) {
       ErrorHelper.handleError(error);
     }

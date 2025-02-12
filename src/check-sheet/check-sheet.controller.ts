@@ -23,7 +23,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { CheckSheetRequest } from './check-sheet-request.dto';
+import { CheckSheetRequest, UpdateCheckItem } from './check-sheet-request.dto';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
 import { PaginationDto } from 'src/common-dto/pagination.dto';
@@ -103,7 +103,40 @@ export class CheckSheetController {
   })
   async findAllCheckItems(@Param('type') type: '지게차' | '대차' | '크레인') {
     const checkItems = await this.checkSheetService.findAllCheckItems(type);
-    return checkItems;
+    return { data: [checkItems] };
+  }
+
+  @Get('/checkItems/:id')
+  @ApiParam({
+    name: 'id',
+    required: true,
+  })
+  async findOneCheckItem(
+    @Param('id') id: string, // `id`는 string으로 전달됨 → 숫자로 변환 필요
+  ) {
+    const checkItem = await this.checkSheetService.findOneCheckItem(id);
+
+    return { data: [checkItem] };
+  }
+
+  @Put('/checkItems/:id')
+  @ApiParam({
+    name: 'id',
+    required: true,
+  })
+  @ApiBody({ type: UpdateCheckItem })
+  async updateOneCheckItem(
+    @Param('id') id: string,
+    @Body() checkItemDto: UpdateCheckItem,
+  ) {
+    const checkItem = await this.checkSheetService.updateOneCheckItem(
+      id,
+      checkItemDto,
+    );
+
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
   }
 
   // @Put(':id')

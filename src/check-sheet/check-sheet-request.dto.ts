@@ -1,8 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
   IsArray,
+  isBoolean,
   IsBoolean,
   IsIn,
   IsNumber,
@@ -41,6 +42,12 @@ export class CheckItem {
   index: number;
 }
 
+export class UpdateCheckItem extends PartialType(CheckItem) {
+  @ApiProperty({ description: '선택', example: true })
+  @IsBoolean()
+  isOk: boolean;
+}
+
 export class DateDto {
   @ApiProperty({
     description: '받아올 날짜',
@@ -76,17 +83,6 @@ export class DateDto {
 //   @IsString()
 //   issue?: string;
 // }
-
-export class ImageUrl {
-  @ApiProperty({
-    description: '이미지 URL',
-    example: 'uploads/지게차1.png',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  imageUrl?: string;
-}
 
 export class CheckSheetRequest {
   @ApiProperty({

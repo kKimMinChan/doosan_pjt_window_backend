@@ -10,7 +10,11 @@ import {
   DuplicateDateError,
   ResourceNotFoundError,
 } from 'src/helper/ErrorHelper';
-import { CheckSheetInfo, CheckSheetInfoDocument } from './check-sheet.schema';
+import {
+  CheckItem,
+  CheckSheetInfo,
+  CheckSheetInfoDocument,
+} from './check-sheet.schema';
 
 export interface CheckSheetRepository {
   createCheckSheet(checkSheetDto: CheckSheetInfo);
@@ -18,6 +22,8 @@ export interface CheckSheetRepository {
   findAll(skip: number, limit: number);
   findAllCheckItems(type: '지게차' | '대차' | '크레인');
   findOne(type: '지게차' | '대차' | '크레인');
+  findOneCheckItem(id: string);
+  updateOneCheckItem(id: string, checkItemDto: CheckItem);
   // update(id: string, checkSheetDto: CheckSheet);
   // isCheckSheet(id: string);
   // findCheckedLists();
@@ -44,7 +50,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
 
     console.log(checkItems);
 
-    return checkItems;
+    return checkItems.checkItems;
   }
 
   async findAll(skip: number, limit: number) {
@@ -57,6 +63,14 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
 
   async countCheckSheet() {
     return await this.checkSheetModel.countDocuments().exec();
+  }
+
+  async findOneCheckItem(id: string) {
+    const checkItem = await this.checkSheetModel.findOne(
+      { 'checkItems._id': id },
+      { 'checkItems.$': 1 },
+    );
+    return checkItem.checkItems[0];
   }
 
   async findOne(type: string) {
@@ -85,6 +99,22 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       throw new ConflictException(`이미 존재하는 유형입니다: ${type}`);
     }
     return exist;
+  }
+
+  async updateOneCheckItem(id: string, checkItemDto: CheckItem) {
+    const updateFields: Partial<CheckItem> = {};
+    if (checkItemDto.content) {
+      updateFields['content'] = checkItemDto.content;
+    }
+    if (checkItemDto.type) {
+      updateFields['type'] = checkItemDto.type;
+    }
+    if (checkItemDto.method) {
+      updateFields['method'] = checkItemDto.method;
+    }
+    if (checkItemDto.isOk) {
+      updateFields['isOk'] = checkItemDto.isOk;
+    }
   }
 
   // async update(id: string, checkSheetDto: Partial<CheckSheet>) {

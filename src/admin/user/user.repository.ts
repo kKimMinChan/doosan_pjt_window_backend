@@ -28,7 +28,11 @@ export class usersMongoRepository implements UsersRepository {
 
   async findAll(skip: number, limit: number) {
     try {
-      return (await this.usersModel.find().skip(skip).limit(limit)).reverse();
+      return await this.usersModel
+        .find()
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit);
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;

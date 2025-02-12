@@ -27,9 +27,11 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
   }
 
   async findAll(skip: number, limit: number) {
-    return (
-      await this.heavyEquipmentModel.find().skip(skip).limit(limit)
-    ).reverse();
+    return await this.heavyEquipmentModel
+      .find()
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit);
   }
 
   async countEquipments() {
