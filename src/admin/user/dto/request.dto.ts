@@ -44,7 +44,7 @@ export class UpdateUserRequest extends PartialType(UserRequest) {
     required: false,
   })
   @IsString()
-  heavyEquipmentId: string;
+  heavyEquipmentId?: string;
 
   @ApiProperty({
     description: '사용자 활성화',

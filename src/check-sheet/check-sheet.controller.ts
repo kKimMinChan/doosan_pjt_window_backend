@@ -144,7 +144,7 @@ export class CheckSheetController {
     @Body() body: CheckItemsRequest,
     @Param('type') type: '지게차' | '대차' | '크레인',
   ) {
-    await this.checkSheetService.createCheckItems(type, body);
+    await this.checkSheetService.updateCheckItems(type, body);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };

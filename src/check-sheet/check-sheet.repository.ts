@@ -186,15 +186,31 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     for (const newItem of newItems) {
       const key = `${newItem.type}-${newItem.method}-${newItem.content}`;
       const existingItem = existingItemsMap.get(key);
-
+      console.log(key, existingItem);
       if (!existingItem) {
         updates.push({
           updateOne: {
             filter: { 'checkItems._id': existingItem?.id },
+            update: {
+              $set: {
+                'checkItems.$.type': newItem.type,
+                'checkItems.$.method': newItem.method,
+                'checkItems.$.content': newItem.content,
+                updatedAt: new Date(),
+              },
+            },
           },
         });
       }
     }
+
+    console.log(updates);
+
+    if (updates.length > 0) {
+      await this.checkSheetModel.bulkWrite(updates);
+    }
+
+    return updates.length;
   }
 
   // async update(id: string, checkSheetDto: Partial<CheckSheet>) {
