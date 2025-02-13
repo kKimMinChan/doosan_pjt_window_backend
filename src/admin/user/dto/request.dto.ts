@@ -57,5 +57,5 @@ export class UpdateUserRequest extends PartialType(UserRequest) {
     return value; // 변환할 수 없는 경우 그대로 반환
   })
   @IsBoolean()
-  isDeleted?: boolean;
+  isActive?: boolean;
 }

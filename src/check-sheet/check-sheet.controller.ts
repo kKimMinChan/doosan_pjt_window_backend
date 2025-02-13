@@ -39,10 +39,44 @@ import { CheckSheetInfoResponse } from './check-sheet-response.dto';
 @Controller('check-sheet-infos')
 export class CheckSheetController {
   constructor(private checkSheetService: CheckSheetService) {}
+  @Get()
+  @ApiOperation({
+    summary: '지게차, 대차, 크레인 점검 항목, 이미지 GET',
+    description: '',
+  })
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(
+      CheckSheetInfoResponse,
+      '작업 안전 점검표',
+    ),
+  )
+  async findAll(@Query() paginationDto: PaginationDto) {
+    const checkSheet = await this.checkSheetService.findAll(paginationDto);
+    return checkSheet;
+  }
+
+  @Get(':type')
+  @ApiOperation({
+    summary: 'type의 점검 항목, 이미지 GET',
+    description: '',
+  })
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(CheckSheetInfoResponse, ''),
+  )
+  @ApiParam({
+    name: 'type',
+    required: true,
+    enum: ['지게차', '대차', '크레인'],
+    description: '중장비의 유형 (지게차, 대차, 크레인 중 하나)',
+  })
+  async findOne(@Param('type') type: '지게차' | '대차' | '크레인') {
+    const checkSheetInfo = await this.checkSheetService.findOne(type);
+    return { data: [checkSheetInfo] };
+  }
+
   @Post(':type')
   @ApiOperation({
-    summary: '중장비 유형별 안전 점검표 생성 API',
-    description: '중장비 유형별 안전 점검표 생성',
+    summary: '중장비 유형별 안전 점검표 점검 항목[]과 이미지 동시 생성 API',
   })
   @ApiBody({
     description:
@@ -70,7 +104,7 @@ export class CheckSheetController {
 
   @Post('/checkItems/:type')
   @ApiOperation({
-    summary: '중장비 유형별 안전 점검표 항목 생성 API',
+    summary: '중장비 유형별 안전 점검표 항목[] 생성',
     description: '중장비 유형별 안전 점검표 항목 생성',
   })
   @ApiBody({
@@ -114,37 +148,6 @@ export class CheckSheetController {
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };
-  }
-
-  @Get()
-  @ApiOperation({
-    summary: '작업 안전 점검표 GET API',
-    description: '작업 안전 점검표',
-  })
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(
-      CheckSheetInfoResponse,
-      '작업 안전 점검표',
-    ),
-  )
-  async findAll(@Query() paginationDto: PaginationDto) {
-    const checkSheet = await this.checkSheetService.findAll(paginationDto);
-    return checkSheet;
-  }
-
-  @Get(':type')
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(CheckSheetInfoResponse, ''),
-  )
-  @ApiParam({
-    name: 'type',
-    required: true,
-    enum: ['지게차', '대차', '크레인'],
-    description: '중장비의 유형 (지게차, 대차, 크레인 중 하나)',
-  })
-  async findOne(@Param('type') type: '지게차' | '대차' | '크레인') {
-    const checkSheetInfo = await this.checkSheetService.findOne(type);
-    return { data: [checkSheetInfo] };
   }
 
   @Get('/checkItems/type/:type')

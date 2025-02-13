@@ -27,7 +27,7 @@ export class UserInfo {
   role: string;
 
   @Prop({ default: false })
-  isDeleted?: boolean;
+  isActive?: boolean;
 
   @Prop({
     type: mongoose.Schema.ObjectId,

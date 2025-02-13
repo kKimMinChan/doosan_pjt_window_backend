@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
@@ -26,7 +27,7 @@ export interface CheckSheetRepository {
   findOne(type: '지게차' | '대차' | '크레인');
   findOneCheckItem(id: string);
   updateOneCheckItem(id: string, checkItemDto: CheckItem);
-  updateCheckItems(checkSheetDto: CheckSheetInfo);
+  updateCheckItems(type: '지게차' | '대차' | '크레인', newItems: CheckItem[]);
   removeCheckItem(id: string);
   // update(id: string, checkSheetDto: CheckSheet);
   // isCheckSheet(id: string);
@@ -157,7 +158,44 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     return result;
   }
 
-  async updateCheckItems(checkSheetDto: CheckSheetInfo) {}
+  async updateCheckItems(
+    type: '지게차' | '대차' | '크레인',
+    newItems: CheckItem[],
+  ) {
+    const existingItems = await this.findAllCheckItems(type);
+    if (!existingItems) {
+      throw new NotFoundException(
+        `데이터가 존재하지 않습니다. 요청한 유형: ${type}`,
+      );
+    }
+
+    if (existingItems.length !== newItems.length) {
+      throw new BadRequestException(
+        `기존 데이터 개수(${existingItems.length})와 전송된 데이터 개수(${newItems.length})가 다릅니다.`,
+      );
+    }
+
+    const updates = [];
+    const existingItemsMap = new Map(
+      existingItems.map((item: any) => [
+        `${item.type}-${item.method}-${item.content}`,
+        item,
+      ]),
+    );
+
+    for (const newItem of newItems) {
+      const key = `${newItem.type}-${newItem.method}-${newItem.content}`;
+      const existingItem = existingItemsMap.get(key);
+
+      if (!existingItem) {
+        updates.push({
+          updateOne: {
+            filter: { 'checkItems._id': existingItem?.id },
+          },
+        });
+      }
+    }
+  }
 
   // async update(id: string, checkSheetDto: Partial<CheckSheet>) {
   //   const updateFields: Partial<CheckSheet> = {};

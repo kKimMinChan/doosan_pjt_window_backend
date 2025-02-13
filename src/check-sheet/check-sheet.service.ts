@@ -32,6 +32,36 @@ export class CheckSheetService {
     private heavyEquipmentRepository: HeavyEquipmentMongoRepository,
   ) {}
 
+  async findAll(paginationDto: PaginationDto) {
+    try {
+      const { limit, page } = paginationDto;
+
+      const skip = (page - 1) * limit;
+
+      const [data, totalCount] = await Promise.all([
+        this.checkSheetRepository.findAll(skip, limit),
+        this.checkSheetRepository.countCheckSheet(),
+      ]);
+
+      if (!data) {
+        // 데이터가 없는 경우 404 상태와 메시지 반환
+        throw new HttpException(
+          '작업 안전 점검표 데이터가 없습니다. 작업 안전 점검표 데이터를 추가해주세요.',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      return {
+        pageSize: limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        page,
+        data,
+      };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
   async findOne(type: string) {
     try {
       return await this.checkSheetRepository.findOne(type);
@@ -74,36 +104,6 @@ export class CheckSheetService {
   async removeCheckItem(id: string) {
     try {
       const result = await this.checkSheetRepository.removeCheckItem(id);
-    } catch (error) {
-      ErrorHelper.handleError(error);
-    }
-  }
-
-  async findAll(paginationDto: PaginationDto) {
-    try {
-      const { limit, page } = paginationDto;
-
-      const skip = (page - 1) * limit;
-
-      const [data, totalCount] = await Promise.all([
-        this.checkSheetRepository.findAll(skip, limit),
-        this.checkSheetRepository.countCheckSheet(),
-      ]);
-
-      if (!data) {
-        // 데이터가 없는 경우 404 상태와 메시지 반환
-        throw new HttpException(
-          '작업 안전 점검표 데이터가 없습니다. 작업 안전 점검표 데이터를 추가해주세요.',
-          HttpStatus.NOT_FOUND,
-        );
-      }
-      return {
-        pageSize: limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        page,
-        data,
-      };
     } catch (error) {
       ErrorHelper.handleError(error);
     }
@@ -155,31 +155,20 @@ export class CheckSheetService {
     body: CheckItemsRequest,
   ) {
     try {
-      const exist = await this.checkSheetRepository.isExistType(type);
-      if (!exist) {
-        throw new NotFoundException(
-          `데이터가 존재하지 않습니다. 요청한 유형: ${type}`,
-        );
-      }
-      const checkItems = JSON.parse(JSON.stringify(body.checkItems, null, 2));
+      const newItems = JSON.parse(JSON.stringify(body.checkItems, null, 2));
 
       // 유효성 검사
-      const errors = await validate(checkItems);
+      const errors = await validate(newItems);
       if (errors.length > 0) {
         console.error('유효성 검사 실패:', errors);
         throw new BadRequestException('유효성 검사에 실패했습니다.');
       }
 
-      const checkSheetDto = {
-        checkItems,
+      const updateCheckItems = await this.checkSheetRepository.updateCheckItems(
         type,
-      };
-
-      const CreatedCheckSheet =
-        await this.checkSheetRepository.createCheckSheet({
-          ...checkSheetDto,
-        });
-      return CreatedCheckSheet;
+        newItems,
+      );
+      return updateCheckItems;
     } catch (error) {
       ErrorHelper.handleError(error);
     }

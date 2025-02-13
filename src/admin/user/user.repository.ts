@@ -101,8 +101,8 @@ export class usersMongoRepository implements UsersRepository {
     if (userInfo.department) updateFields['department'] = userInfo.department;
     if (userInfo.role) updateFields['role'] = userInfo.role;
     if (userInfo.imageUrl) updateFields['imageUrl'] = userInfo.imageUrl;
-    if (typeof userInfo.isDeleted !== 'undefined')
-      updateFields['isActive'] = userInfo.isDeleted;
+    if (typeof userInfo.isActive !== 'undefined')
+      updateFields['isActive'] = userInfo.isActive;
 
     // 업데이트할 값이 없으면 바로 반환
     if (Object.keys(updateFields).length === 0) {
