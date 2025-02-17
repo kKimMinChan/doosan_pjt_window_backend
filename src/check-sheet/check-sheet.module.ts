@@ -1,29 +1,24 @@
 import { Module } from '@nestjs/common';
-import { CheckSheetController } from './check-sheet.controller';
 import { CheckSheetService } from './check-sheet.service';
+import { CheckSheetController } from './check-sheet.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CheckSheetInfo, CheckSheetInfoSchema } from './check-sheet.schema';
+import { CheckSheet, CheckSheetSchema } from './entities/check-sheet.schema';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
-import { PassportModule } from '@nestjs/passport';
-import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
-import {
-  HeavyEquipment,
-  HeavyEquipmentSchema,
-} from 'src/heavy-equipment/entities/heavy-equipment.entity';
+import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
+import { CheckItemModule } from 'src/check-item/check-item.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: CheckSheetInfo.name, schema: CheckSheetInfoSchema },
-      { name: HeavyEquipment.name, schema: HeavyEquipmentSchema },
+      { name: CheckSheet.name, schema: CheckSheetSchema },
     ]),
-    PassportModule.register({ session: true }),
+    CheckItemModule,
   ],
   controllers: [CheckSheetController],
   providers: [
     CheckSheetService,
     CheckSheetMongoRepository,
-    HeavyEquipmentMongoRepository,
+    CheckItemMongoRepository,
   ],
 })
 export class CheckSheetModule {}

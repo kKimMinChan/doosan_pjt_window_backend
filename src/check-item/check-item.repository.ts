@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { CheckItem, CheckItemDocument } from './entities/check-item.schema';
 
 export interface CheckItemRepository {
-  create(checkItemDto: CheckItem[]);
+  create(checkItemDto: CheckItem[]): Promise<{ id: string }[]>;
   findAll(skip: number, limit: number);
   countCheckItems();
   findOne(id: string);
@@ -19,9 +19,49 @@ export class CheckItemMongoRepository implements CheckItemRepository {
     private checkItemModel: Model<CheckItemDocument>,
   ) {}
 
-  async create(checkItemDto: CheckItem[]) {
-    const newCheckItems = await this.checkItemModel.insertMany(checkItemDto);
-    return newCheckItems;
+  async create(checkItemDto: CheckItem[]): Promise<{ id: string }[]> {
+    if (checkItemDto.length === 0) {
+      return [];
+    }
+    // ✅ 1. 모든 요청 데이터에 대한 `type`, `method`, `content` 조합을 생성
+    const uniqueKeys = checkItemDto.map((item) => ({
+      type: item.type,
+      method: item.method,
+      content: item.content,
+    }));
+    // ✅ 2. 기존 데이터 조회 (한 번의 요청으로 모든 항목 조회)
+    const existingItems = await this.checkItemModel
+      .find({
+        $or: uniqueKeys, // 여러 개의 조건을 한 번에 조회
+      })
+      .lean();
+    // ✅ 3. 기존 항목의 `_id`를 매핑 (Map 사용)
+    const existingItemsMap = new Map(
+      existingItems.map((item) => [
+        `${item.type}-${item.method}-${item.content}`,
+        item._id.toString(),
+      ]),
+    );
+    // ✅ 4. 새로 추가해야 하는 항목 필터링
+    const newItems = checkItemDto.filter(
+      (item) =>
+        !existingItemsMap.has(`${item.type}-${item.method}-${item.content}`),
+    );
+    let insertedItems = [];
+    if (newItems.length > 0) {
+      // ✅ 5. 새 항목 `bulkWrite`로 한 번에 삽입
+      const insertResult = await this.checkItemModel.insertMany(newItems);
+      insertedItems = insertResult.map((item) => ({
+        key: `${item.type}-${item.method}-${item.content}`,
+        id: item._id.toString(),
+      }));
+    }
+    // ✅ 6. 기존 항목과 새로 삽입한 항목을 합쳐서 `_id` 리스트 반환
+    const allItems = [
+      ...existingItemsMap.entries(),
+      ...insertedItems.map((item) => [item.key, item.id]),
+    ];
+    return allItems.map(([_, id]) => id);
   }
 
   async findAll(skip: number, limit: number) {

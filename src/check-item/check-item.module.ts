@@ -11,7 +11,9 @@ import { CheckItemMongoRepository } from './check-item.repository';
       { name: CheckItem.name, schema: CheckItemSchema },
     ]),
   ],
+
   controllers: [CheckItemController],
   providers: [CheckItemService, CheckItemMongoRepository],
+  exports: [CheckItemMongoRepository, MongooseModule],
 })
 export class CheckItemModule {}

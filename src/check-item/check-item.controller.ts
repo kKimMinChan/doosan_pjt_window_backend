@@ -25,13 +25,17 @@ export class CheckItemController {
 
   @Post()
   @ApiBody({ type: [CheckItemRequest] })
-  create(@Body() checkItemDto: CheckItemRequest[]) {
-    return this.checkItemService.create(checkItemDto);
+  async create(@Body() checkItemDto: CheckItemRequest[]) {
+    return {
+      data: await this.checkItemService.create(checkItemDto),
+    };
   }
 
   @Post('/bulk')
-  createBulk(@Body() checkItemDto: CheckItemRequest[]) {
-    return this.checkItemService.create(checkItemDto);
+  async createBulk(@Body() checkItemDto: CheckItemRequest[]) {
+    return {
+      data: await this.checkItemService.create(checkItemDto),
+    };
   }
 
   @Get()
