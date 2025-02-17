@@ -23,8 +23,8 @@ export class UserResponse {
 
   @ApiProperty({
     description: '역할',
-    example: '운전자',
-    enum: ['운전자', '점검자', '확인자', '관리자'],
+    example: 'DRIVER',
+    enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'],
     required: true,
   })
   role: string;

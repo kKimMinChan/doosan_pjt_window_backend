@@ -16,7 +16,7 @@ export interface UsersRepository {
   createUser(userInfo: UserInfo);
   update(id: string, userInfo: UserInfo);
   remove(id: string);
-  findRole(id: string, role: '점검자' | '확인자');
+  findRole(id: string, role: 'INSPECTOR' | 'REVIEWER');
 }
 
 @Injectable()
@@ -64,7 +64,7 @@ export class usersMongoRepository implements UsersRepository {
     return userDocument;
   }
 
-  async findRole(id: string, role: '점검자' | '확인자') {
+  async findRole(id: string, role: 'INSPECTOR' | 'REVIEWER') {
     return await this.usersModel.findOne({
       heavyEquipmentId: id,
       role,
@@ -73,7 +73,7 @@ export class usersMongoRepository implements UsersRepository {
   }
 
   async createUser(userInfo: UserInfo) {
-    if (userInfo.role === '점검자' || userInfo.role === '확인자') {
+    if (userInfo.role === 'INSPECTOR' || userInfo.role === 'REVIEWER') {
       const existingUser = await this.usersModel.findOne({
         role: userInfo.role,
         heavyEquipmentId: userInfo.heavyEquipmentId,
@@ -94,15 +94,16 @@ export class usersMongoRepository implements UsersRepository {
     // return null;
   }
 
-  async update(id: string, userInfo: UserInfo) {
+  async update(id: string, userInfo: Partial<UserInfo>) {
+    console.log(userInfo, 'info');
+
     const updateFields: Partial<UserInfo> = {};
     // 업데이트할 필드만 동적으로 추가
     if (userInfo.name) updateFields['name'] = userInfo.name;
     if (userInfo.department) updateFields['department'] = userInfo.department;
     if (userInfo.role) updateFields['role'] = userInfo.role;
     if (userInfo.imageUrl) updateFields['imageUrl'] = userInfo.imageUrl;
-    if (typeof userInfo.isActive !== 'undefined')
-      updateFields['isActive'] = userInfo.isActive;
+    if (userInfo.isActive) updateFields['isActive'] = userInfo.isActive;
 
     // 업데이트할 값이 없으면 바로 반환
     if (Object.keys(updateFields).length === 0) {

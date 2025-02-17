@@ -76,12 +76,12 @@ export class UserService {
   async update(
     id: string,
     userInfo: UpdateUserRequest,
-    userFile: Express.Multer.File,
+    userFile: Express.MulterS3.File,
   ) {
     try {
       const updateData = {
         ...userInfo,
-        ...(userFile && { imageUrl: userFile.path }),
+        ...(userFile && { imageUrl: userFile.key }),
       };
 
       const result = await this.usersRepository.update(id, updateData as any);
@@ -101,6 +101,7 @@ export class UserService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      console.error(error, 'asdfoniwe');
       ErrorHelper.handleError(error);
     }
   }

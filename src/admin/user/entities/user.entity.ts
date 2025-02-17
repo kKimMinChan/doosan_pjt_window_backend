@@ -23,7 +23,7 @@ export class UserInfo {
   @Prop({ required: true })
   imageUrl: string;
 
-  @Prop({ required: true, enum: ['운전자', '점검자', '확인자', '관리자'] })
+  @Prop({ required: true, enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'] })
   role: string;
 
   @Prop({ default: false })
@@ -43,6 +43,6 @@ UsersSchema.index(
   { role: 1, heavyEquipmentId: 1 },
   {
     unique: true,
-    partialFilterExpression: { role: { $in: ['점검자', '확인자'] } },
+    partialFilterExpression: { role: { $in: ['INSPECTOR', 'REVIEWER'] } },
   },
 );

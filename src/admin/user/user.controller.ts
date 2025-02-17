@@ -102,8 +102,8 @@ export class UserController {
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async update(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: UpdateUserRequest,
+    @UploadedFile() file: Express.MulterS3.File,
+    @Body() body: any,
   ) {
     await this.userService.update(id, body, file);
     return {

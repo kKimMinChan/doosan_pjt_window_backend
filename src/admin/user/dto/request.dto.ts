@@ -21,11 +21,11 @@ export class UserRequest {
 
   @ApiProperty({
     description: '역할',
-    example: '운전자',
-    enum: ['운전자', '점검자', '확인자', '관리자'],
+    example: 'DRIVER',
+    enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'],
     required: true,
   })
-  @IsIn(['운전자', '점검자', '확인자', '관리자'])
+  @IsIn(['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'])
   role: string;
 
   @ApiProperty({
@@ -34,17 +34,55 @@ export class UserRequest {
     format: 'binary',
     required: false,
   })
-  file?: Express.Multer.File; // 파일 필드 추가
+  file?: Express.MulterS3.File; // 파일 필드 추가
 }
 
-export class UpdateUserRequest extends PartialType(UserRequest) {
+export class UpdateUserRequest {
+  @ApiProperty({
+    description: '운전자 이름',
+    example: '홍길동',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  name: string;
+
+  @ApiProperty({
+    description: '부서',
+    example: '안전',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  department: string;
+
+  @ApiProperty({
+    description: '역할',
+    example: 'DRIVER',
+    enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'],
+    required: false,
+  })
+  @IsIn(['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'])
+  @IsOptional()
+  role: string;
+
+  @ApiProperty({
+    description: '업로드할 파일',
+    type: 'string',
+    format: 'binary',
+    required: false,
+  })
+  @IsOptional()
+  file: Express.MulterS3.File; // 파일 필드 추가
+
   @ApiProperty({
     description: '중장비 id',
     example: '67a2fc0c89ca50f1cee44e03',
     required: false,
   })
   @IsString()
-  heavyEquipmentId?: string;
+  @IsOptional()
+  heavyEquipmentId: string;
 
   @ApiProperty({
     description: '사용자 활성화',
@@ -57,5 +95,6 @@ export class UpdateUserRequest extends PartialType(UserRequest) {
     return value; // 변환할 수 없는 경우 그대로 반환
   })
   @IsBoolean()
-  isActive?: boolean;
+  @IsOptional()
+  isActive: boolean;
 }

@@ -1,0 +1,29 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+
+export type CheckItemDocument = CheckItem & Document;
+
+@Schema({
+  timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
+      delete ret._id; // _id 제거
+      delete ret.__v; // __v 제거
+    },
+  },
+})
+export class CheckItem {
+  @Prop({
+    required: true,
+    enum: ['KEY_ITEM', 'CHECKLIST_BEFORE_WORK', 'GENERAL_ITEM'],
+  })
+  type: string;
+
+  @Prop({ required: true, enum: ['EYE', 'DOCUMENT', 'FUNCTION'] })
+  method: string;
+
+  @Prop({ required: true })
+  content: string;
+}
+
+export const CheckItemSchema = SchemaFactory.createForClass(CheckItem);
