@@ -1,3 +1,4 @@
+import { Optional } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
@@ -53,14 +54,16 @@ export class CheckSheetRequest {
   items: Item[];
 
   @ApiProperty({ description: '이미지 정보', type: [Image] })
+  @Optional()
   @IsArray()
   @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
   @Type(() => Image) // ✅ 내부 객체 매핑
-  images: Image[];
+  images?: Image[];
 
   @ApiProperty({ description: '이슈사항', example: '안전벨트 불량' })
+  @Optional()
   @IsString()
-  issue: string;
+  issue?: string;
 
   @ApiProperty({
     description: '중장비 id',
@@ -85,4 +88,47 @@ export class CheckSheetRequest {
   })
   @IsString()
   reviewer: string;
+}
+
+export class UpdateItem {
+  @ApiProperty({
+    description: 'CheckItem id',
+    example: '67b2cce73dd1ff6de078fb23',
+  })
+  @IsString()
+  checkItem: string;
+
+  @ApiProperty({
+    description: '해당 항목이 체크되었는지 여부 (true, false, 또는 null)',
+    example: true,
+    nullable: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isOk: boolean | null;
+}
+
+export class UpdateCheckSheetRequest {
+  @ApiProperty({
+    description: 'CheckItemId & isOk',
+    type: [UpdateItem],
+    required: true,
+  })
+  @Optional()
+  @IsArray()
+  @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
+  @Type(() => UpdateItem) // ✅ 내부 객체 매핑
+  items: UpdateItem[];
+
+  @ApiProperty({ description: '이미지 정보', type: [Image] })
+  @Optional()
+  @IsArray()
+  @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
+  @Type(() => Image) // ✅ 내부 객체 매핑
+  images: Image[];
+
+  @ApiProperty({ description: '이슈사항', example: '안전벨트 불량' })
+  @Optional()
+  @IsString()
+  issue: string;
 }

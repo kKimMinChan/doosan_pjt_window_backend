@@ -7,9 +7,13 @@ import {
   Param,
   Delete,
   Query,
+  Put,
 } from '@nestjs/common';
 import { CheckSheetService } from './check-sheet.service';
-import { CheckSheetRequest } from './dto/check-sheet.request';
+import {
+  CheckSheetRequest,
+  UpdateCheckSheetRequest,
+} from './dto/check-sheet.request';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 @Controller('check-sheets')
@@ -43,12 +47,12 @@ export class CheckSheetController {
     return await this.checkSheetService.findAll(id, paginationDto);
   }
 
-  @Patch(':id')
+  @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateCheckSheetDto: CheckSheetRequest,
+    @Body() updateDto: UpdateCheckSheetRequest,
   ) {
-    return this.checkSheetService.update(id, updateCheckSheetDto);
+    return this.checkSheetService.update(id, updateDto);
   }
 
   @Delete(':id')

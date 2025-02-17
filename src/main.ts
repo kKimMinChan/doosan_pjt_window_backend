@@ -67,10 +67,13 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true, // DTO로 변환 활성화
-      whitelist: true, // DTO에 정의되지 않은 값은 거부
+      transform: true, // ✅ DTO 타입 변환 활성화
+      whitelist: true, // ✅ DTO에 정의되지 않은 필드 자동 제거
+      forbidNonWhitelisted: false, // ✅ 정의되지 않은 필드가 있어도 예외 발생 X
+      skipMissingProperties: true, // ✅ undefined 필드를 무시하여 검증
     }),
   );
+
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 

@@ -45,7 +45,7 @@ export class CheckSheet {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'CheckItem',
           required: true,
-          autopopulate: true,
+          autopopulate: false,
         },
         isOk: { type: Boolean, default: null },
       },
@@ -74,7 +74,7 @@ export class CheckSheet {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',
     required: true,
-    autopopulate: true,
+    autopopulate: false,
   })
   inspector: string;
 
@@ -82,7 +82,7 @@ export class CheckSheet {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',
     required: true,
-    autopopulate: true,
+    autopopulate: false,
   })
   reviewer: string;
 
@@ -90,7 +90,7 @@ export class CheckSheet {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'HeavyEquipment',
     required: true,
-    autopopulate: true,
+    autopopulate: false,
   })
   heavyEquipment: string;
 }

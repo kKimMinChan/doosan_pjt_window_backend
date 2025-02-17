@@ -1,5 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CheckSheetRequest } from './dto/check-sheet.request';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  CheckSheetRequest,
+  UpdateCheckSheetRequest,
+} from './dto/check-sheet.request';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
 import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { CheckSheet } from './entities/check-sheet.schema';
@@ -61,11 +68,31 @@ export class CheckSheetService {
     return await this.checkSheetRepository.findOneLatest(id);
   }
 
-  async update(id: string, updateCheckSheetDto: CheckSheetRequest) {
-    return `This action updates a #${id} checkSheet`;
+  async update(id: string, updateDto: UpdateCheckSheetRequest) {
+    try {
+      const checkSheet = await this.checkSheetRepository.noPopulateFindOne(id);
+
+      const checkSheetCheckItems = checkSheet.items.map((item) =>
+        item.checkItem.toString(),
+      );
+      const updateDtoCheckItems = updateDto.items.map((item) =>
+        item.checkItem.toString(),
+      );
+
+      // ✅ 두 배열이 완전히 같은지 확인
+      const isSame =
+        JSON.stringify(checkSheetCheckItems.sort()) ===
+        JSON.stringify(updateDtoCheckItems.sort());
+
+      console.log(isSame); // true 또는 false
+
+      if (isSame) return await this.checkSheetRepository.update(id, updateDto);
+      return null;
+      // return await this.checkSheetRepository.update(id, updateDto);
+    } catch (error) {}
   }
 
   async remove(id: string) {
-    return `This action removes a #${id} checkSheet`;
+    return await this.checkSheetRepository.remove(id);
   }
 }
