@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { CheckSheetService } from './check-sheet.service';
 import { CheckSheetRequest } from './dto/check-sheet.request';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
-@Controller('check-sheet')
+@Controller('check-sheets')
 export class CheckSheetController {
   constructor(private readonly checkSheetService: CheckSheetService) {}
 
@@ -26,9 +28,19 @@ export class CheckSheetController {
     };
   }
 
-  @Get(':heavyEquipmentId')
-  async findAll(@Param('id') id: string) {
-    return this.checkSheetService.findAll();
+  @Get(':heavyEquipmentId/latest')
+  async findOneLatest(@Param('heavyEquipmentId') id: string) {
+    return {
+      data: await this.checkSheetService.findOneLatest(id),
+    };
+  }
+
+  @Get('/heavyEquipment/:id')
+  async findAll(
+    @Param('id') id: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return await this.checkSheetService.findAll(id, paginationDto);
   }
 
   @Patch(':id')

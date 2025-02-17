@@ -3,6 +3,8 @@ import { CheckSheetRequest } from './dto/check-sheet.request';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
 import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { CheckSheet } from './entities/check-sheet.schema';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
+import { ErrorHelper } from 'src/helper/ErrorHelper';
 
 @Injectable()
 export class CheckSheetService {
@@ -28,12 +30,35 @@ export class CheckSheetService {
     return await this.checkSheetRepository.create(newCheckSheet);
   }
 
-  async findAll() {
-    return `This action returns all checkSheet`;
+  async findAll(id: string, paginationDto: PaginationDto) {
+    try {
+      const { limit, page } = paginationDto;
+
+      const skip = (page - 1) * limit;
+
+      const [data, totalCount] = await Promise.all([
+        this.checkSheetRepository.findAll(id, skip, limit),
+        this.checkSheetRepository.countCheckSheet(id),
+      ]);
+
+      return {
+        pageSize: limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        page,
+        data,
+      };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async findOne(id: string) {
     return await this.checkSheetRepository.findOne(id);
+  }
+
+  async findOneLatest(id: string) {
+    return await this.checkSheetRepository.findOneLatest(id);
   }
 
   async update(id: string, updateCheckSheetDto: CheckSheetRequest) {
