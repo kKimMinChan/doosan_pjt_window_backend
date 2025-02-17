@@ -20,7 +20,8 @@ export class CheckSheetService {
     private checkItemRepository: CheckItemMongoRepository,
   ) {}
   async create(checkSheetDto: CheckSheetRequest) {
-    const checkItems = checkSheetDto.items.map((item) => item.checkItem);
+    console.log(checkSheetDto);
+    const checkItems = checkSheetDto?.items?.map((item) => item.checkItem);
 
     const checkItemIds = await this.checkItemRepository.create(checkItems);
 

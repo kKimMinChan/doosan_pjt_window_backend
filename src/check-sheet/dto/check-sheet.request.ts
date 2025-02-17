@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsBoolean,
   IsNumber,
+  IsNotEmpty,
 } from 'class-validator';
 import { CheckItemRequest } from 'src/check-item/dto/check-item-request.dto';
 
@@ -51,6 +52,7 @@ export class CheckSheetRequest {
   @IsArray()
   @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
   @Type(() => Item) // ✅ 내부 객체 매핑
+  @IsNotEmpty()
   items: Item[];
 
   @ApiProperty({ description: '이미지 정보', type: [Image] })

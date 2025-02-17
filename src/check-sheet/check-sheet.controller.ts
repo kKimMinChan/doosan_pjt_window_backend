@@ -22,6 +22,7 @@ export class CheckSheetController {
 
   @Post()
   async create(@Body() checkSheetDto: CheckSheetRequest) {
+    console.log(checkSheetDto);
     return await this.checkSheetService.create(checkSheetDto);
   }
 

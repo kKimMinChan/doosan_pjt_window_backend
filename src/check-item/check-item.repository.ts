@@ -20,7 +20,7 @@ export class CheckItemMongoRepository implements CheckItemRepository {
   ) {}
 
   async create(checkItemDto: CheckItem[]): Promise<{ id: string }[]> {
-    if (checkItemDto.length === 0) {
+    if (checkItemDto?.length === 0) {
       return [];
     }
     // ✅ 1. 모든 요청 데이터에 대한 `type`, `method`, `content` 조합을 생성

@@ -45,7 +45,7 @@ export class CheckSheet {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'CheckItem',
           required: true,
-          autopopulate: false,
+          autopopulate: true,
         },
         isOk: { type: Boolean, default: null },
       },
