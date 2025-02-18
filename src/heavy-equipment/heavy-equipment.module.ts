@@ -7,14 +7,21 @@ import {
   HeavyEquipmentSchema,
 } from './entities/heavy-equipment.entity';
 import { HeavyEquipmentMongoRepository } from './heavy-equipment.repository';
+import { usersMongoRepository } from 'src/admin/user/user.repository';
+import { UserModule } from 'src/admin/user/user.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: HeavyEquipment.name, schema: HeavyEquipmentSchema },
     ]),
+    UserModule,
   ],
   controllers: [HeavyEquipmentController],
-  providers: [HeavyEquipmentService, HeavyEquipmentMongoRepository],
+  providers: [
+    HeavyEquipmentService,
+    HeavyEquipmentMongoRepository,
+    usersMongoRepository,
+  ],
 })
 export class HeavyEquipmentModule {}

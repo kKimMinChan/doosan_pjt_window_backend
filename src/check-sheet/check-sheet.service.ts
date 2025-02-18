@@ -25,8 +25,9 @@ export class CheckSheetService {
   ) {}
   async create(checkSheetDto: any, files: Express.MulterS3.File[]) {
     try {
-      const parsedCheckItems = JSON.parse(checkSheetDto.items) as Item[];
-      const parsedImages = JSON.parse(checkSheetDto.images);
+      if (checkSheetDto?.items === undefined)
+        throw new BadRequestException('items가 존재하지 않습니다.');
+      const parsedCheckItems = JSON.parse(checkSheetDto?.items) as Item[];
 
       const checkItems = parsedCheckItems.map((item) => item.checkItem);
       const checkItemIds = await this.checkItemRepository.create(checkItems);
@@ -36,10 +37,17 @@ export class CheckSheetService {
         isOk: parsedCheckItems[index].isOk,
       }));
 
-      const images = parsedImages.map((image, idx) => ({
-        ...image,
-        url: `${process.env.CLOUDFRONT_URL}/${files[idx].key}`,
-      }));
+      const images = files.map((file) => {
+        if (file.fieldname.split('_').length !== 2)
+          throw new BadRequestException('이미지 필드 이름이 잘못됐습니다.');
+        const [title, index] = decodeURIComponent(file.fieldname).split('_');
+        const indexToNum = Number(index);
+        return {
+          title,
+          index: indexToNum,
+          url: `${process.env.CLOUDFRONT_URL}/${file.key}`,
+        };
+      });
 
       const newCheckSheet = {
         ...checkSheetDto,
@@ -86,16 +94,34 @@ export class CheckSheetService {
     return await this.checkSheetRepository.findOneLatest(id);
   }
 
-  async update(id: string, updateDto: UpdateCheckSheetRequest) {
+  async update(id: string, body: any, files: Express.MulterS3.File[]) {
     try {
+      if (body?.items === undefined)
+        throw new BadRequestException('items가 존재하지 않습니다.');
+
       const checkSheet = await this.checkSheetRepository.noPopulateFindOne(id);
+
+      const date = new Date();
+
+      if (
+        date.toISOString().split('T')[0] !==
+        checkSheet.createdAt.toISOString().split('T')[0]
+      ) {
+        throw new HttpException(
+          '오늘 작성된 안전점검표만 수정할 수 있습니다.',
+          HttpStatus.FORBIDDEN, // 403 Forbidden
+        );
+      }
 
       const checkSheetCheckItems = checkSheet.items.map((item) =>
         item.checkItem.toString(),
       );
-      const updateDtoCheckItems = updateDto.items.map((item) =>
+
+      const parsedItems = JSON.parse(body.items);
+      const updateDtoCheckItems = parsedItems?.map((item) =>
         item.checkItem.toString(),
       );
+      console.log(parsedItems, checkSheetCheckItems, updateDtoCheckItems);
 
       // ✅ 두 배열이 완전히 같은지 확인
       const isSame =
@@ -104,10 +130,31 @@ export class CheckSheetService {
 
       console.log(isSame); // true 또는 false
 
-      // if (isSame) return await this.checkSheetRepository.update(id, updateDto);
+      const images =
+        files.map((file) => {
+          if (file.fieldname.split('_').length !== 2)
+            throw new BadRequestException('이미지 필드 이름이 잘못됐습니다.');
+          const [title, index] = decodeURIComponent(file.fieldname).split('_');
+          const indexToNum = Number(index);
+          return {
+            title,
+            index: indexToNum,
+            url: `${process.env.CLOUDFRONT_URL}/${file.key}`,
+          };
+        }) || [];
+
+      const updateDto: UpdateCheckSheetRequest = {
+        items: parsedItems,
+        issue: body.issue ?? '',
+        images,
+      };
+
+      if (isSame) return await this.checkSheetRepository.update(id, updateDto);
       return null;
       // return await this.checkSheetRepository.update(id, updateDto);
-    } catch (error) {}
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async remove(id: string) {

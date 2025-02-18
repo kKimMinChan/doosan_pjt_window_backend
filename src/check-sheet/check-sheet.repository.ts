@@ -79,7 +79,8 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     if (updateDto.items) {
       updateFields.items = updateDto.items;
     }
-    if (updateDto.images) {
+    if (updateDto.images.length > 0) {
+      console.log(updateDto);
       updateFields.images = updateDto.images;
     }
     if (updateDto.issue) {

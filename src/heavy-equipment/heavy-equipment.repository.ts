@@ -39,9 +39,11 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
   }
 
   async findOne(id: string) {
-    const equipmentDocument = await this.heavyEquipmentModel.findOne({
-      _id: id,
-    });
+    const equipmentDocument = await this.heavyEquipmentModel
+      .findOne({
+        _id: id,
+      })
+      .populate('inspectors reviewers');
     return equipmentDocument;
   }
 
@@ -52,8 +54,12 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
     if (heavyEquipmentInfo.factoryName)
       updateFields['factoryName'] = heavyEquipmentInfo.factoryName;
     if (heavyEquipmentInfo.isDeleted)
-      updateFields['isActive'] = heavyEquipmentInfo.isDeleted;
+      updateFields['isDeleted'] = heavyEquipmentInfo.isDeleted;
     if (heavyEquipmentInfo.type) updateFields['type'] = heavyEquipmentInfo.type;
+    if (heavyEquipmentInfo.inspectors?.length > 0)
+      updateFields['inspectors'] = heavyEquipmentInfo.inspectors;
+    if (heavyEquipmentInfo.reviewers?.length > 0)
+      updateFields['reviewers'] = heavyEquipmentInfo.reviewers;
 
     if (Object.keys(updateFields).length === 0) {
       throw new Error('변경할 데이터가 없습니다.');

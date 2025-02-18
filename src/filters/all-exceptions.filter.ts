@@ -42,7 +42,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const method = request.method;
     let cause;
 
-    console.log(exception);
+    // console.log(exception, 'asefsefs');
 
     const status =
       exception instanceof HttpException

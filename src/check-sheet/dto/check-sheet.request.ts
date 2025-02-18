@@ -37,10 +37,10 @@ export class Image {
   @IsNumber()
   index: number;
 
-  // @ApiProperty({ description: '이미지 주소' })
-  // @IsString()
-  // @IsOptional()
-  // url: string | null;
+  @ApiProperty({ description: '이미지 주소' })
+  @IsString()
+  @IsOptional()
+  url: string | null;
 }
 
 export class CheckSheetRequest {
@@ -55,21 +55,43 @@ export class CheckSheetRequest {
   @IsNotEmpty()
   items: Item[];
 
-  @ApiProperty({ description: '이미지 정보', type: [Image] })
-  @Optional()
-  @IsArray()
-  @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
-  @Type(() => Image) // ✅ 내부 객체 매핑
-  images: Image[];
+  // @ApiProperty({ description: '이미지 정보', type: [Image] })
+  // @Optional()
+  // @IsArray()
+  // @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
+  // @Type(() => Image) // ✅ 내부 객체 매핑
+  // images: Image[];
 
   @ApiProperty({
-    description: '운전자 이미지',
+    description: '이미지 1',
     format: 'binary',
-    required: true,
+    required: false,
   })
-  files: Express.MulterS3.File[];
+  name_1: Express.MulterS3.File;
+  @ApiProperty({
+    description: '이미지 2',
+    format: 'binary',
+    required: false,
+  })
+  name_2: Express.MulterS3.File;
+  @ApiProperty({
+    description: '이미지 3',
+    format: 'binary',
+    required: false,
+  })
+  name_3: Express.MulterS3.File;
+  @ApiProperty({
+    description: '이미지 4',
+    format: 'binary',
+    required: false,
+  })
+  name_4: Express.MulterS3.File;
 
-  @ApiProperty({ description: '이슈사항', example: '안전벨트 불량' })
+  @ApiProperty({
+    description: '이슈사항',
+    example: '안전벨트 불량',
+    required: false,
+  })
   // @IsString()
   // @Optional()
   issue: string;

@@ -45,7 +45,7 @@ export class CheckSheet {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'CheckItem',
           required: true,
-          autopopulate: true,
+          autopopulate: false,
         },
         isOk: { type: Boolean, default: null },
       },
@@ -93,6 +93,9 @@ export class CheckSheet {
     autopopulate: false,
   })
   heavyEquipment: string;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);

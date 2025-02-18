@@ -20,5 +20,6 @@ import { multerOptionsFactory } from 'multer.s3';
   ],
   controllers: [UserController],
   providers: [UserService, usersMongoRepository],
+  exports: [MongooseModule],
 })
 export class UserModule {}

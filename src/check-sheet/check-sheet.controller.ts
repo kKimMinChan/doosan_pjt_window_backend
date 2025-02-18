@@ -17,8 +17,11 @@ import {
   UpdateCheckSheetRequest,
 } from './dto/check-sheet.request';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  AnyFilesInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 
 @ApiTags('안전 점검표')
 @Controller('check-sheets')
@@ -26,8 +29,9 @@ export class CheckSheetController {
   constructor(private readonly checkSheetService: CheckSheetService) {}
 
   @Post()
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CheckSheetRequest })
   async create(
     @UploadedFiles() files: Express.MulterS3.File[],
     @Body() body: any,
@@ -58,11 +62,15 @@ export class CheckSheetController {
   }
 
   @Put(':id')
+  @UseInterceptors(AnyFilesInterceptor())
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UpdateCheckSheetRequest })
   async update(
     @Param('id') id: string,
-    @Body() updateDto: UpdateCheckSheetRequest,
+    @UploadedFiles() files: Express.MulterS3.File[],
+    @Body() body: any,
   ) {
-    return this.checkSheetService.update(id, updateDto);
+    return await this.checkSheetService.update(id, body, files);
   }
 
   @Delete(':id')

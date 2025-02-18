@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import {
   CreateHeavyEquipmentRequest,
   UpdateHeavyEquipmentRequest,
@@ -8,11 +13,13 @@ import { HeavyEquipmentMongoRepository } from './heavy-equipment.repository';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
+import { usersMongoRepository } from 'src/admin/user/user.repository';
 
 @Injectable()
 export class HeavyEquipmentService {
   constructor(
     private heavyEquipmentRepository: HeavyEquipmentMongoRepository,
+    private usersRepository: usersMongoRepository,
   ) {}
 
   async create(createHeavyEquipmentDto: CreateHeavyEquipmentRequest) {
@@ -62,10 +69,26 @@ export class HeavyEquipmentService {
     id: string,
     updateHeavyEquipmentDto: UpdateHeavyEquipmentRequest,
   ) {
-    return await this.heavyEquipmentRepository.update(
-      id,
-      updateHeavyEquipmentDto,
-    );
+    try {
+      const mergedArray = [
+        updateHeavyEquipmentDto.inspectors,
+        updateHeavyEquipmentDto.reviewers,
+      ].flat();
+      const missingUsers =
+        await this.usersRepository.findMissingUsers(mergedArray);
+      if (missingUsers.length > 0) {
+        throw new HttpException(
+          `존재하지 않는 ID: ${missingUsers}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      return await this.heavyEquipmentRepository.update(
+        id,
+        updateHeavyEquipmentDto,
+      );
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async remove(id: string) {

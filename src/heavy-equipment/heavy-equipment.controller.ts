@@ -14,14 +14,12 @@ import {
   CreateHeavyEquipmentRequest,
   UpdateHeavyEquipmentRequest,
 } from './dto/request';
-import {
-  HeavyEquipmentResponse,
-  UpdateHeavyEquipmentDto,
-} from './dto/response';
+import { HeavyEquipmentResponse } from './dto/response';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
-import { ApiCreatedResponse, ApiResponse } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
+@ApiTags('중장비')
 @Controller('heavy-equipment')
 export class HeavyEquipmentController {
   constructor(private readonly heavyEquipmentService: HeavyEquipmentService) {}
@@ -54,12 +52,11 @@ export class HeavyEquipmentController {
   }
 
   @Put(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateHeavyEquipmentDto: UpdateHeavyEquipmentRequest,
   ) {
-    console.log(updateHeavyEquipmentDto, 'dto');
-    this.heavyEquipmentService.update(id, updateHeavyEquipmentDto);
+    await this.heavyEquipmentService.update(id, updateHeavyEquipmentDto);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };

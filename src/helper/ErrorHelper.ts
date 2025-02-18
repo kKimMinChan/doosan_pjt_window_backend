@@ -18,7 +18,13 @@ export class ResourceNotFoundError extends Error {
 export class ErrorHelper {
   static handleError(error: Error): never {
     if (error instanceof HttpException) {
-      throw new HttpException(error.message, error.getStatus());
+      // ✅ getStatus()가 없으면 500으로 처리
+      const statusCode =
+        typeof error.getStatus === 'function'
+          ? error.getStatus()
+          : HttpStatus.INTERNAL_SERVER_ERROR;
+
+      throw new HttpException(error.message, statusCode);
     }
 
     if (error instanceof DuplicateDateError) {

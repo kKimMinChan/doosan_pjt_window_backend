@@ -17,6 +17,7 @@ export interface UsersRepository {
   update(id: string, userInfo: UserInfo);
   remove(id: string);
   findRole(id: string, role: 'INSPECTOR' | 'REVIEWER');
+  findMissingUsers(userIds: string[]): Promise<string[]>;
 }
 
 @Injectable()
@@ -43,19 +44,14 @@ export class usersMongoRepository implements UsersRepository {
     return this.usersModel.countDocuments().exec();
   }
 
-  // async findAll() {
-  //   try {
-  //     const usersDocument = await this.usersModel
-  //       .findOne()
-  //       .then((result) => result?.users);
-  //     if (!usersDocument)
-  //       throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
-  //     return usersDocument;
-  //   } catch (error) {
-  //     console.error('Error fetching users:', error);
-  //     throw error;
-  //   }
-  // }
+  async findMissingUsers(userIds: string[]): Promise<string[]> {
+    const existingUsers = await this.usersModel
+      .find({ _id: { $in: userIds } })
+      .select('_id')
+      .lean();
+    const existingIds = existingUsers.map((user) => user._id.toString());
+    return userIds.filter((id) => !existingIds.includes(id));
+  }
 
   async findOne(id: string) {
     const userDocument = await this.usersModel.findOne({ _id: id });
