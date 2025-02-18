@@ -105,6 +105,7 @@ export class UserController {
     @UploadedFile() file: Express.MulterS3.File,
     @Body() body: any,
   ) {
+    console.log(id, body, file);
     await this.userService.update(id, body, file);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',

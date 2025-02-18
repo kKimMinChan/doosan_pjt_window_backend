@@ -67,8 +67,8 @@ export class CheckSheet {
   })
   images?: { title: string; index: number; url: string | null }[];
 
-  @Prop({ type: String, required: false })
-  issue?: string;
+  @Prop({ type: String, required: false, default: null })
+  issue?: string | null;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

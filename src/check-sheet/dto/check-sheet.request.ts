@@ -37,10 +37,10 @@ export class Image {
   @IsNumber()
   index: number;
 
-  @ApiProperty({ description: '이미지 주소', example: 'images/레오.png' })
-  @IsString()
-  @IsOptional()
-  url: string | null;
+  // @ApiProperty({ description: '이미지 주소' })
+  // @IsString()
+  // @IsOptional()
+  // url: string | null;
 }
 
 export class CheckSheetRequest {
@@ -60,12 +60,19 @@ export class CheckSheetRequest {
   @IsArray()
   @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
   @Type(() => Image) // ✅ 내부 객체 매핑
-  images?: Image[];
+  images: Image[];
+
+  @ApiProperty({
+    description: '운전자 이미지',
+    format: 'binary',
+    required: true,
+  })
+  files: Express.MulterS3.File[];
 
   @ApiProperty({ description: '이슈사항', example: '안전벨트 불량' })
-  @Optional()
-  @IsString()
-  issue?: string;
+  // @IsString()
+  // @Optional()
+  issue: string;
 
   @ApiProperty({
     description: '중장비 id',

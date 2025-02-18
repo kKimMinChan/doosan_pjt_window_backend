@@ -110,7 +110,7 @@ export class usersMongoRepository implements UsersRepository {
       throw new Error('변경할 데이터가 없습니다.');
     }
 
-    console.log(updateFields);
+    console.log(updateFields, 'updateFields');
 
     const result = await this.usersModel.updateOne(
       { _id: id }, // 바로 해당 사용자의 ID로 업데이트

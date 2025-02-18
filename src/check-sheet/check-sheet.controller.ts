@@ -8,6 +8,8 @@ import {
   Delete,
   Query,
   Put,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CheckSheetService } from './check-sheet.service';
 import {
@@ -15,15 +17,22 @@ import {
   UpdateCheckSheetRequest,
 } from './dto/check-sheet.request';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
+@ApiTags('안전 점검표')
 @Controller('check-sheets')
 export class CheckSheetController {
   constructor(private readonly checkSheetService: CheckSheetService) {}
 
   @Post()
-  async create(@Body() checkSheetDto: CheckSheetRequest) {
-    console.log(checkSheetDto);
-    return await this.checkSheetService.create(checkSheetDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
+  async create(
+    @UploadedFiles() files: Express.MulterS3.File[],
+    @Body() body: any,
+  ) {
+    return await this.checkSheetService.create(body, files);
   }
 
   @Get(':id')

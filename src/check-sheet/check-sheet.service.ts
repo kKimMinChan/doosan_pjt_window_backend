@@ -1,10 +1,13 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import {
   CheckSheetRequest,
+  Item,
   UpdateCheckSheetRequest,
 } from './dto/check-sheet.request';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
@@ -12,6 +15,7 @@ import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { CheckSheet } from './entities/check-sheet.schema';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class CheckSheetService {
@@ -19,23 +23,36 @@ export class CheckSheetService {
     private checkSheetRepository: CheckSheetMongoRepository,
     private checkItemRepository: CheckItemMongoRepository,
   ) {}
-  async create(checkSheetDto: CheckSheetRequest) {
-    console.log(checkSheetDto);
-    const checkItems = checkSheetDto?.items?.map((item) => item.checkItem);
+  async create(checkSheetDto: any, files: Express.MulterS3.File[]) {
+    try {
+      const parsedCheckItems = JSON.parse(checkSheetDto.items) as Item[];
+      const parsedImages = JSON.parse(checkSheetDto.images);
 
-    const checkItemIds = await this.checkItemRepository.create(checkItems);
+      const checkItems = parsedCheckItems.map((item) => item.checkItem);
+      const checkItemIds = await this.checkItemRepository.create(checkItems);
 
-    const items = checkItemIds.map((id, index) => ({
-      checkItem: String(id),
-      isOk: checkSheetDto.items[index].isOk,
-    }));
+      const items = checkItemIds.map((id, index) => ({
+        checkItem: String(id),
+        isOk: parsedCheckItems[index].isOk,
+      }));
 
-    const newCheckSheet = {
-      ...checkSheetDto,
-      items,
-    };
+      const images = parsedImages.map((image, idx) => ({
+        ...image,
+        url: `${process.env.CLOUDFRONT_URL}/${files[idx].key}`,
+      }));
 
-    return await this.checkSheetRepository.create(newCheckSheet);
+      const newCheckSheet = {
+        ...checkSheetDto,
+        items,
+        images,
+      };
+
+      console.log(newCheckSheet);
+
+      return await this.checkSheetRepository.create(newCheckSheet);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async findAll(id: string, paginationDto: PaginationDto) {
@@ -87,7 +104,7 @@ export class CheckSheetService {
 
       console.log(isSame); // true 또는 false
 
-      if (isSame) return await this.checkSheetRepository.update(id, updateDto);
+      // if (isSame) return await this.checkSheetRepository.update(id, updateDto);
       return null;
       // return await this.checkSheetRepository.update(id, updateDto);
     } catch (error) {}
