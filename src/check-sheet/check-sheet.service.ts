@@ -15,7 +15,6 @@ import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { CheckSheet } from './entities/check-sheet.schema';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
-import mongoose from 'mongoose';
 
 @Injectable()
 export class CheckSheetService {
@@ -27,7 +26,8 @@ export class CheckSheetService {
     try {
       if (checkSheetDto?.items === undefined)
         throw new BadRequestException('items가 존재하지 않습니다.');
-      const parsedCheckItems = JSON.parse(checkSheetDto?.items) as Item[];
+      const parsedCheckItems =
+        (JSON.parse(checkSheetDto?.items) as Item[]) ?? [];
 
       const checkItems = parsedCheckItems.map((item) => item.checkItem);
       const checkItemIds = await this.checkItemRepository.create(checkItems);
@@ -36,18 +36,39 @@ export class CheckSheetService {
         checkItem: String(id),
         isOk: parsedCheckItems[index].isOk,
       }));
+      console.log(checkSheetDto.imageInfo);
+      // const parsedImageInfo = JSON.parse(checkSheetDto?.imageInfo ?? null);
+      const parsedImageInfo =
+        checkSheetDto?.imageInfo?.map((item) => JSON.parse(item)) ?? [];
 
-      const images = files.map((file) => {
-        if (file.fieldname.split('_').length !== 2)
-          throw new BadRequestException('이미지 필드 이름이 잘못됐습니다.');
-        const [title, index] = decodeURIComponent(file.fieldname).split('_');
-        const indexToNum = Number(index);
-        return {
-          title,
-          index: indexToNum,
-          url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
-        };
-      });
+      if (files?.length > parsedImageInfo?.length)
+        throw new BadRequestException(
+          '이미지 파일과 이미지 정보의 개수가 맞지 않습니다.',
+        );
+
+      const images =
+        files.map((file, idx) => {
+          const { title, index } = parsedImageInfo[idx];
+          return {
+            title,
+            index,
+            url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
+          };
+        }) || [];
+
+      console.log(images);
+
+      // const images = files.map((file) => {
+      //   if (file.fieldname.split('_').length !== 2)
+      //     throw new BadRequestException('이미지 필드 이름이 잘못됐습니다.');
+      //   const [title, index] = decodeURIComponent(file.fieldname).split('_');
+      //   const indexToNum = Number(index);
+      //   return {
+      //     title,
+      //     index: indexToNum,
+      //     url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
+      //   };
+      // });
 
       const newCheckSheet = {
         ...checkSheetDto,
@@ -59,6 +80,7 @@ export class CheckSheetService {
 
       return await this.checkSheetRepository.create(newCheckSheet);
     } catch (error) {
+      console.error(error);
       ErrorHelper.handleError(error);
     }
   }
@@ -87,11 +109,27 @@ export class CheckSheetService {
   }
 
   async findOne(id: string) {
-    return await this.checkSheetRepository.findOne(id);
+    try {
+      const checkSheet = await this.checkSheetRepository.findOne(id);
+
+      if (!checkSheet)
+        throw new NotFoundException(
+          '해당 id의 안전점검표가 존재하지 않습니다.',
+        );
+      return checkSheet;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async findOneLatest(id: string) {
-    return await this.checkSheetRepository.findOneLatest(id);
+    try {
+      const latest = await this.checkSheetRepository.findOneLatest(id);
+      if (latest) return latest;
+      throw new NotFoundException('생성된 안전 점검표가 없습니다.');
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async update(id: string, body: any, files: Express.MulterS3.File[]) {
@@ -115,36 +153,28 @@ export class CheckSheetService {
         );
       }
 
-      const checkSheetCheckItems = checkSheet.items.map((item) =>
-        item.checkItem.toString(),
-      );
-
       const parsedItems = JSON.parse(body.items);
-      const updateDtoCheckItems = parsedItems?.map((item) =>
-        item.checkItem.toString(),
-      );
-      console.log(parsedItems, checkSheetCheckItems, updateDtoCheckItems);
 
-      // ✅ 두 배열이 완전히 같은지 확인
-      // const isSame =
-      //   JSON.stringify(checkSheetCheckItems.sort()) ===
-      //   JSON.stringify(updateDtoCheckItems.sort());
+      const parsedImageInfo =
+        body?.imageInfo?.map((item) => JSON.parse(item)) ?? [];
 
-      // console.log(isSame); // true 또는 false
-      // if (!isSame) throw new BadRequestException('')
+      console.log(body.imageInfo, parsedImageInfo);
+      if (files.length > parsedImageInfo.length)
+        throw new BadRequestException(
+          '이미지 파일과 이미지 정보의 개수가 맞지 않습니다.',
+        );
 
       const images =
-        files.map((file) => {
-          if (file.fieldname.split('_').length !== 2)
-            throw new BadRequestException('이미지 필드 이름이 잘못됐습니다.');
-          const [title, index] = decodeURIComponent(file.fieldname).split('_');
-          const indexToNum = Number(index);
+        files.map((file, idx) => {
+          const { title, index } = parsedImageInfo[idx];
           return {
             title,
-            index: indexToNum,
-            url: `${process.env.CLOUDFRONT_URL}/${file.key}`,
+            index,
+            url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
           };
         }) || [];
+
+      console.log(images);
 
       const updateDto: UpdateCheckSheetRequest = {
         items: parsedItems,
@@ -152,10 +182,10 @@ export class CheckSheetService {
         images,
       };
 
-      // if (isSame) return await this.checkSheetRepository.update(id, updateDto);
       return await this.checkSheetRepository.update(id, updateDto);
-      // return await this.checkSheetRepository.update(id, updateDto);
     } catch (error) {
+      console.log(error);
+
       ErrorHelper.handleError(error);
     }
   }

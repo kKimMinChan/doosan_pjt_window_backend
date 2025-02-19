@@ -72,7 +72,7 @@ export class UserController {
 
   @Get('users')
   @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '', true),
+    SwaggerHelper.getApiResponseSchema(UserResponse, '', true, true),
   )
   @ApiResponse({ type: UserResponse })
   async findAll(@Query() paginationDto: PaginationDto) {
@@ -86,7 +86,9 @@ export class UserController {
     description: 'User ID', // 설명
     required: true, // 필수 여부
   })
-  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema(UserResponse, ''))
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(UserResponse, '', false, true),
+  )
   async findOne(@Param('id') id: string) {
     const user = await this.userService.findOne(id);
     return { data: [user] };

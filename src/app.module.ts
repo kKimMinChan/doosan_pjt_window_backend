@@ -11,6 +11,7 @@ import { FileStorageModule } from './file-storage/file-storage.module';
 import { HeavyEquipmentModule } from './heavy-equipment/heavy-equipment.module';
 import { CheckItemModule } from './check-item/check-item.module';
 import { CheckSheetModule } from './check-sheet/check-sheet.module';
+import { WorkPlanModule } from './work-plan/work-plan.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CheckSheetModule } from './check-sheet/check-sheet.module';
     HeavyEquipmentModule,
     CheckItemModule,
     CheckSheetModule,
+    WorkPlanModule,
   ],
   controllers: [AppController],
   providers: [AppService],

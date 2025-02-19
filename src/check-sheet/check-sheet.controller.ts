@@ -17,11 +17,19 @@ import {
   UpdateCheckSheetRequest,
 } from './dto/check-sheet.request';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   AnyFilesInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express';
+import { SwaggerHelper } from 'src/helper/SwaggerHelper';
+import { CheckSheetResponse } from './dto/check-sheet.response';
 
 @ApiTags('안전 점검표')
 @Controller('check-sheets')
@@ -29,6 +37,7 @@ export class CheckSheetController {
   constructor(private readonly checkSheetService: CheckSheetService) {}
 
   @Post()
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: CheckSheetRequest })
@@ -40,6 +49,10 @@ export class CheckSheetController {
   }
 
   @Get(':id')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', false, true),
+  )
+  @ApiResponse({ type: CheckSheetResponse })
   async findOne(@Param('id') id: string) {
     return {
       data: await this.checkSheetService.findOne(id),
@@ -47,6 +60,9 @@ export class CheckSheetController {
   }
 
   @Get(':heavyEquipmentId/latest')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', false, true),
+  )
   async findOneLatest(@Param('heavyEquipmentId') id: string) {
     return {
       data: await this.checkSheetService.findOneLatest(id),
@@ -54,6 +70,9 @@ export class CheckSheetController {
   }
 
   @Get('/heavyEquipment/:id')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', true, true),
+  )
   async findAll(
     @Param('id') id: string,
     @Query() paginationDto: PaginationDto,
@@ -62,6 +81,7 @@ export class CheckSheetController {
   }
 
   @Put(':id')
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateCheckSheetRequest })
@@ -70,10 +90,14 @@ export class CheckSheetController {
     @UploadedFiles() files: Express.MulterS3.File[],
     @Body() body: any,
   ) {
-    return await this.checkSheetService.update(id, body, files);
+    await this.checkSheetService.update(id, body, files);
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
   }
 
   @Delete(':id')
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async remove(@Param('id') id: string) {
     return this.checkSheetService.remove(id);
   }

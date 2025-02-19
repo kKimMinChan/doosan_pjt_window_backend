@@ -43,6 +43,16 @@ export class Image {
   url: string | null;
 }
 
+export class CreateImage {
+  @ApiProperty({ description: '이미지 제목', example: '안전벨트' })
+  @IsString()
+  title: string;
+
+  @ApiProperty({ description: '이미지 순번', example: 1 })
+  @IsNumber()
+  index: number;
+}
+
 export class CheckSheetRequest {
   @ApiProperty({
     description: 'CheckItem & isOk',
@@ -67,25 +77,15 @@ export class CheckSheetRequest {
     format: 'binary',
     required: false,
   })
-  name_1: Express.MulterS3.File;
+  file: string;
+
   @ApiProperty({
-    description: '이미지 2',
-    format: 'binary',
+    description: '이미지 제목, 인덱스',
+    type: [CreateImage],
     required: false,
   })
-  name_2: Express.MulterS3.File;
-  @ApiProperty({
-    description: '이미지 3',
-    format: 'binary',
-    required: false,
-  })
-  name_3: Express.MulterS3.File;
-  @ApiProperty({
-    description: '이미지 4',
-    format: 'binary',
-    required: false,
-  })
-  name_4: Express.MulterS3.File;
+  @IsArray()
+  imageInfo: CreateImage[];
 
   @ApiProperty({
     description: '이슈사항',

@@ -20,7 +20,7 @@ import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
 @ApiTags('중장비')
-@Controller('heavy-equipment')
+@Controller('heavy-equipments')
 export class HeavyEquipmentController {
   constructor(private readonly heavyEquipmentService: HeavyEquipmentService) {}
 
@@ -35,7 +35,7 @@ export class HeavyEquipmentController {
 
   @Get()
   @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(HeavyEquipmentResponse, '', true),
+    SwaggerHelper.getApiResponseSchema(HeavyEquipmentResponse, '', true, true),
   )
   @ApiResponse({ type: HeavyEquipmentResponse })
   findAll(@Query() paginationDto: PaginationDto) {
@@ -44,7 +44,7 @@ export class HeavyEquipmentController {
 
   @Get(':id')
   @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(HeavyEquipmentResponse),
+    SwaggerHelper.getApiResponseSchema(HeavyEquipmentResponse, '', false, true),
   )
   async findOne(@Param('id') id: string) {
     const heavyEquipment = await this.heavyEquipmentService.findOne(id);
@@ -52,6 +52,7 @@ export class HeavyEquipmentController {
   }
 
   @Put(':id')
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async update(
     @Param('id') id: string,
     @Body() updateHeavyEquipmentDto: UpdateHeavyEquipmentRequest,
@@ -63,6 +64,7 @@ export class HeavyEquipmentController {
   }
 
   @Delete(':id')
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   remove(@Param('id') id: string) {
     this.heavyEquipmentService.remove(id);
     return {

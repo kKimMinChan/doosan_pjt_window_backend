@@ -15,8 +15,22 @@ export class HeavyEquipmentResponse {
   @ApiProperty({ description: '장비 번호', example: 'A55' })
   equipmentNumber: string;
 
+  @ApiProperty({
+    description: '점검자 id',
+    required: false,
+    example: ['67b44273d4cb64b4e38dde95'],
+  })
+  inspectors: string[];
+
+  @ApiProperty({
+    description: '확인자 id',
+    required: false,
+    example: ['67b44273d4cb64b4e38dde95'],
+  })
+  reviewers: string[];
+
   @ApiProperty({ description: '활성 상태', example: true })
-  isActive: boolean;
+  isDeleted: boolean;
 
   @ApiProperty({ description: '생성일', example: '2025-02-05T05:50:04.116Z' })
   createdAt: Date;
