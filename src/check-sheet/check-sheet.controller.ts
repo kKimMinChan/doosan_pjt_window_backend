@@ -54,8 +54,9 @@ export class CheckSheetController {
   )
   @ApiResponse({ type: CheckSheetResponse })
   async findOne(@Param('id') id: string) {
+    const checkSheet = await this.checkSheetService.findOne(id);
     return {
-      data: await this.checkSheetService.findOne(id),
+      data: checkSheet,
     };
   }
 
@@ -64,8 +65,9 @@ export class CheckSheetController {
     SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', false, true),
   )
   async findOneLatest(@Param('heavyEquipmentId') id: string) {
+    const checkSheet = await this.checkSheetService.findOneLatest(id);
     return {
-      data: await this.checkSheetService.findOneLatest(id),
+      data: checkSheet,
     };
   }
 

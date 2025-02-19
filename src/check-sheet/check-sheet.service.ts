@@ -112,10 +112,10 @@ export class CheckSheetService {
     try {
       const checkSheet = await this.checkSheetRepository.findOne(id);
 
-      if (!checkSheet)
-        throw new NotFoundException(
-          '해당 id의 안전점검표가 존재하지 않습니다.',
-        );
+      // if (!checkSheet)
+      //   throw new NotFoundException(
+      //     '해당 id의 안전점검표가 존재하지 않습니다.',
+      //   );
       return checkSheet;
     } catch (error) {
       ErrorHelper.handleError(error);
@@ -125,8 +125,9 @@ export class CheckSheetService {
   async findOneLatest(id: string) {
     try {
       const latest = await this.checkSheetRepository.findOneLatest(id);
-      if (latest) return latest;
-      throw new NotFoundException('생성된 안전 점검표가 없습니다.');
+      // if (!latest)
+      //   throw new NotFoundException('생성된 안전 점검표가 없습니다.');
+      return latest;
     } catch (error) {
       ErrorHelper.handleError(error);
     }
