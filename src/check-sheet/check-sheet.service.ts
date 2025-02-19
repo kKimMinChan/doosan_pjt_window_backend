@@ -45,7 +45,7 @@ export class CheckSheetService {
         return {
           title,
           index: indexToNum,
-          url: `${process.env.CLOUDFRONT_URL}/${file.key}`,
+          url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
         };
       });
 
@@ -100,9 +100,11 @@ export class CheckSheetService {
         throw new BadRequestException('items가 존재하지 않습니다.');
 
       const checkSheet = await this.checkSheetRepository.noPopulateFindOne(id);
+      if (!checkSheet) {
+        throw new NotFoundException(`CheckSheet를 찾을 수 없습니다.`);
+      }
 
       const date = new Date();
-
       if (
         date.toISOString().split('T')[0] !==
         checkSheet.createdAt.toISOString().split('T')[0]
@@ -124,11 +126,12 @@ export class CheckSheetService {
       console.log(parsedItems, checkSheetCheckItems, updateDtoCheckItems);
 
       // ✅ 두 배열이 완전히 같은지 확인
-      const isSame =
-        JSON.stringify(checkSheetCheckItems.sort()) ===
-        JSON.stringify(updateDtoCheckItems.sort());
+      // const isSame =
+      //   JSON.stringify(checkSheetCheckItems.sort()) ===
+      //   JSON.stringify(updateDtoCheckItems.sort());
 
-      console.log(isSame); // true 또는 false
+      // console.log(isSame); // true 또는 false
+      // if (!isSame) throw new BadRequestException('')
 
       const images =
         files.map((file) => {
@@ -149,8 +152,8 @@ export class CheckSheetService {
         images,
       };
 
-      if (isSame) return await this.checkSheetRepository.update(id, updateDto);
-      return null;
+      // if (isSame) return await this.checkSheetRepository.update(id, updateDto);
+      return await this.checkSheetRepository.update(id, updateDto);
       // return await this.checkSheetRepository.update(id, updateDto);
     } catch (error) {
       ErrorHelper.handleError(error);

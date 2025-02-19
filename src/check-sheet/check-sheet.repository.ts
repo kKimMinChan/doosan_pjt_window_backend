@@ -73,15 +73,34 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   }
 
   async update(id: string, updateDto: Partial<CheckSheet>) {
+    const checkSheet = await this.checkSheetModel.findById(id).exec();
+
     // ✅ 업데이트할 필드만 동적으로 선택
     const updateFields: Partial<CheckSheet> = {};
 
     if (updateDto.items) {
       updateFields.items = updateDto.items;
     }
-    if (updateDto.images.length > 0) {
-      console.log(updateDto);
-      updateFields.images = updateDto.images;
+    // ✅ `images` 업데이트 로직
+    if (updateDto.images?.length > 0) {
+      // 기존 `checkSheet.images`를 `index` 기반으로 빠르게 검색 가능하도록 변환
+      const imageMap = new Map(
+        checkSheet.images.map((image) => [image.index, image]),
+      );
+
+      // 업데이트할 images 순회
+      updateDto.images.forEach((newImage) => {
+        if (imageMap.has(newImage.index)) {
+          // ✅ 기존 index가 존재하는 경우 업데이트
+          imageMap.set(newImage.index, newImage);
+        } else {
+          // ✅ 새로운 index가 추가된 경우 유지
+          imageMap.set(newImage.index, newImage);
+        }
+      });
+
+      // ✅ 변경된 images 배열 업데이트
+      updateFields.images = Array.from(imageMap.values());
     }
     if (updateDto.issue) {
       updateFields.issue = updateDto.issue;
