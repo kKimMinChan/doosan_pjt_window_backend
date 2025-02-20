@@ -41,6 +41,8 @@ export class ErrorHelper {
       );
     }
 
+    console.error(error);
+
     // 기본 에러 처리
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error occurred';

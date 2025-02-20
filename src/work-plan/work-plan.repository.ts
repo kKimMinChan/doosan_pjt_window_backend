@@ -7,7 +7,13 @@ export interface WorkPlanRepository {
   create(workPlanDto: WorkPlan);
   findOne(id: string);
   findAll(id, skip: number, limit: number);
-  update(id: string, workPlanDto: Partial<WorkPlan>);
+  countWorkPlan();
+  updateSignature(
+    id: string,
+    key: 'adminSignatures' | 'driverSignatures',
+    matchValue: string,
+    url: string,
+  );
   remove(id: string);
 }
 
@@ -16,11 +22,62 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
   constructor(
     @InjectModel(WorkPlan.name) private workPlanModel: Model<WorkPlanDocument>,
   ) {}
-  async create(workPlanDto: WorkPlan) {}
-  async findOne(id: string) {}
-  async findAll(id: any, skip: number, limit: number) {}
+  async create(workPlanDto: Partial<WorkPlan>) {
+    const workPlan = new this.workPlanModel(workPlanDto);
+    return await workPlan.save();
+  }
+  async findOne(id: string) {
+    const workPlan = await this.workPlanModel.findById(id);
+    return workPlan;
+  }
+  async findAll(id: any, skip: number, limit: number) {
+    const workPlans = await this.workPlanModel
+      .find()
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit);
+    return workPlans;
+  }
+  async countWorkPlan() {
+    return await this.workPlanModel.countDocuments();
+  }
 
-  async update(id: string, workPlanDto: Partial<WorkPlan>) {}
+  async updateSignature(
+    id: string,
+    key: 'adminSignatures' | 'driverSignatures',
+    matchValue: string,
+    url: string,
+  ) {
+    const matchField = key === 'adminSignatures' ? 'type' : 'driver';
+
+    console.log(id, key, matchValue, url);
+    const updateSignature = await this.workPlanModel.updateOne(
+      {
+        _id: id,
+        [key]: { $elemMatch: { [matchField]: matchValue } },
+      },
+      {
+        $set: { [`${key}.$.url`]: url },
+      },
+    );
+    if (updateSignature.matchedCount === 0) {
+      const addSignature = await this.workPlanModel.updateOne(
+        {
+          _id: id,
+        },
+        {
+          $push: {
+            [key]: {
+              [matchField]: matchValue,
+              url,
+            },
+          },
+        },
+      );
+      return addSignature;
+    }
+    return updateSignature;
+  }
 
   async remove(id: string) {}
 }

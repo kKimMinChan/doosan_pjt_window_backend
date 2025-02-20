@@ -101,6 +101,7 @@ export class CheckSheetController {
   @Delete(':id')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async remove(@Param('id') id: string) {
-    return this.checkSheetService.remove(id);
+    console.log(id);
+    return await this.checkSheetService.remove(id);
   }
 }

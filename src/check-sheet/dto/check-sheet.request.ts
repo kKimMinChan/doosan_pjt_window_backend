@@ -51,6 +51,10 @@ export class CreateImage {
   @ApiProperty({ description: '이미지 순번', example: 1 })
   @IsNumber()
   index: number;
+
+  @ApiProperty({ description: '존재 여부', example: true })
+  @IsBoolean()
+  exist: boolean;
 }
 
 export class CheckSheetRequest {
@@ -133,6 +137,7 @@ export class UpdateItem {
     description: '해당 항목이 체크되었는지 여부 (true, false, 또는 null)',
     example: true,
     nullable: true,
+    required: false,
   })
   @IsBoolean()
   @IsOptional()
@@ -151,14 +156,19 @@ export class UpdateCheckSheetRequest {
   @Type(() => UpdateItem) // ✅ 내부 객체 매핑
   items: UpdateItem[];
 
-  @ApiProperty({ description: '이미지 정보', type: [Image] })
-  @Optional()
+  @ApiProperty({
+    description: '이미지 제목, 인덱스',
+    type: [CreateImage],
+    required: false,
+  })
   @IsArray()
-  @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
-  @Type(() => Image) // ✅ 내부 객체 매핑
-  images: Image[];
+  imageInfo: CreateImage[];
 
-  @ApiProperty({ description: '이슈사항', example: '안전벨트 불량' })
+  @ApiProperty({
+    description: '이슈사항',
+    example: '안전벨트 불량',
+    required: false,
+  })
   @Optional()
   @IsString()
   issue: string;

@@ -58,18 +58,6 @@ export class CheckSheetService {
 
       console.log(images);
 
-      // const images = files.map((file) => {
-      //   if (file.fieldname.split('_').length !== 2)
-      //     throw new BadRequestException('이미지 필드 이름이 잘못됐습니다.');
-      //   const [title, index] = decodeURIComponent(file.fieldname).split('_');
-      //   const indexToNum = Number(index);
-      //   return {
-      //     title,
-      //     index: indexToNum,
-      //     url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
-      //   };
-      // });
-
       const newCheckSheet = {
         ...checkSheetDto,
         items,
@@ -155,19 +143,27 @@ export class CheckSheetService {
       }
 
       const parsedItems = JSON.parse(body.items);
+      const checkItems = parsedItems.map((item) => item.checkItem);
+      const checkItemIds = await this.checkItemRepository.create(checkItems);
+
+      const items = checkItemIds.map((id, index) => ({
+        checkItem: String(id),
+        isOk: parsedItems[index].isOk,
+      }));
 
       const parsedImageInfo =
         body?.imageInfo?.map((item) => JSON.parse(item)) ?? [];
 
-      console.log(body.imageInfo, parsedImageInfo);
-      if (files.length > parsedImageInfo.length)
+      if (files?.length > parsedImageInfo?.length)
         throw new BadRequestException(
           '이미지 파일과 이미지 정보의 개수가 맞지 않습니다.',
         );
-
+      console.log(parsedImageInfo);
+      const isOkImageInfos = parsedImageInfo?.filter((info) => info.exist);
+      const deleteImageInfos = parsedImageInfo?.filter((info) => !info.exist);
       const images =
-        files.map((file, idx) => {
-          const { title, index } = parsedImageInfo[idx];
+        files?.map((file, idx) => {
+          const { title, index } = isOkImageInfos[idx];
           return {
             title,
             index,
@@ -175,10 +171,13 @@ export class CheckSheetService {
           };
         }) || [];
 
-      console.log(images);
+      console.log(images, 'images', deleteImageInfos, '지울거');
+      deleteImageInfos?.map((info) => images.push(info));
 
-      const updateDto: UpdateCheckSheetRequest = {
-        items: parsedItems,
+      console.log(images, '통합');
+
+      const updateDto = {
+        items,
         issue: body.issue ?? '',
         images,
       };
@@ -192,6 +191,10 @@ export class CheckSheetService {
   }
 
   async remove(id: string) {
-    return await this.checkSheetRepository.remove(id);
+    try {
+      return await this.checkSheetRepository.remove(id);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 }

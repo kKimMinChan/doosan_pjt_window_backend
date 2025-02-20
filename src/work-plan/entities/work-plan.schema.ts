@@ -3,13 +3,27 @@ import mongoose from 'mongoose';
 
 export type WorkPlanDocument = WorkPlan & Document;
 
-type SignatureType = 'create' | 'approval' | 'finish';
+// type SignatureType = 'create' | 'approval' | 'finish';
 
 class WorkPlanData<T> {
   @Prop({ type: Object, required: false }) // ✅ T가 어떤 타입이든 저장 가능
   data?: T;
 
   @Prop({ required: true })
+  url: string;
+}
+
+export enum SignatureType {
+  CREATE = 'create',
+  APPROVAL = 'approval',
+  FINISH = 'finish',
+}
+
+class AdminSignature {
+  @Prop({ type: String, enum: SignatureType, required: true })
+  type: SignatureType;
+
+  @Prop({ type: String, required: true })
   url: string;
 }
 
@@ -27,18 +41,21 @@ export class WorkPlan {
   @Prop({ type: WorkPlanData, required: true })
   workPlanData: WorkPlanData<any>;
 
-  @Prop({
-    type: [
-      {
-        type: { type: String },
-        url: { type: String },
-      },
-    ],
-  })
-  adminSignatures: {
-    type: SignatureType;
-    url: string;
-  }[];
+  // @Prop({
+  //   type: [
+  //     {
+  //       type: { type: String },
+  //       url: { type: String },
+  //     },
+  //   ],
+  // })
+  // adminSignatures: {
+  //   type: SignatureType;
+  //   url: string;
+  // }[];
+
+  @Prop({ type: [AdminSignature], required: false })
+  adminSignatures?: AdminSignature[];
 
   @Prop({
     type: [
@@ -47,6 +64,7 @@ export class WorkPlan {
         url: { type: String },
       },
     ],
+    _id: false,
   })
   driverSignatures: {
     driver: SignatureType;
@@ -56,9 +74,9 @@ export class WorkPlan {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'HeavyEquipment',
-    required: true,
+    required: false,
   })
-  heavyEquipment: string;
+  heavyEquipment: string | null;
 }
 
 export const WorkPlanSchema = SchemaFactory.createForClass(WorkPlan);

@@ -42,6 +42,7 @@ export class CheckItemMongoRepository implements CheckItemRepository {
         item._id.toString(),
       ]),
     );
+
     // ✅ 4. 새로 추가해야 하는 항목 필터링
     const newItems = checkItemDto.filter(
       (item) =>

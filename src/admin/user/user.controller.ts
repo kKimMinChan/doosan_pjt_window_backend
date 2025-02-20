@@ -91,7 +91,7 @@ export class UserController {
   )
   async findOne(@Param('id') id: string) {
     const user = await this.userService.findOne(id);
-    return { data: [user] };
+    return { data: user };
   }
 
   @Put('users/:id')

@@ -48,7 +48,7 @@ export class HeavyEquipmentController {
   )
   async findOne(@Param('id') id: string) {
     const heavyEquipment = await this.heavyEquipmentService.findOne(id);
-    return { data: [heavyEquipment] };
+    return { data: heavyEquipment };
   }
 
   @Put(':id')
