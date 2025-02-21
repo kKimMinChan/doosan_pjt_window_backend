@@ -93,8 +93,10 @@ export class RecordController {
     description: '모든 녹화 데이터',
     type: [RecordDto],
   })
-  getAllVideos() {
-    return this.recordService.generateVideoStorageData();
+  async getAllVideos() {
+    return {
+      data: await this.recordService.generateVideoStorageData(),
+    };
   }
 
   @Get('play')

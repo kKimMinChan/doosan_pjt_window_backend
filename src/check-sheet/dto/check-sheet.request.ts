@@ -140,14 +140,14 @@ export class UpdateItem {
 export class UpdateCheckSheetRequest {
   @ApiProperty({
     description: 'CheckItemId & isOk',
-    type: [UpdateItem],
+    type: [Item],
     required: true,
   })
   @Optional()
   @IsArray()
   @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
-  @Type(() => UpdateItem) // ✅ 내부 객체 매핑
-  items: UpdateItem[];
+  @Type(() => Item) // ✅ 내부 객체 매핑
+  items: Item[];
 
   @ApiProperty({
     description: '이미지',

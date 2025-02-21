@@ -24,6 +24,7 @@ export class CheckItemMongoRepository implements CheckItemRepository {
       return [];
     }
     // ✅ 1. 모든 요청 데이터에 대한 `type`, `method`, `content` 조합을 생성
+    console.log(checkItemDto);
     const uniqueKeys = checkItemDto.map((item) => ({
       type: item.type,
       method: item.method,

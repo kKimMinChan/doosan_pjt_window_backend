@@ -104,4 +104,7 @@ export class CheckSheetController {
     console.log(id);
     return await this.checkSheetService.remove(id);
   }
+
+  // @Delete()
+  // async removeAll()
 }

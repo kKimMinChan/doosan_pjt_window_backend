@@ -143,6 +143,7 @@ export class CheckSheetService {
       }
 
       const parsedItems = JSON.parse(body.items);
+      console.log(parsedItems);
       const checkItems = parsedItems.map((item) => item.checkItem);
       const checkItemIds = await this.checkItemRepository.create(checkItems);
 
@@ -171,16 +172,15 @@ export class CheckSheetService {
           };
         }) || [];
 
-      console.log(images, 'images', deleteImageInfos, '지울거');
       deleteImageInfos?.map((info) => images.push(info));
-
-      console.log(images, '통합');
 
       const updateDto = {
         items,
-        issue: body.issue ?? '',
+        issue: body.issue,
         images,
       };
+
+      console.log(updateDto);
 
       return await this.checkSheetRepository.update(id, updateDto);
     } catch (error) {

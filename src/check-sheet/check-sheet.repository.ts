@@ -16,6 +16,7 @@ export interface CheckSheetRepository {
   countCheckSheet(id: string);
   update(id: string, updateDto: Partial<CheckSheet>);
   remove(id: string);
+  removeAll();
 }
 
 @Injectable()
@@ -102,7 +103,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       // ✅ 변경된 images 배열 업데이트
       updateFields.images = Array.from(imageMap.values());
     }
-    if (updateDto.issue) {
+    if (updateDto.issue !== undefined) {
       updateFields.issue = updateDto.issue;
     }
 
@@ -123,5 +124,10 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     if (result.deletedCount > 0) return result;
 
     return null;
+  }
+
+  async removeAll() {
+    const result = await this.checkSheetModel.deleteMany();
+    return result;
   }
 }
