@@ -9,6 +9,8 @@ import { multerOptionsFactory } from 'multer.s3';
 import { WorkPlanMongoRepository } from './work-plan.repository';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
 import { UserModule } from 'src/admin/user/user.module';
+import { HeavyEquipmentModule } from 'src/heavy-equipment/heavy-equipment.module';
+import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
 
 @Module({
   imports: [
@@ -22,9 +24,15 @@ import { UserModule } from 'src/admin/user/user.module';
         multerOptionsFactory(configService),
     }),
     UserModule,
+    HeavyEquipmentModule,
   ],
 
   controllers: [WorkPlanController],
-  providers: [WorkPlanService, WorkPlanMongoRepository, usersMongoRepository],
+  providers: [
+    WorkPlanService,
+    WorkPlanMongoRepository,
+    usersMongoRepository,
+    HeavyEquipmentMongoRepository,
+  ],
 })
 export class WorkPlanModule {}

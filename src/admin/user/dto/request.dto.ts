@@ -23,7 +23,7 @@ export class UserRequest {
     description: '역할',
     example: 'DRIVER',
     enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'],
-    required: true,
+    required: false,
   })
   @IsIn(['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'])
   role: string;

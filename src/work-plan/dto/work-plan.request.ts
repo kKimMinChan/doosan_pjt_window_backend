@@ -27,7 +27,17 @@ export class WorkPlanRequest {
   heavyEquipment: string;
 }
 
-export class UpdateWorkPlanRequest {
+export class AssignEquipmentRequest {
+  @ApiProperty({
+    description: '중장비 id',
+    example: '67a2fc0c89ca50f1cee44e03',
+    required: false,
+  })
+  @IsString()
+  heavyEquipment: string;
+}
+
+export class AdminSignatureRequest {
   @ApiProperty({
     description: '서명 파일',
     format: 'binary',
@@ -39,29 +49,27 @@ export class UpdateWorkPlanRequest {
     description: '서명 유형 (create, approval, finish)',
     enum: ['create', 'approval', 'finish'],
     example: 'create',
-    required: false,
+    required: true,
   })
-  @IsOptional()
   @IsEnum(SignatureType, {
     message: 'type 값은 create, approval, finish 중 하나여야 합니다.',
   })
-  type?: string;
+  type: SignatureType;
+}
+
+export class DriverSignatureRequest {
+  @ApiProperty({
+    description: '서명 파일',
+    format: 'binary',
+    required: true,
+  })
+  file: string;
 
   @ApiProperty({
     description: '운전자 id',
     example: '67a2fc0c89ca50f1cee44e03',
-    required: false,
+    required: true,
   })
-  @IsOptional()
   @IsString()
-  driver?: string;
-
-  @ApiProperty({
-    description: '중장비 id',
-    example: '67a2fc0c89ca50f1cee44e03',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  heavyEquipment?: string;
+  driver: string;
 }

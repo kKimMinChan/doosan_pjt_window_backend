@@ -41,19 +41,6 @@ export class WorkPlan {
   @Prop({ type: WorkPlanData, required: true })
   workPlanData: WorkPlanData<any>;
 
-  // @Prop({
-  //   type: [
-  //     {
-  //       type: { type: String },
-  //       url: { type: String },
-  //     },
-  //   ],
-  // })
-  // adminSignatures: {
-  //   type: SignatureType;
-  //   url: string;
-  // }[];
-
   @Prop({ type: [AdminSignature], required: false })
   adminSignatures?: AdminSignature[];
 

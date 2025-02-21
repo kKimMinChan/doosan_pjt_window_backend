@@ -23,5 +23,6 @@ import { UserModule } from 'src/admin/user/user.module';
     HeavyEquipmentMongoRepository,
     usersMongoRepository,
   ],
+  exports: [MongooseModule],
 })
 export class HeavyEquipmentModule {}

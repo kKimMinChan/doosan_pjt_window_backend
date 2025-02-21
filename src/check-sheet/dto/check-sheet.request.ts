@@ -69,19 +69,12 @@ export class CheckSheetRequest {
   @IsNotEmpty()
   items: Item[];
 
-  // @ApiProperty({ description: '이미지 정보', type: [Image] })
-  // @Optional()
-  // @IsArray()
-  // @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
-  // @Type(() => Image) // ✅ 내부 객체 매핑
-  // images: Image[];
-
   @ApiProperty({
-    description: '이미지 1',
+    description: '이미지',
     format: 'binary',
     required: false,
   })
-  file: string;
+  file: string[];
 
   @ApiProperty({
     description: '이미지 제목, 인덱스',
@@ -103,7 +96,7 @@ export class CheckSheetRequest {
   @ApiProperty({
     description: '중장비 id',
     example: '67a2fc0c89ca50f1cee44e03',
-    required: true,
+    required: false,
   })
   @IsString()
   heavyEquipment: string;
@@ -111,7 +104,7 @@ export class CheckSheetRequest {
   @ApiProperty({
     description: '점검자 id',
     example: '67a31a37993b5f84b50e32c3',
-    required: true,
+    required: false,
   })
   @IsString()
   inspector: string;
@@ -119,7 +112,7 @@ export class CheckSheetRequest {
   @ApiProperty({
     description: '확인자 id',
     example: '67a31796abd7b569e02dfff9',
-    required: true,
+    required: false,
   })
   @IsString()
   reviewer: string;
@@ -155,6 +148,13 @@ export class UpdateCheckSheetRequest {
   @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
   @Type(() => UpdateItem) // ✅ 내부 객체 매핑
   items: UpdateItem[];
+
+  @ApiProperty({
+    description: '이미지',
+    format: 'binary',
+    required: false,
+  })
+  file: string[];
 
   @ApiProperty({
     description: '이미지 제목, 인덱스',

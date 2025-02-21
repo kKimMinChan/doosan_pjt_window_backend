@@ -13,19 +13,22 @@ import {
 } from '@nestjs/common';
 import { WorkPlanService } from './work-plan.service';
 import {
-  UpdateWorkPlanRequest,
+  AdminSignatureRequest,
+  AssignEquipmentRequest,
+  DriverSignatureRequest,
   WorkPlanRequest,
 } from './dto/work-plan.request';
-import { UpdateWorkPlanDto } from './dto/work-plan.response';
 import {
   ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
+import { WorkPlanResponse } from './dto/work-plan.response';
 
 @ApiTags('작업 계획서')
 @Controller('work-plans')
@@ -43,6 +46,9 @@ export class WorkPlanController {
   }
 
   @Get('heavyEquipment/:id')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(WorkPlanResponse, '', true, true),
+  )
   async findAll(
     @Query() paginationDto: PaginationDto,
     @Param('id') id: string,
@@ -51,26 +57,52 @@ export class WorkPlanController {
   }
 
   @Get(':id')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(WorkPlanResponse, '', false, true),
+  )
+  @ApiResponse({ type: WorkPlanResponse })
   async findOne(@Param('id') id: string) {
     return {
       data: await this.workPlanService.findOne(id),
     };
   }
 
-  @Put('/heavyEquipment/:id')
-  async register(@Param('id') id: string) {}
+  @Put(':id/assign-equipment')
+  async assignEquipment(
+    @Param('id') id: string,
+    @Body() assignEquipmentDto: AssignEquipmentRequest,
+  ) {
+    const result = await this.workPlanService.assignEquipment(
+      id,
+      assignEquipmentDto,
+    );
+    return result;
+  }
 
-  @Put(':id')
+  @Put(':id/admin-signature')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
-  @ApiBody({ type: UpdateWorkPlanRequest })
+  @ApiBody({ type: AdminSignatureRequest })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   async updateSignature(
     @Param('id') id: string,
-    @Body() body: UpdateWorkPlanRequest,
+    @Body() body: AdminSignatureRequest,
     @UploadedFile() file: Express.MulterS3.File,
   ) {
-    return await this.workPlanService.updateSignature(id, body, file);
+    return await this.workPlanService.adminSignature(id, body, file);
+  }
+
+  @Put(':id/driver-signature')
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
+  @ApiBody({ type: DriverSignatureRequest })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  async driverSignature(
+    @Param('id') id: string,
+    @Body() body: DriverSignatureRequest,
+    @UploadedFile() file: Express.MulterS3.File,
+  ) {
+    return await this.workPlanService.driverSignature(id, body, file);
   }
 
   @Delete(':id')

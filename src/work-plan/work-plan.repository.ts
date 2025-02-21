@@ -7,13 +7,14 @@ export interface WorkPlanRepository {
   create(workPlanDto: WorkPlan);
   findOne(id: string);
   findAll(id, skip: number, limit: number);
-  countWorkPlan();
+  countWorkPlan(id: string);
   updateSignature(
     id: string,
     key: 'adminSignatures' | 'driverSignatures',
     matchValue: string,
     url: string,
   );
+  assignEquipment(id: string, workPlanDto: WorkPlan);
   remove(id: string);
 }
 
@@ -32,14 +33,23 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
   }
   async findAll(id: any, skip: number, limit: number) {
     const workPlans = await this.workPlanModel
-      .find()
+      .find({ heavyEquipment: id })
       .sort({ _id: -1 })
       .skip(skip)
       .limit(limit);
     return workPlans;
   }
-  async countWorkPlan() {
-    return await this.workPlanModel.countDocuments();
+  async countWorkPlan(id: string) {
+    return await this.workPlanModel.countDocuments({ heavyEquipment: id });
+  }
+
+  async assignEquipment(id: string, workPlanDto: Partial<WorkPlan>) {
+    const result = await this.workPlanModel.updateOne(
+      { _id: id },
+      { $set: workPlanDto },
+    );
+
+    return result;
   }
 
   async updateSignature(
@@ -79,5 +89,7 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     return updateSignature;
   }
 
-  async remove(id: string) {}
+  async remove(id: string) {
+    return await this.workPlanModel.deleteOne({ _id: id });
+  }
 }
