@@ -59,7 +59,7 @@ export class CreateImage {
 
 export class CheckSheetRequest {
   @ApiProperty({
-    description: 'CheckItem & isOk',
+    description: 'CheckItem & isOk formData에 배열 데이터를 stringify해서 전달',
     type: [Item],
     required: true,
   })
@@ -77,7 +77,8 @@ export class CheckSheetRequest {
   file: string[];
 
   @ApiProperty({
-    description: '이미지 제목, 인덱스',
+    description:
+      '이미지 제목, 인덱스 formData에 객체를 여러번 append해서 배열로 전달',
     type: [CreateImage],
     required: false,
   })

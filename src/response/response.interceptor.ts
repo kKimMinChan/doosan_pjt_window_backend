@@ -82,6 +82,26 @@ export class ResponseInterceptor<T>
         }
 
         const { totalCount, totalPages, page, pageSize, data } = responseData;
+        const kstData = Array.isArray(data)
+          ? data.map((item) => ({
+              ...item.toJSON(),
+              createdAt: new Date(
+                item.createdAt.getTime() + 9 * 60 * 60 * 1000,
+              ).toISOString(),
+              updatedAt: new Date(
+                item.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+              ).toISOString(),
+            }))
+          : {
+              ...data.toJSON(),
+              createdAt: new Date(
+                data.createdAt.getTime() + 9 * 60 * 60 * 1000,
+              ).toISOString(),
+              updatedAt: new Date(
+                data.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+              ).toISOString(),
+            };
+
         return {
           statusCode,
           message,
@@ -92,11 +112,11 @@ export class ResponseInterceptor<T>
           pageSize,
           page,
           data:
-            data == null
+            kstData == null
               ? ([] as unknown as T) // ✅ null 또는 undefined일 경우 빈 배열 반환
-              : Array.isArray(data)
-                ? (data as T) // ✅ 배열이면 그대로 반환
-                : ([data] as unknown as T), // ✅ 단일 객체라면 배열로 변환
+              : Array.isArray(kstData)
+                ? (kstData as T) // ✅ 배열이면 그대로 반환
+                : ([kstData] as unknown as T), // ✅ 단일 객체라면 배열로 변환
         };
       }),
     );

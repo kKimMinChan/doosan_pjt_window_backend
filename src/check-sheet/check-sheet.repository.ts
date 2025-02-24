@@ -53,8 +53,16 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       .sort({ _id: -1 })
       .populate('items.checkItem') // ✅ 최신 데이터 우선 정렬
       .exec(); // ✅ `exec()` 호출하여 실행
-
-    return checkSheet;
+    const kstCheckSheet = {
+      ...checkSheet.toJSON(),
+      createdAt: new Date(
+        checkSheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
+      ).toISOString(),
+      updatedAt: new Date(
+        checkSheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+      ).toISOString(),
+    };
+    return kstCheckSheet;
   }
 
   async findAll(id: string, skip: number, limit: number) {

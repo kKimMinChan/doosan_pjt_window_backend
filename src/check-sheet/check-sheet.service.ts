@@ -84,16 +84,21 @@ export class CheckSheetService {
         this.checkSheetRepository.countCheckSheet(id),
       ]);
 
-      const checkSheets = data.map((sheet) => ({
-        ...sheet,
-        createdAt: new Date(
-          sheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
-        ).toISOString(), // ✅ KST 변환
-        updatedAt: new Date(
-          sheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
-        ).toISOString(), // ✅ KST 변환
-      }));
+      const date = new Date().toISOString();
 
+      const latestCheckSheet =
+        await this.checkSheetRepository.findOneLatest(id);
+      console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
+
+      if (latestCheckSheet.createdAt.split('T')[0] === date.split('T')[0]) {
+        return {
+          pageSize: limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          page,
+          data: data.filter((sheet) => sheet.id !== latestCheckSheet.id),
+        };
+      }
       return {
         pageSize: limit,
         totalCount,
@@ -114,6 +119,7 @@ export class CheckSheetService {
       //   throw new NotFoundException(
       //     '해당 id의 안전점검표가 존재하지 않습니다.',
       //   );
+
       return checkSheet;
     } catch (error) {
       ErrorHelper.handleError(error);
@@ -123,9 +129,9 @@ export class CheckSheetService {
   async findOneLatest(id: string) {
     try {
       const latest = await this.checkSheetRepository.findOneLatest(id);
+      return latest;
       // if (!latest)
       //   throw new NotFoundException('생성된 안전 점검표가 없습니다.');
-      return latest;
     } catch (error) {
       ErrorHelper.handleError(error);
     }
