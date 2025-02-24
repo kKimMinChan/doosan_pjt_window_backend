@@ -12,7 +12,13 @@ export class AppController {
   )
   @Header('Pragma', 'no-cache')
   @Header('Expires', '0')
-  healthCheck(): string {
-    return 'OK';
+  healthCheck() {
+    try {
+      return {
+        translate: 'OK',
+      };
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

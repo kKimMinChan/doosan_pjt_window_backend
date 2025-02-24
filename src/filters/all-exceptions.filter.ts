@@ -78,7 +78,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     //   cause = (exception as any)?.cause || null; // cause를 추가적으로 추출
     // }
 
-    // console.log(exception);
+    console.log(exception);
 
     response.status(status).json({
       statusCode: status,

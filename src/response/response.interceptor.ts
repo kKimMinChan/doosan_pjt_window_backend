@@ -82,25 +82,33 @@ export class ResponseInterceptor<T>
         }
 
         const { totalCount, totalPages, page, pageSize, data } = responseData;
+
         const kstData = Array.isArray(data)
-          ? data.map((item) => ({
-              ...item.toJSON(),
-              createdAt: new Date(
-                item.createdAt.getTime() + 9 * 60 * 60 * 1000,
-              ).toISOString(),
-              updatedAt: new Date(
-                item.updatedAt.getTime() + 9 * 60 * 60 * 1000,
-              ).toISOString(),
-            }))
-          : {
-              ...data.toJSON(),
-              createdAt: new Date(
-                data.createdAt.getTime() + 9 * 60 * 60 * 1000,
-              ).toISOString(),
-              updatedAt: new Date(
-                data.updatedAt.getTime() + 9 * 60 * 60 * 1000,
-              ).toISOString(),
-            };
+          ? data.map(
+              (item) =>
+                item && typeof item.toJSON === 'function' // ✅ item이 null이 아니고, toJSON이 있는 경우만 변환
+                  ? {
+                      ...item.toJSON(),
+                      createdAt: new Date(
+                        item.createdAt.getTime() + 9 * 60 * 60 * 1000,
+                      ).toISOString(),
+                      updatedAt: new Date(
+                        item.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+                      ).toISOString(),
+                    }
+                  : item, // null 또는 변환 불가능한 경우 그대로 반환
+            )
+          : data && typeof data.toJSON === 'function'
+            ? {
+                ...data.toJSON(),
+                createdAt: new Date(
+                  data.createdAt.getTime() + 9 * 60 * 60 * 1000,
+                ).toISOString(),
+                updatedAt: new Date(
+                  data.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+                ).toISOString(),
+              }
+            : data;
 
         return {
           statusCode,
