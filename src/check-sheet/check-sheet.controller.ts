@@ -105,6 +105,8 @@ export class CheckSheetController {
     return await this.checkSheetService.remove(id);
   }
 
-  // @Delete()
-  // async removeAll()
+  @Delete()
+  async removeAll() {
+    return await this.checkSheetService.removeAll();
+  }
 }

@@ -36,7 +36,7 @@ export class CheckSheetService {
         checkItem: String(id),
         isOk: parsedCheckItems[index].isOk,
       }));
-      console.log(checkSheetDto.imageInfo);
+      console.log(checkSheetDto.imageInfo[0], checkSheetDto.imageInfo[1]);
       // const parsedImageInfo = JSON.parse(checkSheetDto?.imageInfo ?? null);
       const parsedImageInfo =
         checkSheetDto?.imageInfo?.map((item) => JSON.parse(item)) ?? [];
@@ -83,6 +83,16 @@ export class CheckSheetService {
         this.checkSheetRepository.findAll(id, skip, limit),
         this.checkSheetRepository.countCheckSheet(id),
       ]);
+
+      const checkSheets = data.map((sheet) => ({
+        ...sheet,
+        createdAt: new Date(
+          sheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
+        ).toISOString(), // ✅ KST 변환
+        updatedAt: new Date(
+          sheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+        ).toISOString(), // ✅ KST 변환
+      }));
 
       return {
         pageSize: limit,
@@ -193,6 +203,14 @@ export class CheckSheetService {
   async remove(id: string) {
     try {
       return await this.checkSheetRepository.remove(id);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async removeAll() {
+    try {
+      return await this.checkSheetRepository.removeAll();
     } catch (error) {
       ErrorHelper.handleError(error);
     }
