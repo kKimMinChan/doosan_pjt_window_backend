@@ -75,12 +75,12 @@ export class CheckSheetService {
 
   async findAll(id: string, paginationDto: PaginationDto) {
     try {
-      const { limit, page } = paginationDto;
+      const { limit, page, sort } = paginationDto;
 
       const skip = (page - 1) * limit;
 
       const [data, totalCount] = await Promise.all([
-        this.checkSheetRepository.findAll(id, skip, limit),
+        this.checkSheetRepository.findAll(id, skip, limit, sort),
         this.checkSheetRepository.countCheckSheet(id),
       ]);
 

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CheckSheet, CheckSheetDocument } from './entities/check-sheet.schema';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, SortOrder } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   CheckItem,
@@ -12,7 +12,7 @@ export interface CheckSheetRepository {
   findOne(id: string);
   noPopulateFindOne(id: string);
   findOneLatest(id: string);
-  findAll(id: string, skip: number, limit: number);
+  findAll(id: string, skip: number, limit: number, sort: number);
   countCheckSheet(id: string);
   update(id: string, updateDto: Partial<CheckSheet>);
   remove(id: string);
@@ -65,10 +65,14 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     return kstCheckSheet;
   }
 
-  async findAll(id: string, skip: number, limit: number) {
+  async findAll(id: string, skip: number, limit: number, sort: number) {
+    const sortOrder: SortOrder = [1, -1].includes(sort as number)
+      ? (sort as SortOrder)
+      : -1; // ✅ 안전한 변환
+
     const checkSheets = await this.checkSheetModel
       .find({ heavyEquipment: new mongoose.Types.ObjectId(id) })
-      .sort({ _id: -1 })
+      .sort({ _id: sortOrder })
       .skip(skip)
       .limit(limit)
       .populate('items.checkItem');
