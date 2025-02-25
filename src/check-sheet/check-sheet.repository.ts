@@ -122,7 +122,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     }
     pipeline.push({ $match: filter });
     pipeline.push(
-      { $sort: { _id: sortOrder } },
+      { $sort: { createdAt: sortOrder } },
       { $skip: skip },
       { $limit: limit },
     );
@@ -183,6 +183,8 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
         updatedAt: { $first: '$updatedAt' },
       },
     });
+
+    pipeline.push({ $sort: { createdAt: sortOrder } });
 
     pipeline.push({
       $addFields: {

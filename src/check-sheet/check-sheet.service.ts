@@ -99,7 +99,7 @@ export class CheckSheetService {
         this.checkSheetRepository.countCheckSheet(id, todaySkip),
       ]);
 
-      console.log(todaySkip, data);
+      console.log(data.map((sheet) => sheet.createdAt));
 
       // console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
 
