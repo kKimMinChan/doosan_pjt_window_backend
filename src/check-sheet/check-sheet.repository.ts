@@ -17,6 +17,7 @@ export interface CheckSheetRepository {
     skip: number,
     limit: number,
     sort: number,
+    todaySkip: boolean,
     inspectionStatus: string,
     startDay: string,
     endDay: string,
@@ -82,6 +83,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     skip: number,
     limit: number,
     sort: number,
+    todaySkip: boolean,
     inspectionStatus: string,
     startDay: string,
     endDay: string,
@@ -106,13 +108,40 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       filter['issue'] = null;
     }
 
-    const checkSheets = await this.checkSheetModel
-      .find(filter)
-      .sort({ _id: sortOrder })
-      .skip(skip)
-      .limit(limit)
-      .populate('items.checkItem');
+    const pipeline: any[] = [];
+    if (todaySkip) {
+      pipeline.push(
+        { $match: filter },
+        { $sort: { createdAt: -1 } },
+        { $skip: 1 },
+      );
+    }
+    pipeline.push(
+      { $sort: { _id: sortOrder } },
+      { $skip: skip },
+      { $limit: limit },
+    );
+    pipeline.push({
+      $lookup: {
+        from: 'checkitems',
+        localField: 'items.checkItem',
+        foreignField: '_id',
+        as: 'items.checkItem',
+      },
+    });
+
+    console.log(filter, skip);
+
+    const checkSheets = await this.checkSheetModel.aggregate(pipeline);
     return checkSheets;
+
+    // const checkSheets = await this.checkSheetModel
+    //   .find(filter)
+    //   .sort({ _id: sortOrder })
+    //   .skip(skip)
+    //   .limit(limit)
+    //   .populate('items.checkItem');
+    // return checkSheets;
   }
 
   async countCheckSheet(id: string, isToday: boolean) {

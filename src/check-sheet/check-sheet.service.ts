@@ -5,16 +5,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  CheckSheetPaginationDto,
-  CheckSheetRequest,
-  Item,
-  UpdateCheckSheetRequest,
-} from './dto/check-sheet.request';
+import { CheckSheetPaginationDto, Item } from './dto/check-sheet.request';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
 import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
-import { CheckSheet } from './entities/check-sheet.schema';
-import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 
 @Injectable()
@@ -84,10 +77,13 @@ export class CheckSheetService {
 
       const date = new Date().toISOString();
 
-      const isToday =
-        latestCheckSheet?.createdAt.split('T')[0] === date.split('T')[0];
+      const todaySkip =
+        latestCheckSheet?.createdAt.split('T')[0] === date.split('T')[0] &&
+        !startDay;
 
-      const skip = (page - 1) * limit + (isToday ? 1 : 0);
+      const skip = (page - 1) * limit;
+
+      console.log(skip, 'skip');
 
       const [data, totalCount] = await Promise.all([
         this.checkSheetRepository.findAll(
@@ -95,14 +91,15 @@ export class CheckSheetService {
           skip,
           limit,
           sort,
+          todaySkip,
           inspectionStatus,
           startDay,
           endDay,
         ),
-        this.checkSheetRepository.countCheckSheet(id, isToday),
+        this.checkSheetRepository.countCheckSheet(id, todaySkip),
       ]);
 
-      console.log(isToday, data);
+      console.log(todaySkip, data.length);
 
       // console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
 
