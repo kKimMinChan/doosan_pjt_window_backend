@@ -92,7 +92,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       ? (sort as SortOrder)
       : -1; // ✅ 안전한 변환
 
-    const filter: any = { heavyEquipment: new mongoose.Types.ObjectId(id) };
+    const filter: any = {};
 
     // ✅ 날짜가 있으면 필터 추가
     if (startDay) {
@@ -111,11 +111,16 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     const pipeline: any[] = [];
     if (todaySkip) {
       pipeline.push(
-        { $match: filter },
+        { $match: { heavyEquipment: new mongoose.Types.ObjectId(id) } },
         { $sort: { createdAt: -1 } },
         { $skip: 1 },
       );
+    } else {
+      pipeline.push({
+        $match: { heavyEquipment: new mongoose.Types.ObjectId(id) },
+      });
     }
+    pipeline.push({ $match: filter });
     pipeline.push(
       { $sort: { _id: sortOrder } },
       { $skip: skip },
