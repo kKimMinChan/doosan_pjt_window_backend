@@ -131,7 +131,67 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
         from: 'checkitems',
         localField: 'items.checkItem',
         foreignField: '_id',
-        as: 'items.checkItem',
+        as: 'populatedCheckItems',
+      },
+    });
+
+    pipeline.push({ $unwind: '$items' });
+
+    pipeline.push({
+      $addFields: {
+        'items.checkItem': {
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: '$populatedCheckItems',
+                as: 'ci',
+                cond: { $eq: ['$$ci._id', '$items.checkItem'] }, // ✅ items.checkItem과 매칭되는 checkItem 찾기
+              },
+            },
+            0,
+          ],
+        },
+      },
+    });
+    pipeline.push({
+      $addFields: {
+        'items.checkItem.id': '$items.checkItem._id',
+        'items.id': '$items._id',
+      },
+    });
+
+    pipeline.push({
+      $project: {
+        populatedCheckItems: 0, // ✅ 임시 필드 제거
+        'items.checkItem._id': 0, // ✅ checkItem 내부의 `_id` 필드 제거
+        'items.checkItem.__v': 0,
+        'items._id': 0,
+        __v: 0, // ✅ Mongoose 버전 필드 제거
+      },
+    });
+
+    pipeline.push({
+      $group: {
+        _id: '$_id',
+        items: { $push: '$items' }, // ✅ `items` 배열로 복구
+        images: { $first: '$images' },
+        issue: { $first: '$issue' },
+        inspector: { $first: '$inspector' },
+        reviewer: { $first: '$reviewer' },
+        heavyEquipment: { $first: '$heavyEquipment' },
+        createdAt: { $first: '$createdAt' },
+        updatedAt: { $first: '$updatedAt' },
+      },
+    });
+
+    pipeline.push({
+      $addFields: {
+        id: '$_id',
+      },
+    });
+    pipeline.push({
+      $project: {
+        _id: 0,
       },
     });
 
