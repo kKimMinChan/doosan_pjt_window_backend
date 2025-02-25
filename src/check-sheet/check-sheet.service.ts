@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  CheckSheetPaginationDto,
   CheckSheetRequest,
   Item,
   UpdateCheckSheetRequest,
@@ -73,9 +74,10 @@ export class CheckSheetService {
     }
   }
 
-  async findAll(id: string, paginationDto: PaginationDto) {
+  async findAll(id: string, checkSheetPaginationDto: CheckSheetPaginationDto) {
     try {
-      const { limit, page, sort } = paginationDto;
+      const { limit, page, sort, inspectionStatus, startDay, endDay } =
+        checkSheetPaginationDto;
 
       const latestCheckSheet =
         await this.checkSheetRepository.findOneLatest(id);
@@ -88,9 +90,19 @@ export class CheckSheetService {
       const skip = (page - 1) * limit + (isToday ? 1 : 0);
 
       const [data, totalCount] = await Promise.all([
-        this.checkSheetRepository.findAll(id, skip, limit, sort),
-        this.checkSheetRepository.countCheckSheet(id),
+        this.checkSheetRepository.findAll(
+          id,
+          skip,
+          limit,
+          sort,
+          inspectionStatus,
+          startDay,
+          endDay,
+        ),
+        this.checkSheetRepository.countCheckSheet(id, isToday),
       ]);
+
+      console.log(isToday, data.length);
 
       // console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
 

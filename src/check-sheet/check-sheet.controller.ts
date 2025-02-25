@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { CheckSheetService } from './check-sheet.service';
 import {
+  CheckSheetPaginationDto,
   CheckSheetRequest,
   UpdateCheckSheetRequest,
 } from './dto/check-sheet.request';
@@ -77,9 +78,9 @@ export class CheckSheetController {
   )
   async findAll(
     @Param('id') id: string,
-    @Query() paginationDto: PaginationDto,
+    @Query() checkSheetPaginationDto: CheckSheetPaginationDto,
   ) {
-    return await this.checkSheetService.findAll(id, paginationDto);
+    return await this.checkSheetService.findAll(id, checkSheetPaginationDto);
   }
 
   @Put(':id')

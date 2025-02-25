@@ -12,8 +12,16 @@ export interface CheckSheetRepository {
   findOne(id: string);
   noPopulateFindOne(id: string);
   findOneLatest(id: string);
-  findAll(id: string, skip: number, limit: number, sort: number);
-  countCheckSheet(id: string);
+  findAll(
+    id: string,
+    skip: number,
+    limit: number,
+    sort: number,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  );
+  countCheckSheet(id: string, isToday: boolean);
   update(id: string, updateDto: Partial<CheckSheet>);
   remove(id: string);
   removeAll();
@@ -54,7 +62,6 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       .populate('items.checkItem') // ✅ 최신 데이터 우선 정렬
       .exec(); // ✅ `exec()` 호출하여 실행
 
-    console.log(checkSheet);
     const kstCheckSheet = checkSheet
       ? {
           ...checkSheet.toJSON(),
@@ -70,13 +77,39 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     return kstCheckSheet;
   }
 
-  async findAll(id: string, skip: number, limit: number, sort: number) {
+  async findAll(
+    id: string,
+    skip: number,
+    limit: number,
+    sort: number,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  ) {
     const sortOrder: SortOrder = [1, -1].includes(sort as number)
       ? (sort as SortOrder)
       : -1; // ✅ 안전한 변환
 
+    const filter: any = { heavyEquipment: new mongoose.Types.ObjectId(id) };
+
+    // ✅ 날짜가 있으면 필터 추가
+    if (startDay) {
+      filter.createdAt = { ...filter.createdAt, $gte: new Date(startDay) };
+    }
+    if (endDay) {
+      filter.createdAt = { ...filter.createdAt, $lte: new Date(endDay) };
+    }
+
+    if (inspectionStatus === 'CHECKED') {
+      filter['checkSheets.items.issue'] = { $ne: null };
+    } else if (inspectionStatus === 'UNCHECKED') {
+      filter['checkSheets.items.issue'] = null;
+    }
+
+    console.log(filter);
+
     const checkSheets = await this.checkSheetModel
-      .find({ heavyEquipment: new mongoose.Types.ObjectId(id) })
+      .find(filter)
       .sort({ _id: sortOrder })
       .skip(skip)
       .limit(limit)
@@ -84,10 +117,11 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     return checkSheets;
   }
 
-  async countCheckSheet(id: string) {
-    return this.checkSheetModel
+  async countCheckSheet(id: string, isToday: boolean) {
+    const totalCount = await this.checkSheetModel
       .countDocuments({ heavyEquipment: new mongoose.Types.ObjectId(id) })
       .exec();
+    return isToday ? totalCount - 1 : totalCount;
   }
 
   async update(id: string, updateDto: Partial<CheckSheet>) {

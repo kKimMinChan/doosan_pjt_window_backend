@@ -1,5 +1,5 @@
 import { Optional } from '@nestjs/common';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ValidateNested,
@@ -9,8 +9,11 @@ import {
   IsBoolean,
   IsNumber,
   IsNotEmpty,
+  IsIn,
+  Matches,
 } from 'class-validator';
 import { CheckItemRequest } from 'src/check-item/dto/check-item-request.dto';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 export class Item {
   @ApiProperty({ description: 'CheckItem' })
@@ -173,4 +176,41 @@ export class UpdateCheckSheetRequest {
   @Optional()
   @IsString()
   issue: string;
+}
+
+export class CheckSheetPaginationDto extends PartialType(PaginationDto) {
+  @ApiProperty({
+    description:
+      '점검 여부 유(CHECKED), 무(UNCHECKED), 전체(ALL) 기본 값 = ALL',
+    enum: ['CHECKED', 'UNCHECKED', 'ALL'],
+    example: 'ALL',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(['CHECKED', 'UNCHECKED', 'ALL'])
+  inspectionStatus?: string = 'ALL';
+
+  @ApiProperty({
+    description: '검색 시작 날짜',
+    example: '2025-02-19',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'startDay는 YYYY-MM-DD 형식이어야 합니다.',
+  })
+  startDay?: string;
+
+  @ApiProperty({
+    description: '검색 종료 날짜',
+    example: '2025-02-28',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'startDay는 YYYY-MM-DD 형식이어야 합니다.',
+  })
+  endDay?: string;
 }
