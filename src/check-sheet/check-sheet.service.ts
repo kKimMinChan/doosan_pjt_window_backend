@@ -77,28 +77,32 @@ export class CheckSheetService {
     try {
       const { limit, page, sort } = paginationDto;
 
-      const skip = (page - 1) * limit;
+      const latestCheckSheet =
+        await this.checkSheetRepository.findOneLatest(id);
+
+      const date = new Date().toISOString();
+
+      const isToday =
+        latestCheckSheet?.createdAt.split('T')[0] === date.split('T')[0];
+
+      const skip = (page - 1) * limit + (isToday ? 1 : 0);
 
       const [data, totalCount] = await Promise.all([
         this.checkSheetRepository.findAll(id, skip, limit, sort),
         this.checkSheetRepository.countCheckSheet(id),
       ]);
 
-      const date = new Date().toISOString();
+      // console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
 
-      const latestCheckSheet =
-        await this.checkSheetRepository.findOneLatest(id);
-      console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
-
-      if (latestCheckSheet.createdAt.split('T')[0] === date.split('T')[0]) {
-        return {
-          pageSize: limit,
-          totalCount,
-          totalPages: Math.ceil(totalCount / limit),
-          page,
-          data: data.filter((sheet) => sheet.id !== latestCheckSheet.id),
-        };
-      }
+      // if (latestCheckSheet.createdAt.split('T')[0] === date.split('T')[0]) {
+      //   return {
+      //     pageSize: limit,
+      //     totalCount,
+      //     totalPages: Math.ceil(totalCount / limit),
+      //     page,
+      //     data: data.filter((sheet) => sheet.id !== latestCheckSheet.id),
+      //   };
+      // }
       return {
         pageSize: limit,
         totalCount,
@@ -148,6 +152,10 @@ export class CheckSheetService {
       }
 
       const date = new Date();
+      console.log(
+        date.toISOString().split('T')[0],
+        checkSheet.createdAt.toISOString().split('T')[0],
+      );
       if (
         date.toISOString().split('T')[0] !==
         checkSheet.createdAt.toISOString().split('T')[0]

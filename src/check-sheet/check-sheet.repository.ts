@@ -53,15 +53,20 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       .sort({ _id: -1 })
       .populate('items.checkItem') // ✅ 최신 데이터 우선 정렬
       .exec(); // ✅ `exec()` 호출하여 실행
-    const kstCheckSheet = {
-      ...checkSheet.toJSON(),
-      createdAt: new Date(
-        checkSheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
-      ).toISOString(),
-      updatedAt: new Date(
-        checkSheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
-      ).toISOString(),
-    };
+
+    console.log(checkSheet);
+    const kstCheckSheet = checkSheet
+      ? {
+          ...checkSheet.toJSON(),
+          createdAt: new Date(
+            checkSheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
+          ).toISOString(),
+          updatedAt: new Date(
+            checkSheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+          ).toISOString(),
+        }
+      : null;
+
     return kstCheckSheet;
   }
 

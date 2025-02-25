@@ -19,7 +19,7 @@ import { WorkPlanModule } from './work-plan/work-plan.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (ConfigService: ConfigService) => ({
-        // uri: ConfigService.get<string>('MONGO_URI'),
+        // uri: process.env.MONGO_URI,
         uri: ConfigService.get<string>('MONGO_URI'),
       }),
       inject: [ConfigService],

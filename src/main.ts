@@ -94,6 +94,8 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  console.log('✅ Loaded MONGO_URI:', process.env.MONGO_URI);
+
   await app.listen(4000);
 }
 bootstrap();

@@ -120,11 +120,11 @@ export class ResponseInterceptor<T>
           pageSize,
           page,
           data:
-            kstData == null
+            data == null
               ? ([] as unknown as T) // ✅ null 또는 undefined일 경우 빈 배열 반환
-              : Array.isArray(kstData)
-                ? (kstData as T) // ✅ 배열이면 그대로 반환
-                : ([kstData] as unknown as T), // ✅ 단일 객체라면 배열로 변환
+              : Array.isArray(data)
+                ? (data as T) // ✅ 배열이면 그대로 반환
+                : ([data] as unknown as T), // ✅ 단일 객체라면 배열로 변환
         };
       }),
     );
