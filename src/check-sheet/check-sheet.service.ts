@@ -72,18 +72,30 @@ export class CheckSheetService {
       const { limit, page, sort, inspectionStatus, startDay, endDay } =
         checkSheetPaginationDto;
 
+      console.log(checkSheetPaginationDto);
+
       const latestCheckSheet =
         await this.checkSheetRepository.findOneLatest(id);
+
+      const kstLatestCheckSheet = {
+        ...latestCheckSheet.toJSON(),
+        createdAt: new Date(
+          latestCheckSheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
+        ).toISOString(),
+        updatedAt: new Date(
+          latestCheckSheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
+        ).toISOString(),
+      };
 
       const date = new Date().toISOString();
 
       const todaySkip =
-        latestCheckSheet?.createdAt.split('T')[0] === date.split('T')[0] &&
+        kstLatestCheckSheet?.createdAt.split('T')[0] === date.split('T')[0] &&
         !startDay;
 
       const skip = (page - 1) * limit;
 
-      console.log(skip, 'skip');
+      // console.log(skip, 'skip');
 
       const [data, totalCount] = await Promise.all([
         this.checkSheetRepository.findAll(
@@ -96,10 +108,19 @@ export class CheckSheetService {
           startDay,
           endDay,
         ),
-        this.checkSheetRepository.countCheckSheet(id, todaySkip),
+        this.checkSheetRepository.countCheckSheet(
+          id,
+          todaySkip,
+          inspectionStatus,
+          startDay,
+          endDay,
+        ),
       ]);
 
-      console.log(data.map((sheet) => sheet.createdAt));
+      console.log(
+        data.map((sheet) => sheet.createdAt),
+        'sheet',
+      );
 
       // console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
 

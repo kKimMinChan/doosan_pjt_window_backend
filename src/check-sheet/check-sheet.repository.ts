@@ -22,7 +22,13 @@ export interface CheckSheetRepository {
     startDay: string,
     endDay: string,
   );
-  countCheckSheet(id: string, isToday: boolean);
+  countCheckSheet(
+    id: string,
+    isToday: boolean,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  );
   update(id: string, updateDto: Partial<CheckSheet>);
   remove(id: string);
   removeAll();
@@ -63,19 +69,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       .populate('items.checkItem') // ✅ 최신 데이터 우선 정렬
       .exec(); // ✅ `exec()` 호출하여 실행
 
-    const kstCheckSheet = checkSheet
-      ? {
-          ...checkSheet.toJSON(),
-          createdAt: new Date(
-            checkSheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
-          ).toISOString(),
-          updatedAt: new Date(
-            checkSheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
-          ).toISOString(),
-        }
-      : null;
-
-    return kstCheckSheet;
+    return checkSheet;
   }
 
   async findAll(
@@ -96,10 +90,16 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
 
     // ✅ 날짜가 있으면 필터 추가
     if (startDay) {
-      filter.createdAt = { ...filter.createdAt, $gte: new Date(startDay) };
+      filter.createdAt = {
+        ...filter.createdAt,
+        $gte: new Date(new Date(startDay).getTime() - 9 * 60 * 60 * 1000),
+      };
     }
     if (endDay) {
-      filter.createdAt = { ...filter.createdAt, $lte: new Date(endDay) };
+      filter.createdAt = {
+        ...filter.createdAt,
+        $lte: new Date(new Date(endDay).getTime() + 15 * 60 * 60 * 1000),
+      };
     }
 
     if (inspectionStatus === 'CHECKED') {
@@ -107,6 +107,8 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     } else if (inspectionStatus === 'UNCHECKED') {
       filter['issue'] = null;
     }
+
+    // console.log(filter, 'filter', startDay, endDay, '1');
 
     const pipeline: any[] = [];
     if (todaySkip) {
@@ -197,8 +199,6 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       },
     });
 
-    console.log(filter, skip);
-
     const checkSheets = await this.checkSheetModel.aggregate(pipeline);
     return checkSheets;
 
@@ -211,10 +211,39 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     // return checkSheets;
   }
 
-  async countCheckSheet(id: string, isToday: boolean) {
-    const totalCount = await this.checkSheetModel
-      .countDocuments({ heavyEquipment: new mongoose.Types.ObjectId(id) })
-      .exec();
+  async countCheckSheet(
+    id: string,
+    isToday: boolean,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  ) {
+    const filter: any = { heavyEquipment: new mongoose.Types.ObjectId(id) };
+
+    // ✅ 날짜 필터 적용 (KST 기준 → UTC 변환)
+    if (startDay) {
+      filter.createdAt = {
+        ...filter.createdAt,
+        $gte: new Date(new Date(startDay).getTime() + 9 * 60 * 60 * 1000), // KST → UTC 변환
+      };
+    }
+    if (endDay) {
+      filter.createdAt = {
+        ...filter.createdAt,
+        $lte: new Date(new Date(endDay).getTime() + 9 * 60 * 60 * 1000), // KST → UTC 변환
+      };
+    }
+
+    // ✅ 점검 상태 필터 적용
+    if (inspectionStatus === 'CHECKED') {
+      filter.issue = { $ne: null };
+    } else if (inspectionStatus === 'UNCHECKED') {
+      filter.issue = null;
+    }
+
+    // ✅ 필터 적용하여 개수 계산
+    const totalCount = await this.checkSheetModel.countDocuments(filter).exec();
+
     return isToday ? totalCount - 1 : totalCount;
   }
 
