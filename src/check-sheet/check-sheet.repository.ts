@@ -101,12 +101,10 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     }
 
     if (inspectionStatus === 'CHECKED') {
-      filter['checkSheets.items.issue'] = { $ne: null };
+      filter['issue'] = { $ne: null };
     } else if (inspectionStatus === 'UNCHECKED') {
-      filter['checkSheets.items.issue'] = null;
+      filter['issue'] = null;
     }
-
-    console.log(filter);
 
     const checkSheets = await this.checkSheetModel
       .find(filter)
