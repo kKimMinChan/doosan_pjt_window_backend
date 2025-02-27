@@ -9,7 +9,7 @@ export type CheckSheetDocument = CheckSheet & Document;
   timestamps: true,
   toJSON: {
     transform: (doc, ret) => {
-      ret.id = ret._id.toString(); // `_id`를 문자열로 변환하여 `id` 필드에 매핑
+      ret.id = ret._id?.toString(); // `_id`를 문자열로 변환하여 `id` 필드에 매핑
       delete ret._id; // `_id` 제거
       delete ret.__v; // `__v` 제거
 
@@ -74,7 +74,7 @@ export class CheckSheet {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',
     required: true,
-    autopopulate: false,
+    autopopulate: true,
   })
   inspector: string;
 
@@ -82,7 +82,7 @@ export class CheckSheet {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',
     required: true,
-    autopopulate: false,
+    autopopulate: true,
   })
   reviewer: string;
 
@@ -90,7 +90,7 @@ export class CheckSheet {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'HeavyEquipment',
     required: true,
-    autopopulate: false,
+    autopopulate: true,
   })
   heavyEquipment: string;
 
@@ -100,5 +100,10 @@ export class CheckSheet {
 
 const CheckSheetSchema = SchemaFactory.createForClass(CheckSheet);
 CheckSheetSchema.plugin(autopopulate);
+
+CheckSheetSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 60 * 60 * 24 * 60 },
+);
 
 export { CheckSheetSchema };

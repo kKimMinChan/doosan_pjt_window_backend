@@ -30,7 +30,8 @@ import {
   FilesInterceptor,
 } from '@nestjs/platform-express';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
-import { CheckSheetResponse } from './dto/check-sheet.response';
+import { CheckSheetResponse, IssueResponse } from './dto/check-sheet.response';
+import { ObjectIdValidationPipe } from 'src/pipes/objectid-validation.pipe';
 
 @ApiTags('안전 점검표')
 @Controller('check-sheets')
@@ -55,8 +56,21 @@ export class CheckSheetController {
     SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', false, true),
   )
   @ApiResponse({ type: CheckSheetResponse })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ObjectIdValidationPipe) id: string) {
     const checkSheet = await this.checkSheetService.findOne(id);
+    return {
+      data: checkSheet,
+    };
+  }
+  @Get(':heavyEquipmentId/latest-issue')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(IssueResponse, '', false, true),
+  )
+  @ApiResponse({ type: IssueResponse })
+  async findOneLatestIssue(
+    @Param('heavyEquipmentId', ObjectIdValidationPipe) id: string,
+  ) {
+    const checkSheet = await this.checkSheetService.findOneLatestIssue(id);
     return {
       data: checkSheet,
     };
@@ -66,7 +80,9 @@ export class CheckSheetController {
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', false, true),
   )
-  async findOneLatest(@Param('heavyEquipmentId') id: string) {
+  async findOneLatest(
+    @Param('heavyEquipmentId', ObjectIdValidationPipe) id: string,
+  ) {
     const checkSheet = await this.checkSheetService.findOneLatest(id);
     return {
       data: checkSheet,
@@ -78,7 +94,7 @@ export class CheckSheetController {
     SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', true, true),
   )
   async findAll(
-    @Param('id') id: string,
+    @Param('id', ObjectIdValidationPipe) id: string,
     @Query() checkSheetPaginationDto: CheckSheetPaginationDto,
   ) {
     return await this.checkSheetService.findAll(id, checkSheetPaginationDto);
@@ -90,7 +106,7 @@ export class CheckSheetController {
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateCheckSheetRequest })
   async update(
-    @Param('id') id: string,
+    @Param('id', ObjectIdValidationPipe) id: string,
     @UploadedFiles() files: Express.MulterS3.File[],
     @Body() body: any,
   ) {
@@ -102,7 +118,7 @@ export class CheckSheetController {
 
   @Delete(':id')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', ObjectIdValidationPipe) id: string) {
     console.log(id);
     return await this.checkSheetService.remove(id);
   }

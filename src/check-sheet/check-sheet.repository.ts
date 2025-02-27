@@ -29,6 +29,7 @@ export interface CheckSheetRepository {
     startDay: string,
     endDay: string,
   );
+  findOneLatestIssue(id: string, isToday: boolean);
   update(id: string, updateDto: Partial<CheckSheet>);
   remove(id: string);
   removeAll();
@@ -70,6 +71,25 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       .exec(); // ✅ `exec()` 호출하여 실행
 
     return checkSheet;
+  }
+
+  async findOneLatestIssue(id: string, isToday: boolean) {
+    const filter: any = {
+      heavyEquipment: new mongoose.Types.ObjectId(id),
+      createdAt: { $gte: new Date(Date.now() - 63 * 60 * 60 * 1000) }, // ✅ 최근 63시간 데이터 필터
+    };
+
+    // ✅ MongoDB Aggregate 사용하여 최적화
+    const pipeline: any = [
+      { $match: filter }, // ✅ heavyEquipment와 createdAt 필터링
+      { $sort: { createdAt: -1 } }, // ✅ 최신 데이터 우선 정렬
+      { $skip: isToday ? 1 : 0 }, // ✅ 가장 최신 데이터 1개 제외 (isToday가 true일 경우)
+      { $match: { issue: { $ne: null } } }, // ✅ issue가 null이 아닌 데이터 필터링
+      { $project: { _id: 0, issue: 1, createdAt: 1 } }, // ✅ issue 필드만 선택
+    ];
+
+    const issueList = await this.checkSheetModel.aggregate(pipeline).exec();
+    return issueList.length === 0 ? [] : issueList[0];
   }
 
   async findAll(

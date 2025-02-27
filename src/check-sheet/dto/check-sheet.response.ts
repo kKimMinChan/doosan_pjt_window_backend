@@ -29,6 +29,15 @@ export class Image {
   url: string | null;
 }
 
+export class IssueResponse {
+  @ApiProperty({
+    description: '이슈사항',
+    example: '안전벨트 불량',
+    required: false,
+  })
+  issue: string;
+}
+
 export class CheckSheetResponse {
   @ApiProperty({
     description: 'CheckItem & isOk',

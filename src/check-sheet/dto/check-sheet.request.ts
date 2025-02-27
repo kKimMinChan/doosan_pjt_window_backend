@@ -198,6 +198,7 @@ export class UpdateCheckSheetRequest {
     required: false,
   })
   @IsArray()
+  @Type(() => CreateImage)
   imageInfo: CreateImage[];
 
   @ApiProperty({

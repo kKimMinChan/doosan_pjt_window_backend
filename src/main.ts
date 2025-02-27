@@ -8,6 +8,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './\bfilters/all-exceptions.filter';
 import { ResponseInterceptor } from './response/response.interceptor';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ObjectIdValidationPipe } from './pipes/objectid-validation.pipe';
 
 // import * as fs from 'fs';
 

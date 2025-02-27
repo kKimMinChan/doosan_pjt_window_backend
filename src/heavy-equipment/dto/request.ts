@@ -47,6 +47,15 @@ export class UpdateHeavyEquipmentRequest extends PartialType(
   reviewers: string[];
 
   @ApiProperty({
+    description: '운전자 id',
+    required: false,
+    example: ['67b44273d4cb64b4e38dde95'],
+  })
+  @IsOptional()
+  @IsArray()
+  drivers: string[];
+
+  @ApiProperty({
     description: '활성 상태',
     example: true,
     required: false,

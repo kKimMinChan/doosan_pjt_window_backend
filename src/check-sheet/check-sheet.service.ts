@@ -9,6 +9,7 @@ import { CheckSheetPaginationDto, Item } from './dto/check-sheet.request';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
 import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class CheckSheetService {
@@ -18,6 +19,11 @@ export class CheckSheetService {
   ) {}
   async create(checkSheetDto: any, files: Express.MulterS3.File[]) {
     try {
+      const date = new Date();
+      const latestCheckSheet = await this.checkSheetRepository.findOneLatest(
+        checkSheetDto?.heavyEquipment,
+      );
+
       if (checkSheetDto?.items === undefined)
         throw new BadRequestException('items가 존재하지 않습니다.');
       const parsedCheckItems =
@@ -78,8 +84,7 @@ export class CheckSheetService {
       const { limit, page, sort, inspectionStatus, startDay, endDay } =
         checkSheetPaginationDto;
 
-      // console.log(checkSheetPaginationDto);
-
+      console.log(id, 'findAll id');
       const latestCheckSheet =
         await this.checkSheetRepository.findOneLatest(id);
 
@@ -126,22 +131,8 @@ export class CheckSheetService {
         ),
       ]);
 
-      // console.log(
-      //   data.map((sheet) => sheet.createdAt),
-      //   'sheet',
-      // );
+      console.log(data, 'wefion');
 
-      // console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
-
-      // if (latestCheckSheet.createdAt.split('T')[0] === date.split('T')[0]) {
-      //   return {
-      //     pageSize: limit,
-      //     totalCount,
-      //     totalPages: Math.ceil(totalCount / limit),
-      //     page,
-      //     data: data.filter((sheet) => sheet.id !== latestCheckSheet.id),
-      //   };
-      // }
       return {
         pageSize: limit,
         totalCount,
@@ -157,12 +148,7 @@ export class CheckSheetService {
   async findOne(id: string) {
     try {
       const checkSheet = await this.checkSheetRepository.findOne(id);
-
-      // if (!checkSheet)
-      //   throw new NotFoundException(
-      //     '해당 id의 안전점검표가 존재하지 않습니다.',
-      //   );
-
+      console.log(checkSheet, 'findOne');
       return checkSheet;
     } catch (error) {
       ErrorHelper.handleError(error);
@@ -172,9 +158,32 @@ export class CheckSheetService {
   async findOneLatest(id: string) {
     try {
       const latest = await this.checkSheetRepository.findOneLatest(id);
+      console.log(latest, 'findOneLatest');
       return latest;
       // if (!latest)
       //   throw new NotFoundException('생성된 안전 점검표가 없습니다.');
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async findOneLatestIssue(id: string) {
+    try {
+      const latest = await this.checkSheetRepository.findOneLatest(id);
+      if (!latest) return { translate: '생성된 안전 점검표가 없습니다.' };
+      const date = new Date();
+      const kstCreatedAt = new Date(
+        latest?.createdAt.getTime() + 9 * 60 * 60 * 1000,
+      )?.toISOString();
+
+      const isToday =
+        date.toISOString().split('T')[0] === kstCreatedAt?.split('T')[0];
+      const issue = await this.checkSheetRepository.findOneLatestIssue(
+        id,
+        isToday,
+      );
+      console.log(issue, 'findOneLatestIssue');
+      return issue;
     } catch (error) {
       ErrorHelper.handleError(error);
     }
