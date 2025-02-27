@@ -170,7 +170,7 @@ export class CheckSheetService {
   async findOneLatestIssue(id: string) {
     try {
       const latest = await this.checkSheetRepository.findOneLatest(id);
-      if (!latest) return { translate: '생성된 안전 점검표가 없습니다.' };
+      if (!latest) return [];
       const date = new Date();
       const kstCreatedAt = new Date(
         latest?.createdAt.getTime() + 9 * 60 * 60 * 1000,
