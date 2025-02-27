@@ -60,6 +60,23 @@ export class CreateImage {
   exist: boolean;
 }
 
+export class ExistingImage {
+  @ApiProperty({ description: '이미지 제목', example: '안전벨트' })
+  @IsString()
+  title: string;
+
+  @ApiProperty({ description: '이미지 순번', example: 1 })
+  @IsNumber()
+  index: number;
+
+  @ApiProperty({
+    description: 'url',
+    example: 'https://d33ycgiczd2w54.cloudfront.net/images/1740532351951.jpg',
+  })
+  @IsString()
+  url: boolean;
+}
+
 export class CheckSheetRequest {
   @ApiProperty({
     description: 'CheckItem & isOk formData에 배열 데이터를 stringify해서 전달',
@@ -73,28 +90,40 @@ export class CheckSheetRequest {
   items: Item[];
 
   @ApiProperty({
-    description: '이미지',
+    description: '이미지 file[]',
     format: 'binary',
     required: false,
   })
+  @IsOptional()
   file: string[];
 
   @ApiProperty({
     description:
-      '이미지 제목, 인덱스 formData에 객체를 여러번 append해서 배열로 전달',
+      '이미지 제목, 인덱스 formData에 객체를 여러번 append해서 배열로 전달 fileInfo[]',
     type: [CreateImage],
     required: false,
   })
+  @IsOptional()
   @IsArray()
-  imageInfo: CreateImage[];
+  fileInfo: CreateImage[];
+
+  @ApiProperty({
+    description:
+      '이미지 제목, 인덱스, 이미지 주소 formData에 객체를 여러번 append해서 배열로 전달 existingImage[]',
+    type: [ExistingImage],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  existingImage: ExistingImage[];
 
   @ApiProperty({
     description: '이슈사항',
     example: '안전벨트 불량',
     required: false,
   })
-  // @IsString()
-  // @Optional()
+  @IsString()
+  @IsOptional()
   issue: string;
 
   @ApiProperty({
@@ -103,6 +132,7 @@ export class CheckSheetRequest {
     required: false,
   })
   @IsString()
+  @IsOptional()
   heavyEquipment: string;
 
   @ApiProperty({
@@ -111,6 +141,7 @@ export class CheckSheetRequest {
     required: false,
   })
   @IsString()
+  @IsOptional()
   inspector: string;
 
   @ApiProperty({
@@ -119,6 +150,7 @@ export class CheckSheetRequest {
     required: false,
   })
   @IsString()
+  @IsOptional()
   reviewer: string;
 }
 

@@ -24,25 +24,29 @@ export class CheckSheetService {
         (JSON.parse(checkSheetDto?.items) as Item[]) ?? [];
 
       const checkItems = parsedCheckItems.map((item) => item.checkItem);
+
       const checkItemIds = await this.checkItemRepository.create(checkItems);
 
       const items = checkItemIds.map((id, index) => ({
         checkItem: String(id),
         isOk: parsedCheckItems[index].isOk,
       }));
-      console.log(checkSheetDto.imageInfo[0], checkSheetDto.imageInfo[1]);
-      // const parsedImageInfo = JSON.parse(checkSheetDto?.imageInfo ?? null);
-      const parsedImageInfo =
-        checkSheetDto?.imageInfo?.map((item) => JSON.parse(item)) ?? [];
 
-      if (files?.length > parsedImageInfo?.length)
+      // const parsedImageInfo = JSON.parse(checkSheetDto?.imageInfo ?? null);
+      const parsedFileInfo =
+        checkSheetDto?.fileInfo?.map((item) => JSON.parse(item)) ?? [];
+
+      const parsedExistingImages =
+        checkSheetDto?.existingImage?.map((image) => JSON.parse(image)) ?? [];
+
+      if (files?.length > parsedFileInfo?.length)
         throw new BadRequestException(
           '이미지 파일과 이미지 정보의 개수가 맞지 않습니다.',
         );
 
       const images =
         files.map((file, idx) => {
-          const { title, index } = parsedImageInfo[idx];
+          const { title, index } = parsedFileInfo[idx];
           return {
             title,
             index,
@@ -50,15 +54,17 @@ export class CheckSheetService {
           };
         }) || [];
 
-      console.log(images);
+      const finalImages = [...images, ...parsedExistingImages];
+
+      console.log(finalImages);
 
       const newCheckSheet = {
         ...checkSheetDto,
         items,
-        images,
+        images: finalImages,
       };
 
-      console.log(newCheckSheet);
+      // console.log(newCheckSheet);
 
       return await this.checkSheetRepository.create(newCheckSheet);
     } catch (error) {
@@ -72,19 +78,22 @@ export class CheckSheetService {
       const { limit, page, sort, inspectionStatus, startDay, endDay } =
         checkSheetPaginationDto;
 
-      console.log(checkSheetPaginationDto);
+      // console.log(checkSheetPaginationDto);
 
       const latestCheckSheet =
         await this.checkSheetRepository.findOneLatest(id);
 
+      if (!latestCheckSheet)
+        return { translate: '생성된 체크시트가 없습니다.' };
+
       const kstLatestCheckSheet = {
-        ...latestCheckSheet.toJSON(),
+        ...latestCheckSheet?.toJSON(),
         createdAt: new Date(
-          latestCheckSheet.createdAt.getTime() + 9 * 60 * 60 * 1000,
-        ).toISOString(),
+          latestCheckSheet?.createdAt?.getTime() + 9 * 60 * 60 * 1000,
+        )?.toISOString(),
         updatedAt: new Date(
-          latestCheckSheet.updatedAt.getTime() + 9 * 60 * 60 * 1000,
-        ).toISOString(),
+          latestCheckSheet?.updatedAt?.getTime() + 9 * 60 * 60 * 1000,
+        )?.toISOString(),
       };
 
       const date = new Date().toISOString();
@@ -117,10 +126,10 @@ export class CheckSheetService {
         ),
       ]);
 
-      console.log(
-        data.map((sheet) => sheet.createdAt),
-        'sheet',
-      );
+      // console.log(
+      //   data.map((sheet) => sheet.createdAt),
+      //   'sheet',
+      // );
 
       // console.log(latestCheckSheet.createdAt.split('T')[0], date.split('T')[0]);
 
@@ -197,7 +206,7 @@ export class CheckSheetService {
       }
 
       const parsedItems = JSON.parse(body.items);
-      console.log(parsedItems);
+      // console.log(parsedItems);
       const checkItems = parsedItems.map((item) => item.checkItem);
       const checkItemIds = await this.checkItemRepository.create(checkItems);
 
@@ -206,19 +215,19 @@ export class CheckSheetService {
         isOk: parsedItems[index].isOk,
       }));
 
-      const parsedImageInfo =
-        body?.imageInfo?.map((item) => JSON.parse(item)) ?? [];
+      const parsedFileInfo =
+        body?.fileInfo?.map((item) => JSON.parse(item)) ?? [];
 
-      if (files?.length > parsedImageInfo?.length)
+      if (files?.length > parsedFileInfo?.length)
         throw new BadRequestException(
           '이미지 파일과 이미지 정보의 개수가 맞지 않습니다.',
         );
-      console.log(parsedImageInfo);
-      const isOkImageInfos = parsedImageInfo?.filter((info) => info.exist);
-      const deleteImageInfos = parsedImageInfo?.filter((info) => !info.exist);
+      console.log(parsedFileInfo);
+      const isOkFileInfos = parsedFileInfo?.filter((info) => info.exist);
+      const deleteFileInfos = parsedFileInfo?.filter((info) => !info.exist);
       const images =
         files?.map((file, idx) => {
-          const { title, index } = isOkImageInfos[idx];
+          const { title, index } = isOkFileInfos[idx];
           return {
             title,
             index,
@@ -226,7 +235,7 @@ export class CheckSheetService {
           };
         }) || [];
 
-      deleteImageInfos?.map((info) => images.push(info));
+      deleteFileInfos?.map((info) => images.push(info));
 
       const updateDto = {
         items,

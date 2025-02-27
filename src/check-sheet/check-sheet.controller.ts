@@ -46,6 +46,7 @@ export class CheckSheetController {
     @UploadedFiles() files: Express.MulterS3.File[],
     @Body() body: any,
   ) {
+    console.log(body);
     return await this.checkSheetService.create(body, files);
   }
 
