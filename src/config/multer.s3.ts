@@ -8,9 +8,12 @@ import * as path from 'path';
 export const multerOptionsFactory = (
   configService: ConfigService,
 ): MulterOptions => {
-  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  console.log('-----------------------------------------------');
+  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`isDevelopment: ${isDevelopment}`);
 
-  if (isProduction) {
+  if (isDevelopment) {
     const s3 = new S3Client({
       region: configService.get('AWS_BUCKET_REGION'),
       credentials: {
@@ -18,6 +21,7 @@ export const multerOptionsFactory = (
         secretAccessKey: configService.get('AWS_SECRET_ACCESS_KEY'),
       },
     });
+
     return {
       storage: multerS3({
         s3,
@@ -45,17 +49,19 @@ export const multerOptionsFactory = (
           // const basename = path.basename(file.originalname, ext);
           done(null, `images/${Date.now()}${ext}`);
           // done(null, `images/${baseName}_${Date.now()}${ext}`);
+
           console.log('이미지 등록');
         },
       }),
       limits: { fileSize: 10 * 1024 * 1024 },
     };
   } else {
+    console.log(process.env.NODE_ENV === 'production', isDevelopment);
     return {
       storage: diskStorage({
-        destination: './uploads', // 파일이 저장될 경로
+        destination: '/Users/kimminchan/Desktop/transGuard_storage', // 파일이 저장될 경로
         filename: (req, file, callback) => {
-          const fileExtName = file.originalname.split('.').pop();
+          const ext = path.extname(file.originalname);
 
           // 파일 이름을 UTF-8로 인코딩하고 다시 디코드
           const buffer = Buffer.from(file.originalname, 'latin1').toString(
@@ -72,7 +78,8 @@ export const multerOptionsFactory = (
           const lastIndex = safeName.lastIndexOf('_');
           const baseName = safeName.substring(0, lastIndex);
           // console.log(baseName, 'safe', fileExtName, 'ext', buffer);
-          callback(null, `${baseName}.${fileExtName}`);
+          callback(null, `${Date.now()}${ext}`);
+          console.log('이미지 등록 local');
         },
       }),
       limits: {

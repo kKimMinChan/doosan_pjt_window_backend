@@ -8,7 +8,7 @@ import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { CheckItemModule } from 'src/check-item/check-item.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { multerOptionsFactory } from 'multer.s3';
+import { multerOptionsFactory } from 'src/config/multer.s3';
 
 @Module({
   imports: [

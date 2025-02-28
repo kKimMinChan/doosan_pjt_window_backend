@@ -56,13 +56,16 @@ export class CheckSheetService {
           return {
             title,
             index,
-            url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
+            url:
+              process.env.NODE_ENV === 'production'
+                ? `${file.path}`
+                : `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
           };
         }) || [];
 
       const finalImages = [...images, ...parsedExistingImages];
 
-      console.log(finalImages);
+      // console.log(finalImages);
 
       const newCheckSheet = {
         ...checkSheetDto,
@@ -70,7 +73,7 @@ export class CheckSheetService {
         images: finalImages,
       };
 
-      // console.log(newCheckSheet);
+      console.log(newCheckSheet, 'newCheckSheet');
 
       return await this.checkSheetRepository.create(newCheckSheet);
     } catch (error) {

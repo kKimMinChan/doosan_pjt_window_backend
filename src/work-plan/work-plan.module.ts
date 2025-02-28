@@ -5,12 +5,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { WorkPlan, WorkPlanSchema } from './entities/work-plan.schema';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { multerOptionsFactory } from 'multer.s3';
 import { WorkPlanMongoRepository } from './work-plan.repository';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
 import { UserModule } from 'src/admin/user/user.module';
 import { HeavyEquipmentModule } from 'src/heavy-equipment/heavy-equipment.module';
 import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
+import { multerOptionsFactory } from 'src/config/multer.s3';
 
 @Module({
   imports: [

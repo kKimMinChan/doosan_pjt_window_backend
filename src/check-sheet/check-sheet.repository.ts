@@ -45,8 +45,9 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   ) {}
 
   async create(checkSheetDto: CheckSheet) {
-    const newCheckSheet = new this.checkSheetModel(checkSheetDto);
-    return await newCheckSheet.save();
+    const newCheckSheet = await new this.checkSheetModel(checkSheetDto).save();
+    console.log(newCheckSheet, 'createNewCheckSheet');
+    return newCheckSheet;
   }
 
   async findOne(id: string) {

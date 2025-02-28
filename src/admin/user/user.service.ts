@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UpdateUserRequest, UserRequest } from './dto/request.dto';
 import { usersMongoRepository } from './user.repository';
-import { UserInfo } from './entities/user.entity';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
@@ -16,10 +15,21 @@ export class UserService {
           '프로필 이미지를 업로드해야 합니다.',
           HttpStatus.BAD_REQUEST,
         );
+      // console.log(userFile, process.env.NODE_ENV, 'userFile');
       const { file, ...rest } = {
         ...userInfo,
-        imageUrl: userFile.key,
+        imageUrl:
+          process.env.NODE_ENV === 'production'
+            ? 'path' in userFile
+              ? userFile.path
+              : null
+            : 'key' in userFile
+              ? userFile.key
+              : null,
+        // : `https://${process.env.CLOUDFRONT_URL}/${userFile.key}`,
       };
+
+      console.log(rest, 'rest');
 
       const result = await this.usersRepository.createUser(rest);
       console.log(result, 'result');

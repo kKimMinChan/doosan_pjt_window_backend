@@ -23,14 +23,11 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { MulterConfig } from 'multer.config';
 import { UpdateUserRequest, UserRequest } from './dto/request.dto';
 import { UserResponse } from './dto/response.dto';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ConfigService } from '@nestjs/config';
-import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
-import { multerOptionsFactory } from 'multer.s3';
 
 @ApiTags('[관리자] 사용자 관리')
 @Controller('admin')
@@ -48,7 +45,7 @@ export class UserController {
     @UploadedFile() file: Express.MulterS3.File,
     @Body() body: UserRequest,
   ) {
-    console.log(body, 'users', file);
+    console.log(file);
     await this.userService.createUser(body, file);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',

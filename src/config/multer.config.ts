@@ -2,7 +2,7 @@ import { diskStorage } from 'multer';
 
 export const MulterConfig = {
   storage: diskStorage({
-    destination: './uploads', // 파일이 저장될 경로
+    destination: './uploadsasdf', // 파일이 저장될 경로
     filename: (req, file, callback) => {
       const fileExtName = file.originalname.split('.').pop();
 
@@ -20,6 +20,7 @@ export const MulterConfig = {
       const baseName = safeName.substring(0, lastIndex);
       // console.log(baseName, 'safe', fileExtName, 'ext', buffer);
       callback(null, `${baseName}.${fileExtName}`);
+      console.log('multerConfig');
     },
   }),
   limits: {
