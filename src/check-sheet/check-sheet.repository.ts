@@ -318,7 +318,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     if (endDay) {
       filter.createdAt = {
         ...filter.createdAt,
-        $lte: new Date(new Date(endDay).getTime() + 9 * 60 * 60 * 1000), // KST → UTC 변환
+        $lte: new Date(new Date(endDay).getTime() + 9 * 60 * 60 * 1000), // KST → UTC 변환 //
       };
     }
 
