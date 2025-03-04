@@ -16,5 +16,5 @@ RUN npm install --only=production
 # 빌드된 dist 폴더만 복사
 COPY --from=builder /app/dist ./dist
 # 실행 명령어
-CMD ["node", "dist/src/main"]
+CMD ["node", "dist/main"]
 #
