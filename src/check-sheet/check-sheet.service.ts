@@ -10,12 +10,16 @@ import { CheckSheetMongoRepository } from './check-sheet.repository';
 import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
+import { usersMongoRepository } from 'src/admin/user/user.repository';
+import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
 
 @Injectable()
 export class CheckSheetService {
   constructor(
     private checkSheetRepository: CheckSheetMongoRepository,
     private checkItemRepository: CheckItemMongoRepository,
+    private userRepository: usersMongoRepository,
+    private heavyEquipmentRepository: HeavyEquipmentMongoRepository,
   ) {}
   async create(checkSheetDto: any, files: Express.MulterS3.File[]) {
     try {
@@ -23,6 +27,22 @@ export class CheckSheetService {
       const latestCheckSheet = await this.checkSheetRepository.findOneLatest(
         checkSheetDto?.heavyEquipment,
       );
+
+      // const isEquipment = await this.heavyEquipmentRepository.findOne(
+      //   checkSheetDto?.heavyEquipment,
+      // );
+
+      // const users = [checkSheetDto?.inspector, checkSheetDto?.reviewer];
+      // const missingUsers = await this.userRepository.findMissingUsers(users);
+
+      // if (!isEquipment)
+      //   throw new NotFoundException('해당 장비가 존재하지 않습니다.');
+
+      // if (missingUsers.length > 0) {
+      //   throw new NotFoundException(
+      //     `존재하지 않는 사용자가 있습니다. ${missingUsers.join(', ')}`,
+      //   );
+      // }
 
       if (checkSheetDto?.items === undefined)
         throw new BadRequestException('items가 존재하지 않습니다.');
@@ -45,6 +65,7 @@ export class CheckSheetService {
       const parsedExistingImages =
         checkSheetDto?.existingImage?.map((image) => JSON.parse(image)) ?? [];
 
+      console.log(parsedFileInfo, 'parsedFileInfo', files?.length);
       if (files?.length > parsedFileInfo?.length)
         throw new BadRequestException(
           '이미지 파일과 이미지 정보의 개수가 맞지 않습니다.',
@@ -73,7 +94,7 @@ export class CheckSheetService {
         images: finalImages,
       };
 
-      console.log(newCheckSheet, 'newCheckSheet');
+      // console.log(newCheckSheet, 'newCheckSheet');
 
       return await this.checkSheetRepository.create(newCheckSheet);
     } catch (error) {
@@ -194,8 +215,8 @@ export class CheckSheetService {
 
   async update(id: string, body: any, files: Express.MulterS3.File[]) {
     try {
-      if (body?.items === undefined)
-        throw new BadRequestException('items가 존재하지 않습니다.');
+      // if (body?.items === undefined)
+      //   throw new BadRequestException('items가 존재하지 않습니다.');
 
       const checkSheet = await this.checkSheetRepository.noPopulateFindOne(id);
       if (!checkSheet) {
@@ -217,8 +238,7 @@ export class CheckSheetService {
         );
       }
 
-      const parsedItems = JSON.parse(body.items);
-      // console.log(parsedItems);
+      const parsedItems = JSON.parse(body?.items || '[]');
       const checkItems = parsedItems.map((item) => item.checkItem);
       const checkItemIds = await this.checkItemRepository.create(checkItems);
 
@@ -234,7 +254,6 @@ export class CheckSheetService {
         throw new BadRequestException(
           '이미지 파일과 이미지 정보의 개수가 맞지 않습니다.',
         );
-      console.log(parsedFileInfo);
       const isOkFileInfos = parsedFileInfo?.filter((info) => info.exist);
       const deleteFileInfos = parsedFileInfo?.filter((info) => !info.exist);
       const images =
@@ -253,6 +272,9 @@ export class CheckSheetService {
         items,
         issue: body.issue,
         images,
+        inspector: body.inspector,
+        reviewer: body.reviewer,
+        heavyEquipment: body.heavyEquipment,
       };
 
       console.log(updateDto);

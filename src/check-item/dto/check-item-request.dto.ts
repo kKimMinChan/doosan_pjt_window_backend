@@ -4,18 +4,18 @@ import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
 export class CheckItemRequest {
   @ApiProperty({
     description: '구분',
-    enum: ['KEY_ITEM', 'CHECKLIST_BEFORE_WORK', 'GENERAL_ITEM'],
-    example: 'KEY_ITEM',
+    enum: ['key-item', 'checklist-before-work', 'general-item'],
+    example: 'key-item',
   })
-  @IsIn(['KEY_ITEM', 'CHECKLIST_BEFORE_WORK', 'GENERAL_ITEM'])
+  @IsIn(['key-item', 'checklist-before-work', 'general-item'])
   type: string;
 
   @ApiProperty({
     description: '점검 방법',
-    enum: ['EYE', 'DOCUMENT', 'FUNCTION'],
-    example: 'DOCUMENT',
+    enum: ['eye', 'document', 'function'],
+    example: 'document',
   })
-  @IsIn(['EYE', 'DOCUMENT', 'FUNCTION'])
+  @IsIn(['eye', 'document', 'function'])
   method: string;
 
   @ApiProperty({ description: '점검 항목 내용', example: '안전장비 상태 확인' })
@@ -26,19 +26,19 @@ export class CheckItemRequest {
 export class UpdateCheckItemRequest {
   @ApiProperty({
     description: '구분',
-    enum: ['KEY_ITEM', 'CHECKLIST_BEFORE_WORK', 'GENERAL_ITEM'],
-    example: 'KEY_ITEM',
+    enum: ['key-item', 'checklist-before-work', 'general-item'],
+    example: 'key-item',
   })
-  @IsIn(['KEY_ITEM', 'CHECKLIST_BEFORE_WORK', 'GENERAL_ITEM'])
+  @IsIn(['key-item', 'checklist-before-work', 'general-item'])
   @IsOptional()
   type: string;
 
   @ApiProperty({
     description: '점검 방법',
-    enum: ['EYE', 'DOCUMENT', 'FUNCTION'],
-    example: 'DOCUMENT',
+    enum: ['eye', 'document', 'function'],
+    example: 'document',
   })
-  @IsIn(['EYE', 'DOCUMENT', 'FUNCTION'])
+  @IsIn(['eye', 'document', 'function'])
   @IsOptional()
   method: string;
 

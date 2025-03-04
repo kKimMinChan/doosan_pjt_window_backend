@@ -53,6 +53,8 @@ export class usersMongoRepository implements UsersRepository {
       },
     ]);
 
+    console.log(result, 'result');
+
     // ✅ 반환된 배열을 객체 형태로 변환
     return result.reduce((acc, curr) => {
       acc[curr.role] = curr.users; // role을 키로 하고 users 배열을 값으로 설정

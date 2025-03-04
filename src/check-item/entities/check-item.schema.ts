@@ -14,11 +14,11 @@ export type CheckItemDocument = CheckItem & Document;
 export class CheckItem {
   @Prop({
     required: true,
-    enum: ['KEY_ITEM', 'CHECKLIST_BEFORE_WORK', 'GENERAL_ITEM'],
+    enum: ['key-item', 'checklist-before-work', 'general-item'],
   })
   type: string;
 
-  @Prop({ required: true, enum: ['EYE', 'DOCUMENT', 'FUNCTION'] })
+  @Prop({ required: true, enum: ['eye', 'document', 'function'] })
   method: string;
 
   @Prop({ required: true })

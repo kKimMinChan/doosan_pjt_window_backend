@@ -46,9 +46,7 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
 
   async findOne(id: string) {
     const equipmentDocument = await this.heavyEquipmentModel
-      .findOne({
-        _id: id,
-      })
+      .findById(id)
       .populate('inspectors reviewers');
     return equipmentDocument;
   }

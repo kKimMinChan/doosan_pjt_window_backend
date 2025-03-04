@@ -276,7 +276,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     // ✅ 업데이트할 필드만 동적으로 선택
     const updateFields: Partial<CheckSheet> = {};
 
-    if (updateDto.items) {
+    if (updateDto.items.length > 0) {
       updateFields.items = updateDto.items;
     }
     // ✅ `images` 업데이트 로직
@@ -303,6 +303,17 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     if (updateDto.issue !== undefined) {
       updateFields.issue = updateDto.issue;
     }
+    if (updateDto.inspector !== undefined) {
+      updateFields.inspector = updateDto.inspector;
+    }
+    if (updateDto.reviewer !== undefined) {
+      updateFields.reviewer = updateDto.reviewer;
+    }
+    if (updateDto.heavyEquipment !== undefined) {
+      updateFields.heavyEquipment = updateDto.heavyEquipment;
+    }
+
+    console.log(updateFields, 'updateFields');
 
     // ✅ 해당 `checkSheet` 찾고 업데이트
     const updatedCheckSheet = await this.checkSheetModel

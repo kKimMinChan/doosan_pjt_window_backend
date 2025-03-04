@@ -177,7 +177,7 @@ export class UpdateCheckSheetRequest {
   @ApiProperty({
     description: 'CheckItemId & isOk',
     type: [Item],
-    required: true,
+    required: false,
   })
   @Optional()
   @IsArray()
@@ -199,7 +199,7 @@ export class UpdateCheckSheetRequest {
   })
   @IsArray()
   @Type(() => CreateImage)
-  imageInfo: CreateImage[];
+  fileInfo: CreateImage[];
 
   @ApiProperty({
     description: '이슈사항',
@@ -209,6 +209,24 @@ export class UpdateCheckSheetRequest {
   @Optional()
   @IsString()
   issue: string;
+
+  @ApiProperty({
+    description: '점검자 id',
+    example: '67a31a37993b5f84b50e32c3',
+    required: false,
+  })
+  @Optional()
+  @IsString()
+  inspector: string;
+
+  @ApiProperty({
+    description: '확인자 id',
+    example: '67a31a37993b5f84b50e32c3',
+    required: false,
+  })
+  @Optional()
+  @IsString()
+  reviewer: string;
 }
 
 export class CheckSheetPaginationDto extends PartialType(PaginationDto) {

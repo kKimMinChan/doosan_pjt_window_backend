@@ -9,6 +9,10 @@ import { CheckItemModule } from 'src/check-item/check-item.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { multerOptionsFactory } from 'src/config/multer.s3';
+import { usersMongoRepository } from 'src/admin/user/user.repository';
+import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
+import { UserModule } from 'src/admin/user/user.module';
+import { HeavyEquipmentModule } from 'src/heavy-equipment/heavy-equipment.module';
 
 @Module({
   imports: [
@@ -22,12 +26,16 @@ import { multerOptionsFactory } from 'src/config/multer.s3';
         multerOptionsFactory(configService),
     }),
     CheckItemModule,
+    UserModule,
+    HeavyEquipmentModule,
   ],
   controllers: [CheckSheetController],
   providers: [
     CheckSheetService,
     CheckSheetMongoRepository,
     CheckItemMongoRepository,
+    usersMongoRepository,
+    HeavyEquipmentMongoRepository,
   ],
 })
 export class CheckSheetModule {}
