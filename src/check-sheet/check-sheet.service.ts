@@ -84,7 +84,7 @@ export class CheckSheetService {
 
   async findAll(id: string, checkSheetPaginationDto: CheckSheetPaginationDto) {
     try {
-      const { limit, page, sort, inspectionStatus, startDay, endDay } =
+      const { limit, page, order, inspectionStatus, startDay, endDay } =
         checkSheetPaginationDto;
 
       console.log(id, 'findAll id');
@@ -119,7 +119,7 @@ export class CheckSheetService {
           id,
           skip,
           limit,
-          sort,
+          order,
           todaySkip,
           inspectionStatus,
           startDay,

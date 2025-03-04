@@ -20,16 +20,27 @@ import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
 @ApiTags('중장비')
-@Controller('heavy-equipments')
+@Controller('equipments')
 export class HeavyEquipmentController {
   constructor(private readonly heavyEquipmentService: HeavyEquipmentService) {}
 
   @Post()
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
-  create(@Body() createHeavyEquipmentDto: CreateHeavyEquipmentRequest) {
-    this.heavyEquipmentService.create(createHeavyEquipmentDto);
+  async create(@Body() createHeavyEquipmentDto: CreateHeavyEquipmentRequest) {
+    await this.heavyEquipmentService.create(createHeavyEquipmentDto);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
+    };
+  }
+
+  @Get('all')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(HeavyEquipmentResponse, '', false, true),
+  )
+  async findAll() {
+    const heavyEquipment = await this.heavyEquipmentService.findAll();
+    return {
+      data: heavyEquipment,
     };
   }
 
@@ -38,8 +49,8 @@ export class HeavyEquipmentController {
     SwaggerHelper.getApiResponseSchema(HeavyEquipmentResponse, '', true, true),
   )
   @ApiResponse({ type: HeavyEquipmentResponse })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.heavyEquipmentService.findAll(paginationDto);
+  async findAllPaginated(@Query() paginationDto: PaginationDto) {
+    return await this.heavyEquipmentService.findAllPaginated(paginationDto);
   }
 
   @Get(':id')

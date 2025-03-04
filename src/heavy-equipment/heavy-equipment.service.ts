@@ -1,14 +1,8 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   CreateHeavyEquipmentRequest,
   UpdateHeavyEquipmentRequest,
 } from './dto/request';
-import { UpdateHeavyEquipmentDto } from './dto/response';
 import { HeavyEquipmentMongoRepository } from './heavy-equipment.repository';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
@@ -28,14 +22,18 @@ export class HeavyEquipmentService {
     );
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll() {
+    return await this.heavyEquipmentRepository.findAll();
+  }
+
+  async findAllPaginated(paginationDto: PaginationDto) {
     try {
       const { limit, page } = paginationDto;
 
       const skip = (page - 1) * limit;
 
       const [data, totalCount] = await Promise.all([
-        this.heavyEquipmentRepository.findAll(skip, limit),
+        this.heavyEquipmentRepository.findAllPaginated(skip, limit),
         this.heavyEquipmentRepository.countEquipments(),
       ]);
 

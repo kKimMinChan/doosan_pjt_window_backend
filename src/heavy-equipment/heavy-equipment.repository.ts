@@ -9,7 +9,9 @@ import { Model } from 'mongoose';
 export interface HeavyEquipmentRepository {
   createHeavyEquipment(heavyEquipmentInfo: HeavyEquipment);
   findOne(id: string);
-  findAll(skip: number, limit: number);
+  findAll();
+  findAllPaginated(skip: number, limit: number);
+  countEquipments();
   update(id: string, heavyEquipmentInfo: Partial<HeavyEquipment>);
   remove(id: string);
 }
@@ -26,7 +28,11 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
     return await document.save();
   }
 
-  async findAll(skip: number, limit: number) {
+  async findAll() {
+    return await this.heavyEquipmentModel.find().sort({ _id: -1 });
+  }
+
+  async findAllPaginated(skip: number, limit: number) {
     return await this.heavyEquipmentModel
       .find()
       .sort({ _id: -1 })
@@ -53,8 +59,8 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
       updateFields['equipmentNumber'] = heavyEquipmentInfo.equipmentNumber;
     if (heavyEquipmentInfo.factoryName)
       updateFields['factoryName'] = heavyEquipmentInfo.factoryName;
-    if (heavyEquipmentInfo.isDeleted)
-      updateFields['isDeleted'] = heavyEquipmentInfo.isDeleted;
+    // if (heavyEquipmentInfo.isDeleted)
+    //   updateFields['isDeleted'] = heavyEquipmentInfo.isDeleted;
     if (heavyEquipmentInfo.type) updateFields['type'] = heavyEquipmentInfo.type;
     if (heavyEquipmentInfo.inspectors?.length > 0)
       updateFields['inspectors'] = heavyEquipmentInfo.inspectors;

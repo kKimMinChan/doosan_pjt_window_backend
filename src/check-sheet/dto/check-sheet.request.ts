@@ -214,14 +214,14 @@ export class UpdateCheckSheetRequest {
 export class CheckSheetPaginationDto extends PartialType(PaginationDto) {
   @ApiProperty({
     description:
-      '점검 여부 유(CHECKED), 무(UNCHECKED), 전체(ALL) 기본 값 = ALL',
-    enum: ['CHECKED', 'UNCHECKED', 'ALL'],
-    example: 'ALL',
+      '점검 여부 유(checked), 무(unChecked), 전체(all) 기본 값 = all',
+    enum: ['checked', 'unChecked', 'all'],
+    example: 'all',
     required: false,
   })
   @IsOptional()
-  @IsIn(['CHECKED', 'UNCHECKED', 'ALL'])
-  inspectionStatus?: string = 'ALL';
+  @IsIn(['checked', 'unChecked', 'all'])
+  inspectionStatus?: string = 'all';
 
   @ApiProperty({
     description: '검색 시작 날짜',

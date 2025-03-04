@@ -1,5 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UpdateUserRequest, UserRequest } from './dto/request.dto';
+import {
+  UpdateUserRequest,
+  UserPaginationDto,
+  UserRequest,
+} from './dto/request.dto';
 import { usersMongoRepository } from './user.repository';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
@@ -46,15 +50,15 @@ export class UserService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAllPaginated(userPaginationDto: UserPaginationDto) {
     try {
-      const { limit, page } = paginationDto;
+      const { limit, page, role } = userPaginationDto;
 
       const skip = (page - 1) * limit;
 
       const [data, totalCount] = await Promise.all([
-        this.usersRepository.findAll(skip, limit),
-        this.usersRepository.countUsers(),
+        this.usersRepository.findAllPaginated(skip, limit, role),
+        this.usersRepository.countUsers(role),
       ]);
 
       return {
@@ -64,6 +68,14 @@ export class UserService {
         page,
         data,
       };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async findAll() {
+    try {
+      return await this.usersRepository.findAll();
     } catch (error) {
       ErrorHelper.handleError(error);
     }

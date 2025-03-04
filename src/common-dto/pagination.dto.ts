@@ -22,12 +22,13 @@ export class PaginationDto {
   page?: number = 1;
 
   @ApiProperty({
-    description: '1 = 오름차순(오래된), -1 = 내림차순(최신) 기본 값 = -1',
-    enum: [1, -1],
-    example: -1,
+    description: 'asc = 오름차순(오래된), desc = 내림차순(최신) 기본 값 = desc',
+    enum: ['asc', 'desc'],
+    example: 'desc',
+    required: false,
   })
   @IsOptional()
-  @Type(() => Number)
-  @IsIn([1, -1])
-  sort?: number = -1;
+  @Type(() => String)
+  @IsIn(['asc', 'desc'])
+  order?: string = 'desc';
 }

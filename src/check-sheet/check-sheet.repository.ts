@@ -16,7 +16,7 @@ export interface CheckSheetRepository {
     id: string,
     skip: number,
     limit: number,
-    sort: number,
+    order: string,
     todaySkip: boolean,
     inspectionStatus: string,
     startDay: string,
@@ -97,15 +97,17 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     id: string,
     skip: number,
     limit: number,
-    sort: number,
+    order: string,
     todaySkip: boolean,
     inspectionStatus: string,
     startDay: string,
     endDay: string,
   ) {
-    const sortOrder: SortOrder = [1, -1].includes(sort as number)
-      ? (sort as SortOrder)
-      : -1; // ✅ 안전한 변환
+    const sortOrder: SortOrder = ['asc', 'desc'].includes(order as string)
+      ? order === 'asc'
+        ? 1
+        : -1 // ✅ 문자열을 숫자로 변환
+      : -1; // 기본값: 최신순
 
     const filter: any = {};
 
@@ -123,9 +125,9 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       };
     }
 
-    if (inspectionStatus === 'CHECKED') {
+    if (inspectionStatus === 'checked') {
       filter['issue'] = { $ne: null };
-    } else if (inspectionStatus === 'UNCHECKED') {
+    } else if (inspectionStatus === 'unChecked') {
       filter['issue'] = null;
     }
 

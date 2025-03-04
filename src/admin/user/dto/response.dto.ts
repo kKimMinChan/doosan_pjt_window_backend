@@ -23,8 +23,8 @@ export class UserResponse {
 
   @ApiProperty({
     description: '역할',
-    example: 'DRIVER',
-    enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'],
+    example: 'driver',
+    enum: ['driver', 'inspector', 'reviewer', 'admin'],
     required: true,
   })
   role: string;
@@ -35,12 +35,12 @@ export class UserResponse {
   })
   imageUrl: string;
 
-  @ApiProperty({
-    description: '재직 or 퇴직',
-    example: true,
-    required: true,
-  })
-  isActive: boolean;
+  // @ApiProperty({
+  //   description: '재직 or 퇴직',
+  //   example: true,
+  //   required: true,
+  // })
+  // isActive: boolean;
 
   @ApiProperty({
     description: '생성된 시간',

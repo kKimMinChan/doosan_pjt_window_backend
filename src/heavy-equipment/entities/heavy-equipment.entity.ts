@@ -18,7 +18,7 @@ export class HeavyEquipment {
   @Prop({ required: true })
   factoryName: string;
 
-  @Prop({ required: true, enum: ['FORKLIFT', 'BOGIE', 'CRANE'] })
+  @Prop({ required: true, enum: ['forklift', 'bogie', 'crane', 'transporter'] })
   type: string;
 
   @Prop({ required: true })
@@ -45,8 +45,8 @@ export class HeavyEquipment {
   })
   drivers?: string[];
 
-  @Prop({ default: false })
-  isDeleted?: boolean;
+  // @Prop({ default: false })
+  // isDeleted?: boolean;
 }
 
 export const HeavyEquipmentSchema =

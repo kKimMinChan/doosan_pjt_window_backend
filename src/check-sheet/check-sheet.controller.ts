@@ -62,13 +62,13 @@ export class CheckSheetController {
       data: checkSheet,
     };
   }
-  @Get(':heavyEquipmentId/latest-issue')
+  @Get(':equipmentId/latest-issue')
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(IssueResponse, '', false, true),
   )
   @ApiResponse({ type: IssueResponse })
   async findOneLatestIssue(
-    @Param('heavyEquipmentId', ObjectIdValidationPipe) id: string,
+    @Param('equipmentId', ObjectIdValidationPipe) id: string,
   ) {
     const checkSheet = await this.checkSheetService.findOneLatestIssue(id);
     return {
@@ -76,12 +76,12 @@ export class CheckSheetController {
     };
   }
 
-  @Get(':heavyEquipmentId/latest')
+  @Get(':equipmentId/latest')
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', false, true),
   )
   async findOneLatest(
-    @Param('heavyEquipmentId', ObjectIdValidationPipe) id: string,
+    @Param('equipmentId', ObjectIdValidationPipe) id: string,
   ) {
     const checkSheet = await this.checkSheetService.findOneLatest(id);
     return {
@@ -89,7 +89,7 @@ export class CheckSheetController {
     };
   }
 
-  @Get('/heavyEquipment/:id')
+  @Get('/equipment/:id')
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(CheckSheetResponse, '', true, true),
   )

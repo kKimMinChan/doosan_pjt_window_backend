@@ -16,8 +16,8 @@ export class CreateHeavyEquipmentRequest {
   @IsString()
   factoryName: string;
 
-  @ApiProperty({ description: '장비 타입', example: 'FORKLIFT' })
-  @IsEnum(['FORKLIFT', 'BOGIE', 'CRANE'])
+  @ApiProperty({ description: '장비 타입', example: 'forklift' })
+  @IsEnum(['forklift', 'bogie', 'crane', 'transporter'])
   type: string;
 
   @ApiProperty({ description: '장비 번호', example: 'A55' })

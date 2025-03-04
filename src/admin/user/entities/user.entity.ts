@@ -23,11 +23,11 @@ export class UserInfo {
   @Prop({ required: true })
   imageUrl: string;
 
-  @Prop({ required: true, enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'] })
+  @Prop({ required: true, enum: ['driver', 'inspector', 'reviewer', 'admin'] })
   role: string;
 
-  @Prop({ default: false })
-  isActive?: boolean;
+  // @Prop({ default: false })
+  // status?: boolean;
 
   @Prop({
     type: mongoose.Schema.ObjectId,
@@ -43,6 +43,8 @@ UsersSchema.index(
   { role: 1, heavyEquipmentId: 1 },
   {
     unique: true,
-    partialFilterExpression: { role: { $in: ['INSPECTOR', 'REVIEWER'] } },
+    partialFilterExpression: {
+      role: { $in: ['inspector', 'reviewer'] },
+    },
   },
 );

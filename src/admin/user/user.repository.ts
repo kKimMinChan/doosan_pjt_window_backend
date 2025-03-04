@@ -8,10 +8,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserInfo, UsersDocument } from './entities/user.entity';
 import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
+import { UserRole } from './dto/request.dto';
 
 export interface UsersRepository {
-  findAll(skip: number, limit: number);
-  countUsers();
+  findAllPaginated(skip: number, limit: number, role: UserRole);
+  findAll();
+  countUsers(role: UserRole);
   findOne(id: string);
   createUser(userInfo: UserInfo);
   update(id: string, userInfo: UserInfo);
@@ -27,16 +29,19 @@ export class usersMongoRepository implements UsersRepository {
     private usersModel: Model<UsersDocument>,
   ) {}
 
-  async findAll(skip: number, limit: number) {
+  async findAllPaginated(skip: number, limit: number, role: UserRole) {
     return await this.usersModel
-      .find()
+      .find({ role })
       .sort({ _id: -1 })
       .skip(skip)
       .limit(limit);
   }
+  async findAll() {
+    return await this.usersModel.find().sort({ _id: -1 });
+  }
 
-  async countUsers() {
-    return this.usersModel.countDocuments().exec();
+  async countUsers(role: UserRole) {
+    return this.usersModel.countDocuments({ role }).exec();
   }
 
   async findMissingUsers(userIds: string[]): Promise<string[]> {
@@ -94,7 +99,7 @@ export class usersMongoRepository implements UsersRepository {
     if (userInfo.department) updateFields['department'] = userInfo.department;
     if (userInfo.role) updateFields['role'] = userInfo.role;
     if (userInfo.imageUrl) updateFields['imageUrl'] = userInfo.imageUrl;
-    if (userInfo.isActive) updateFields['isActive'] = userInfo.isActive;
+    // if (userInfo.isActive) updateFields['isActive'] = userInfo.isActive;
 
     // 업데이트할 값이 없으면 바로 반환
     if (Object.keys(updateFields).length === 0) {

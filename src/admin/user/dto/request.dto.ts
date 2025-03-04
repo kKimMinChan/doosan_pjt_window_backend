@@ -1,6 +1,7 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 export class UserRequest {
   @ApiProperty({
@@ -22,10 +23,10 @@ export class UserRequest {
   @ApiProperty({
     description: '역할',
     example: 'DRIVER',
-    enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'],
+    enum: ['driver', 'inspector', 'reviewer', 'admin'],
     required: false,
   })
-  @IsIn(['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'])
+  @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
   role: string;
 
   @ApiProperty({
@@ -59,10 +60,10 @@ export class UpdateUserRequest {
   @ApiProperty({
     description: '역할',
     example: 'DRIVER',
-    enum: ['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'],
+    enum: ['driver', 'inspector', 'reviewer', 'admin'],
     required: false,
   })
-  @IsIn(['DRIVER', 'INSPECTOR', 'REVIEWER', 'ADMIN'])
+  @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
   @IsOptional()
   role: string;
 
@@ -84,17 +85,31 @@ export class UpdateUserRequest {
   @IsOptional()
   heavyEquipmentId: string;
 
+  // @ApiProperty({
+  //   description: '사용자 활성화',
+  //   example: true,
+  //   required: false,
+  // })
+  // @Transform(({ value }) => {
+  //   if (value === 'true' || value === '1' || value === true) return true;
+  //   if (value === 'false' || value === '0' || value === false) return false;
+  //   return value; // 변환할 수 없는 경우 그대로 반환
+  // })
+  // @IsBoolean()
+  // @IsOptional()
+  // isActive: boolean;
+}
+
+export type UserRole = 'driver' | 'inspector' | 'reviewer' | 'admin';
+
+export class UserPaginationDto extends PartialType(PaginationDto) {
   @ApiProperty({
-    description: '사용자 활성화',
-    example: true,
+    description: 'role에 대한 필터링 (driver, inspector, reviewer, admin)',
+    enum: ['driver', 'inspector', 'reviewer', 'admin'],
+    example: 'driver',
     required: false,
   })
-  @Transform(({ value }) => {
-    if (value === 'true' || value === '1' || value === true) return true;
-    if (value === 'false' || value === '0' || value === false) return false;
-    return value; // 변환할 수 없는 경우 그대로 반환
-  })
-  @IsBoolean()
   @IsOptional()
-  isActive: boolean;
+  @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
+  role?: UserRole = 'driver';
 }
