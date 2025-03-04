@@ -83,7 +83,7 @@ export class UpdateUserRequest {
   })
   @IsString()
   @IsOptional()
-  heavyEquipmentId: string;
+  equipmentId: string;
 
   // @ApiProperty({
   //   description: '사용자 활성화',

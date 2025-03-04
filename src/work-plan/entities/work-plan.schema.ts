@@ -63,7 +63,7 @@ export class WorkPlan {
     ref: 'HeavyEquipment',
     required: false,
   })
-  heavyEquipment: string | null;
+  equipment: string | null;
 }
 
 export const WorkPlanSchema = SchemaFactory.createForClass(WorkPlan);

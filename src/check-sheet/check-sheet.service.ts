@@ -25,24 +25,24 @@ export class CheckSheetService {
     try {
       const date = new Date();
       const latestCheckSheet = await this.checkSheetRepository.findOneLatest(
-        checkSheetDto?.heavyEquipment,
+        checkSheetDto?.equipment,
       );
 
-      // const isEquipment = await this.heavyEquipmentRepository.findOne(
-      //   checkSheetDto?.heavyEquipment,
-      // );
+      const isEquipment = await this.heavyEquipmentRepository.findOne(
+        checkSheetDto?.equipment,
+      );
 
-      // const users = [checkSheetDto?.inspector, checkSheetDto?.reviewer];
-      // const missingUsers = await this.userRepository.findMissingUsers(users);
+      const users = [checkSheetDto?.inspector, checkSheetDto?.reviewer];
+      const missingUsers = await this.userRepository.findMissingUsers(users);
 
-      // if (!isEquipment)
-      //   throw new NotFoundException('해당 장비가 존재하지 않습니다.');
+      if (!isEquipment)
+        throw new NotFoundException('해당 장비가 존재하지 않습니다.');
 
-      // if (missingUsers.length > 0) {
-      //   throw new NotFoundException(
-      //     `존재하지 않는 사용자가 있습니다. ${missingUsers.join(', ')}`,
-      //   );
-      // }
+      if (missingUsers.length > 0) {
+        throw new NotFoundException(
+          `존재하지 않는 사용자가 있습니다. ${missingUsers.join(', ')}`,
+        );
+      }
 
       if (checkSheetDto?.items === undefined)
         throw new BadRequestException('items가 존재하지 않습니다.');
@@ -155,7 +155,7 @@ export class CheckSheetService {
         ),
       ]);
 
-      console.log(data, 'wefion');
+      console.log(data, 'findAll check-sheet-service');
 
       return {
         pageSize: limit,
@@ -224,10 +224,10 @@ export class CheckSheetService {
       }
 
       const date = new Date();
-      console.log(
-        date.toISOString().split('T')[0],
-        checkSheet.createdAt.toISOString().split('T')[0],
-      );
+      // console.log(
+      //   date.toISOString().split('T')[0],
+      //   checkSheet.createdAt.toISOString().split('T')[0],
+      // );
       if (
         date.toISOString().split('T')[0] !==
         checkSheet.createdAt.toISOString().split('T')[0]
@@ -276,8 +276,6 @@ export class CheckSheetService {
         reviewer: body.reviewer,
         heavyEquipment: body.heavyEquipment,
       };
-
-      console.log(updateDto);
 
       return await this.checkSheetRepository.update(id, updateDto);
     } catch (error) {

@@ -55,12 +55,12 @@ export class UpdateHeavyEquipmentRequest extends PartialType(
   @IsArray()
   drivers: string[];
 
-  @ApiProperty({
-    description: '활성 상태',
-    example: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  isDeleted?: boolean;
+  // @ApiProperty({
+  //   description: '활성 상태',
+  //   example: true,
+  //   required: false,
+  // })
+  // @IsOptional()
+  // @IsBoolean()
+  // isDeleted?: boolean;
 }

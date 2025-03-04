@@ -34,13 +34,13 @@ export class UserInfo {
     ref: 'HeavyEquipment',
     required: false,
   })
-  heavyEquipmentId?: string;
+  equipmentId?: string;
 }
 
 export const UsersSchema = SchemaFactory.createForClass(UserInfo);
 
 UsersSchema.index(
-  { role: 1, heavyEquipmentId: 1 },
+  { role: 1, equipmentId: 1 },
   {
     unique: true,
     partialFilterExpression: {

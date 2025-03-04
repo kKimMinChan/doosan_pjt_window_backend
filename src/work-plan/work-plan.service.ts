@@ -33,10 +33,10 @@ export class WorkPlanService {
       const workPlanUrl = `https://${process.env.CLOUDFRONT_URL}/${file.key}`;
       const workPlanDto: Partial<WorkPlan> = {
         workPlanData: { url: workPlanUrl },
-        heavyEquipment: body.heavyEquipment,
+        equipment: body.equipment,
       };
 
-      if (!body.heavyEquipment) delete workPlanDto.heavyEquipment;
+      if (!body.equipment) delete workPlanDto.equipment;
 
       console.log(workPlanDto);
       return await this.workPlanRepository.create(workPlanDto);
@@ -82,13 +82,13 @@ export class WorkPlanService {
     assignEquipmentDto: AssignEquipmentRequest,
   ) {
     try {
-      const { heavyEquipment } = assignEquipmentDto;
-      const equipment =
-        await this.heavyEquipmentRepository.findOne(heavyEquipment);
-      if (!equipment)
+      const { equipment } = assignEquipmentDto;
+      const isEquipment =
+        await this.heavyEquipmentRepository.findOne(equipment);
+      if (!isEquipment)
         throw new NotFoundException('해당 id의 중장비가 존재하지 않습니다.');
       const workPlanDto: Partial<WorkPlan> = {
-        heavyEquipment,
+        equipment,
       };
       const result = await this.workPlanRepository.assignEquipment(
         id,

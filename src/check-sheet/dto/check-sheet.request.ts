@@ -133,7 +133,7 @@ export class CheckSheetRequest {
   })
   @IsString()
   @IsOptional()
-  heavyEquipment: string;
+  equipment: string;
 
   @ApiProperty({
     description: '점검자 id',

@@ -59,7 +59,7 @@ export class CheckSheetResponse {
     description: '중장비',
     required: false,
   })
-  heavyEquipment: HeavyEquipmentResponse;
+  equipment: HeavyEquipmentResponse;
 
   @ApiProperty({
     description: '점검자',

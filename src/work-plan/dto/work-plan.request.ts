@@ -24,7 +24,7 @@ export class WorkPlanRequest {
   })
   @IsString()
   @IsOptional()
-  heavyEquipment: string;
+  equipment: string;
 }
 
 export class AssignEquipmentRequest {
@@ -34,7 +34,7 @@ export class AssignEquipmentRequest {
     required: false,
   })
   @IsString()
-  heavyEquipment: string;
+  equipment: string;
 }
 
 export class AdminSignatureRequest {

@@ -84,7 +84,7 @@ export class usersMongoRepository implements UsersRepository {
 
   async findRole(id: string, role: 'INSPECTOR' | 'REVIEWER') {
     return await this.usersModel.findOne({
-      heavyEquipmentId: id,
+      equipmentId: id,
       role,
       isDeleted: false,
     });
@@ -94,7 +94,7 @@ export class usersMongoRepository implements UsersRepository {
     if (userInfo.role === 'INSPECTOR' || userInfo.role === 'REVIEWER') {
       const existingUser = await this.usersModel.findOne({
         role: userInfo.role,
-        heavyEquipmentId: userInfo.heavyEquipmentId,
+        equipmentId: userInfo.equipmentId,
       });
 
       if (existingUser) {

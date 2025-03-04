@@ -65,7 +65,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   async findOneLatest(id: string) {
     const checkSheet = await this.checkSheetModel
       .findOne({
-        heavyEquipment: new mongoose.Types.ObjectId(id),
+        equipment: new mongoose.Types.ObjectId(id),
       }) // ✅ `ObjectId` 변환 후 비교
       .sort({ _id: -1 })
       .populate('items.checkItem') // ✅ 최신 데이터 우선 정렬
@@ -76,13 +76,13 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
 
   async findOneLatestIssue(id: string, isToday: boolean) {
     const filter: any = {
-      heavyEquipment: new mongoose.Types.ObjectId(id),
+      equipment: new mongoose.Types.ObjectId(id),
       createdAt: { $gte: new Date(Date.now() - 63 * 60 * 60 * 1000) }, // ✅ 최근 63시간 데이터 필터
     };
 
     // ✅ MongoDB Aggregate 사용하여 최적화
     const pipeline: any = [
-      { $match: filter }, // ✅ heavyEquipment와 createdAt 필터링
+      { $match: filter }, // ✅ equipment와 createdAt 필터링
       { $sort: { createdAt: -1 } }, // ✅ 최신 데이터 우선 정렬
       { $skip: isToday ? 1 : 0 }, // ✅ 가장 최신 데이터 1개 제외 (isToday가 true일 경우)
       { $match: { issue: { $ne: null } } }, // ✅ issue가 null이 아닌 데이터 필터링
@@ -136,13 +136,13 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     const pipeline: any[] = [];
     if (todaySkip) {
       pipeline.push(
-        { $match: { heavyEquipment: new mongoose.Types.ObjectId(id) } },
+        { $match: { equipment: new mongoose.Types.ObjectId(id) } },
         { $sort: { createdAt: -1 } },
         { $skip: 1 },
       );
     } else {
       pipeline.push({
-        $match: { heavyEquipment: new mongoose.Types.ObjectId(id) },
+        $match: { equipment: new mongoose.Types.ObjectId(id) },
       });
     }
     pipeline.push({ $match: filter });
@@ -203,9 +203,74 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
         issue: { $first: '$issue' },
         inspector: { $first: '$inspector' },
         reviewer: { $first: '$reviewer' },
-        heavyEquipment: { $first: '$heavyEquipment' },
+        equipment: { $first: '$equipment' },
         createdAt: { $first: '$createdAt' },
         updatedAt: { $first: '$updatedAt' },
+      },
+    });
+
+    // ✅ equipment, reviewer, inspector 컬렉션에서 정보 가져오기
+    pipeline.push({
+      $lookup: {
+        from: 'heavyequipments', // ✅ equipment 정보를 가져오기 위한 조인
+        localField: 'equipment',
+        foreignField: '_id',
+        as: 'equipmentData',
+      },
+    });
+    pipeline.push({
+      $lookup: {
+        from: 'userinfos', // ✅ inspector 정보를 가져오기 위한 조인
+        localField: 'inspector',
+        foreignField: '_id',
+        as: 'inspectorData',
+      },
+    });
+    pipeline.push({
+      $lookup: {
+        from: 'userinfos', // ✅ reviewer 정보를 가져오기 위한 조인
+        localField: 'reviewer',
+        foreignField: '_id',
+        as: 'reviewerData',
+      },
+    });
+
+    // ✅ 불필요한 배열 제거 (각 참조 데이터는 하나의 객체만 가져오도록)
+    pipeline.push({
+      $addFields: {
+        equipment: {
+          $mergeObjects: [
+            { id: '$_id' },
+            { $arrayElemAt: ['$equipmentData', 0] },
+          ],
+        },
+        inspector: {
+          $mergeObjects: [
+            { id: '$_id' },
+            { $arrayElemAt: ['$inspectorData', 0] },
+          ],
+        },
+        reviewer: {
+          $mergeObjects: [
+            { id: '$_id' },
+            { $arrayElemAt: ['$reviewerData', 0] },
+          ],
+        },
+      },
+    });
+
+    // ✅ 필요 없는 필드 제거
+    pipeline.push({
+      $project: {
+        equipmentData: 0,
+        inspectorData: 0,
+        reviewerData: 0,
+        'equipment.__v': 0,
+        'inspector.__v': 0,
+        'reviewer.__v': 0,
+        'equipment._id': 0,
+        'inspector._id': 0,
+        'reviewer._id': 0,
       },
     });
 
@@ -241,7 +306,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     startDay: string,
     endDay: string,
   ) {
-    const filter: any = { heavyEquipment: new mongoose.Types.ObjectId(id) };
+    const filter: any = { equipment: new mongoose.Types.ObjectId(id) };
 
     // ✅ 날짜 필터 적용 (KST 기준 → UTC 변환)
     if (startDay) {
@@ -309,8 +374,8 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     if (updateDto.reviewer !== undefined) {
       updateFields.reviewer = updateDto.reviewer;
     }
-    if (updateDto.heavyEquipment !== undefined) {
-      updateFields.heavyEquipment = updateDto.heavyEquipment;
+    if (updateDto.equipment !== undefined) {
+      updateFields.equipment = updateDto.equipment;
     }
 
     console.log(updateFields, 'updateFields');

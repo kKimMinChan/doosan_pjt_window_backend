@@ -33,14 +33,14 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
   }
   async findAll(id: any, skip: number, limit: number) {
     const workPlans = await this.workPlanModel
-      .find({ heavyEquipment: id })
+      .find({ equipment: id })
       .sort({ _id: -1 })
       .skip(skip)
       .limit(limit);
     return workPlans;
   }
   async countWorkPlan(id: string) {
-    return await this.workPlanModel.countDocuments({ heavyEquipment: id });
+    return await this.workPlanModel.countDocuments({ equipment: id });
   }
 
   async assignEquipment(id: string, workPlanDto: Partial<WorkPlan>) {

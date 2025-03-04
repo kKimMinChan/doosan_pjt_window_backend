@@ -92,7 +92,7 @@ export class CheckSheet {
     required: true,
     autopopulate: true,
   })
-  heavyEquipment: string;
+  equipment: string;
 
   createdAt: Date;
   updatedAt: Date;

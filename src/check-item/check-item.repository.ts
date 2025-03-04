@@ -49,21 +49,26 @@ export class CheckItemMongoRepository implements CheckItemRepository {
       (item) =>
         !existingItemsMap.has(`${item.type}-${item.method}-${item.content}`),
     );
-    let insertedItems = [];
+
+    let insertedItemsMap = new Map();
     if (newItems.length > 0) {
-      // ✅ 5. 새 항목 `bulkWrite`로 한 번에 삽입
+      // ✅ 5. 새 항목 `insertMany`로 한 번에 삽입
       const insertResult = await this.checkItemModel.insertMany(newItems);
-      insertedItems = insertResult.map((item) => ({
-        key: `${item.type}-${item.method}-${item.content}`,
-        id: item._id.toString(),
-      }));
+      insertedItemsMap = new Map(
+        insertResult.map((item) => [
+          `${item.type}-${item.method}-${item.content}`,
+          item._id.toString(),
+        ]),
+      );
     }
-    // ✅ 6. 기존 항목과 새로 삽입한 항목을 합쳐서 `_id` 리스트 반환
-    const allItems = [
-      ...existingItemsMap.entries(),
-      ...insertedItems.map((item) => [item.key, item.id]),
-    ];
-    return allItems.map(([_, id]) => id);
+    // ✅ 6. 요청한 `checkItemDto` 순서대로 `_id`를 반환
+    const orderedIds = checkItemDto.map(
+      (item) =>
+        existingItemsMap.get(`${item.type}-${item.method}-${item.content}`) ??
+        insertedItemsMap.get(`${item.type}-${item.method}-${item.content}`),
+    );
+
+    return orderedIds;
   }
 
   async findAll(skip: number, limit: number) {
