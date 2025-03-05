@@ -81,7 +81,7 @@ export class CheckSheetService {
             url:
               process.env.NODE_ENV === 'production'
                 ? `${file.path}`
-                : `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
+                : `${file.key}`,
           };
         }) || [];
 
@@ -263,7 +263,7 @@ export class CheckSheetService {
           return {
             title,
             index,
-            url: `https://${process.env.CLOUDFRONT_URL}/${file.key}`,
+            url: `${file.key}`,
           };
         }) || [];
 

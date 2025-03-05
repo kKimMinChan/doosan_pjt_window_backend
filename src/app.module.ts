@@ -13,6 +13,7 @@ import { CheckItemModule } from './check-item/check-item.module';
 import { CheckSheetModule } from './check-sheet/check-sheet.module';
 import { WorkPlanModule } from './work-plan/work-plan.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { RecordingModule } from './recording/recording.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MulterModule } from '@nestjs/platform-express';
     CheckItemModule,
     CheckSheetModule,
     WorkPlanModule,
+    RecordingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
