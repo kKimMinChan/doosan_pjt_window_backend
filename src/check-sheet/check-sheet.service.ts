@@ -74,6 +74,7 @@ export class CheckSheetService {
       const images =
         files.map((file, idx) => {
           const { title, index } = parsedFileInfo[idx];
+          console.log(file.key, 'file key');
           return {
             title,
             index,

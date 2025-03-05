@@ -48,6 +48,7 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
     const equipmentDocument = await this.heavyEquipmentModel
       .findById(id)
       .populate('inspectors reviewers');
+
     return equipmentDocument;
   }
 
