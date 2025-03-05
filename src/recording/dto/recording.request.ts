@@ -1,1 +1,24 @@
-export class CreateRecordingDto {}
+import { ApiProperty } from '@nestjs/swagger';
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsString } from 'class-validator';
+
+// export class Ip {
+//   @ApiProperty({
+//     description: 'The IP address of the recording',
+//     example: '192.168.0.10:8080',
+//     required: true,
+//   })
+//   ip: string;
+// }
+
+export class RecordingRequest {
+  @ApiProperty({
+    example: ['192.168.0.10:8080', '192.168.0.11:8080'],
+    required: true,
+    type: [String],
+  })
+  @IsArray() // ✅ 배열인지 확인
+  @ArrayNotEmpty() // ✅ 배열이 비어있으면 안됨
+  @IsString({ each: true }) // ✅ 배열의 각 요소가 문자열인지 확인
+  @IsNotEmpty({ each: true }) // ✅ 배열 요소가 빈 문자열이면 안됨
+  ip: string[];
+}

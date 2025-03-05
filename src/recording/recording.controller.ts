@@ -6,40 +6,49 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { RecordingService } from './recording.service';
-import { CreateRecordingDto } from './dto/recording.request';
-import { UpdateRecordingDto } from './dto/recording.response';
+import { RecordingRequest } from './dto/recording.request';
+import { RecordingResponse } from './dto/recording.response';
+import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
-@Controller('recording')
+@ApiTags('녹화 설정')
+@Controller('configuration/recording')
 export class RecordingController {
   constructor(private readonly recordingService: RecordingService) {}
 
-  @Post()
-  create(@Body() createRecordingDto: CreateRecordingDto) {
-    return this.recordingService.create(createRecordingDto);
-  }
+  // @Post()
+  // create(@Body() createRecordingDto: CreateRecordingDto) {
+  //   return this.recordingService.create(createRecordingDto);
+  // }
 
   @Get()
-  findAll() {
-    return this.recordingService.findAll();
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
+  )
+  @ApiResponse({ type: RecordingResponse })
+  async findAll() {
+    const data = await this.recordingService.findAll();
+    console.log(data);
+    return {
+      data,
+    };
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.recordingService.findOne(+id);
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.recordingService.findOne(+id);
+  // }
+
+  @Put()
+  async update(@Body() updateRecordingDto: RecordingRequest) {
+    return await this.recordingService.update(updateRecordingDto);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateRecordingDto: UpdateRecordingDto,
-  ) {
-    return this.recordingService.update(+id, updateRecordingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.recordingService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.recordingService.remove(+id);
+  // }
 }

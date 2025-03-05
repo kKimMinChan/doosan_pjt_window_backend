@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateRecordingDto } from './recording.request';
+import { RecordingRequest } from './recording.request';
 
-export class UpdateRecordingDto extends PartialType(CreateRecordingDto) {}
+export class RecordingResponse extends PartialType(RecordingRequest) {}

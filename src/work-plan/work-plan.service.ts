@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import {
   AdminSignatureRequest,
-  AssignEquipmentRequest,
   DriverSignatureRequest,
+  WorkPlanDetailsRequest,
   WorkPlanRequest,
 } from './dto/work-plan.request';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
@@ -23,23 +23,19 @@ export class WorkPlanService {
     private userRepository: usersMongoRepository,
     private heavyEquipmentRepository: HeavyEquipmentMongoRepository,
   ) {}
-  async create(body: any, file: Express.MulterS3.File) {
+  async create(workPlanDto: WorkPlanRequest) {
     try {
-      console.log(body, file);
-      if (!file)
-        throw new BadRequestException(
-          '작업 계획서 이미지 파일을 전달받지 못했습니다.',
-        );
-      const workPlanUrl = `https://${process.env.CLOUDFRONT_URL}/${file.key}`;
-      const workPlanDto: Partial<WorkPlan> = {
-        workPlanData: { url: workPlanUrl },
-        equipment: body.equipment,
-      };
-
-      if (!body.equipment) delete workPlanDto.equipment;
-
+      if (!workPlanDto.data)
+        throw new BadRequestException('데이터를 입력해주세요.');
       console.log(workPlanDto);
-      return await this.workPlanRepository.create(workPlanDto);
+
+      const workPlan: Partial<WorkPlan> = {
+        workPlanData: workPlanDto.data,
+        equipment: workPlanDto.equipment,
+      };
+      if (!workPlanDto.equipment) delete workPlan.equipment;
+      console.log(workPlan);
+      return await this.workPlanRepository.create(workPlan);
     } catch (error) {
       ErrorHelper.handleError(error);
     }
@@ -77,23 +73,21 @@ export class WorkPlanService {
     }
   }
 
-  async assignEquipment(
-    id: string,
-    assignEquipmentDto: AssignEquipmentRequest,
-  ) {
+  async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
     try {
-      const { equipment } = assignEquipmentDto;
+      const { equipment, data } = workPlanDto;
+
       const isEquipment =
         await this.heavyEquipmentRepository.findOne(equipment);
-      if (!isEquipment)
-        throw new NotFoundException('해당 id의 중장비가 존재하지 않습니다.');
-      const workPlanDto: Partial<WorkPlan> = {
+
+      const workPlan: Partial<WorkPlan> = {
         equipment,
+        workPlanData: data,
       };
-      const result = await this.workPlanRepository.assignEquipment(
-        id,
-        workPlanDto,
-      );
+      if (!isEquipment) delete workPlan.equipment;
+      if (!data) delete workPlan.workPlanData;
+      console.log(equipment, data, '------------', workPlan);
+      const result = await this.workPlanRepository.updateDetails(id, workPlan);
       if (result.matchedCount === 0)
         throw new NotFoundException(
           '해당 id의 작업 계획서가 존재하지 않습니다.',
@@ -124,7 +118,7 @@ export class WorkPlanService {
           '서명 이미지 파일을 전달받지 못했습니다.',
         );
 
-      const url = `https://${process.env.CLOUDFRONT_URL}/${file.key}`;
+      const url = `${file.key}`;
       return await this.workPlanRepository.updateSignature(
         id,
         'adminSignatures',
@@ -147,7 +141,7 @@ export class WorkPlanService {
           '서명 이미지 파일을 전달받지 못했습니다.',
         );
 
-      const url = `https://${process.env.CLOUDFRONT_URL}/${file.key}`;
+      const url = `${file.key}`;
       const user = await this.userRepository.findOne(body.driver);
       if (!user)
         throw new NotFoundException('해당 id의 사용자가 존재하지 않습니다.');

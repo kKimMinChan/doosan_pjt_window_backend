@@ -104,7 +104,8 @@ export type UserRole = 'driver' | 'inspector' | 'reviewer' | 'admin';
 
 export class UserPaginationDto extends PartialType(PaginationDto) {
   @ApiProperty({
-    description: 'role에 대한 필터링 (driver, inspector, reviewer, admin)',
+    description:
+      'role에 대한 필터링 (driver, inspector, reviewer, admin) 기본 값 driver',
     enum: ['driver', 'inspector', 'reviewer', 'admin'],
     example: 'driver',
     required: false,

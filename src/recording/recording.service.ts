@@ -1,26 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRecordingDto } from './dto/recording.request';
-import { UpdateRecordingDto } from './dto/recording.response';
+import { RecordingRequest } from './dto/recording.request';
+import { RecordingMongoRepository } from './recording.repository';
 
 @Injectable()
 export class RecordingService {
-  create(createRecordingDto: CreateRecordingDto) {
-    return 'This action adds a new recording';
+  constructor(private recordingRepository: RecordingMongoRepository) {}
+
+  // create(createRecordingDto: RecordingRequest) {
+  //   return 'This action adds a new recording';
+  // }
+
+  async findAll() {
+    return await this.recordingRepository.findAll();
   }
 
-  findAll() {
-    return `This action returns all recording`;
+  // findOne(id: number) {
+  //   return `This action returns a #${id} recording`;
+  // }
+
+  async update(updateRecordingDto: RecordingRequest) {
+    return await this.recordingRepository.update(updateRecordingDto);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} recording`;
-  }
-
-  update(id: number, updateRecordingDto: UpdateRecordingDto) {
-    return `This action updates a #${id} recording`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} recording`;
-  }
+  // remove(id: number) {
+  //   return `This action removes a #${id} recording`;
+  // }
 }

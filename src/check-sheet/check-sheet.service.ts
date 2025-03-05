@@ -87,7 +87,10 @@ export class CheckSheetService {
 
       const finalImages = [...images, ...parsedExistingImages];
 
-      // console.log(finalImages);
+      console.log(
+        finalImages,
+        'finalImages ------------------------------------------------------',
+      );
 
       const newCheckSheet = {
         ...checkSheetDto,
@@ -109,7 +112,6 @@ export class CheckSheetService {
       const { limit, page, order, inspectionStatus, startDay, endDay } =
         checkSheetPaginationDto;
 
-      console.log(id, 'findAll id');
       const latestCheckSheet =
         await this.checkSheetRepository.findOneLatest(id);
 
@@ -156,7 +158,7 @@ export class CheckSheetService {
         ),
       ]);
 
-      console.log(data, 'findAll check-sheet-service');
+      console.log('findAll check-sheet-service');
 
       return {
         pageSize: limit,
@@ -183,7 +185,7 @@ export class CheckSheetService {
   async findOneLatest(id: string) {
     try {
       const latest = await this.checkSheetRepository.findOneLatest(id);
-      console.log(latest, 'findOneLatest');
+      console.log('findOneLatest');
       return latest;
       // if (!latest)
       //   throw new NotFoundException('생성된 안전 점검표가 없습니다.');

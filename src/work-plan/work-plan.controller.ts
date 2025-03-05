@@ -14,8 +14,8 @@ import {
 import { WorkPlanService } from './work-plan.service';
 import {
   AdminSignatureRequest,
-  AssignEquipmentRequest,
   DriverSignatureRequest,
+  WorkPlanDetailsRequest,
   WorkPlanRequest,
 } from './dto/work-plan.request';
 import {
@@ -38,11 +38,8 @@ export class WorkPlanController {
   @Post()
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   @ApiBody({ type: WorkPlanRequest })
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
-  async create(@Body() body: any, @UploadedFile() file: Express.MulterS3.File) {
-    console.log(file);
-    return { data: await this.workPlanService.create(body, file) };
+  async create(@Body() workPlanDto: WorkPlanRequest) {
+    return { data: await this.workPlanService.create(workPlanDto) };
   }
 
   @Get('heavyEquipment/:id')
@@ -67,15 +64,12 @@ export class WorkPlanController {
     };
   }
 
-  @Put(':id/assign-equipment')
-  async assignEquipment(
+  @Put(':id/details')
+  async updateDetails(
     @Param('id') id: string,
-    @Body() assignEquipmentDto: AssignEquipmentRequest,
+    @Body() workPlanDto: WorkPlanDetailsRequest,
   ) {
-    const result = await this.workPlanService.assignEquipment(
-      id,
-      assignEquipmentDto,
-    );
+    const result = await this.workPlanService.updateDetails(id, workPlanDto);
     return result;
   }
 

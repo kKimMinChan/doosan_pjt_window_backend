@@ -39,12 +39,12 @@ export class UserInfo {
 
 export const UsersSchema = SchemaFactory.createForClass(UserInfo);
 
-UsersSchema.index(
-  { role: 1, equipmentId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: {
-      role: { $in: ['inspector', 'reviewer'] },
-    },
-  },
-);
+// UsersSchema.index(
+//   { role: 1, equipmentId: 1 },
+//   {
+//     unique: false,
+//     partialFilterExpression: {
+//       role: { $in: ['inspector', 'reviewer'] },
+//     },
+//   },
+// );

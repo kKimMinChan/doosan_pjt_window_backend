@@ -37,7 +37,7 @@ export class usersMongoRepository implements UsersRepository {
       .limit(limit);
   }
   async findAll() {
-    const users = await this.usersModel.find();
+    const users = await this.usersModel.find().sort({ _id: -1 });
     return users;
     // const result = await this.usersModel.aggregate([
     //   {

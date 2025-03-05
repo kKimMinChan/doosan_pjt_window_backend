@@ -14,7 +14,7 @@ export interface WorkPlanRepository {
     matchValue: string,
     url: string,
   );
-  assignEquipment(id: string, workPlanDto: WorkPlan);
+  updateDetails(id: string, workPlanDto: WorkPlan);
   remove(id: string);
 }
 
@@ -43,7 +43,7 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     return await this.workPlanModel.countDocuments({ equipment: id });
   }
 
-  async assignEquipment(id: string, workPlanDto: Partial<WorkPlan>) {
+  async updateDetails(id: string, workPlanDto: Partial<WorkPlan>) {
     const result = await this.workPlanModel.updateOne(
       { _id: id },
       { $set: workPlanDto },
