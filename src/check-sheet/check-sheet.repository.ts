@@ -68,8 +68,10 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
         equipment: new mongoose.Types.ObjectId(id),
       }) // ✅ `ObjectId` 변환 후 비교
       .sort({ _id: -1 })
-      .populate('items.checkItem') // ✅ 최신 데이터 우선 정렬
+      .populate('items.checkItem')
       .exec(); // ✅ `exec()` 호출하여 실행
+
+    console.log(checkSheet, 'checkSheet');
 
     return checkSheet;
   }

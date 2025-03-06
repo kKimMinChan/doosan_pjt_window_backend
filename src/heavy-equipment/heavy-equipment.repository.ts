@@ -5,6 +5,7 @@ import {
 } from './entities/heavy-equipment.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ErrorHelper } from 'src/helper/ErrorHelper';
 
 export interface HeavyEquipmentRepository {
   createHeavyEquipment(heavyEquipmentInfo: HeavyEquipment);
@@ -53,26 +54,31 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
   }
 
   async update(id: string, heavyEquipmentInfo: Partial<HeavyEquipment>) {
-    const updateFields: Partial<HeavyEquipment> = {};
-    if (heavyEquipmentInfo.equipmentNumber)
-      updateFields['equipmentNumber'] = heavyEquipmentInfo.equipmentNumber;
-    if (heavyEquipmentInfo.factoryName)
-      updateFields['factoryName'] = heavyEquipmentInfo.factoryName;
-    // if (heavyEquipmentInfo.isDeleted)
-    //   updateFields['isDeleted'] = heavyEquipmentInfo.isDeleted;
-    if (heavyEquipmentInfo.type) updateFields['type'] = heavyEquipmentInfo.type;
-    if (heavyEquipmentInfo.inspectors?.length > 0)
-      updateFields['inspectors'] = heavyEquipmentInfo.inspectors;
-    if (heavyEquipmentInfo.reviewers?.length > 0)
-      updateFields['reviewers'] = heavyEquipmentInfo.reviewers;
+    // const updateFields: Partial<HeavyEquipment> = {};
+    // if (heavyEquipmentInfo.equipmentNumber)
+    //   updateFields['equipmentNumber'] = heavyEquipmentInfo.equipmentNumber;
+    // if (heavyEquipmentInfo.factoryName)
+    //   updateFields['factoryName'] = heavyEquipmentInfo.factoryName;
+    // // if (heavyEquipmentInfo.isDeleted)
+    // //   updateFields['isDeleted'] = heavyEquipmentInfo.isDeleted;
+    // if (heavyEquipmentInfo.type) updateFields['type'] = heavyEquipmentInfo.type;
+    // if (heavyEquipmentInfo.inspectors?.length > 0)
+    //   updateFields['inspectors'] = heavyEquipmentInfo.inspectors;
+    // if (heavyEquipmentInfo.reviewers?.length > 0)
+    //   updateFields['reviewers'] = heavyEquipmentInfo.reviewers;
+    // if (heavyEquipmentInfo.drivers?.length > 0)
+    //   updateFields['drivers'] = heavyEquipmentInfo.drivers;
 
-    if (Object.keys(updateFields).length === 0) {
-      throw new Error('변경할 데이터가 없습니다.');
-    }
+    // if (Object.keys(updateFields).length === 0) {
+    //   throw new Error('변경할 데이터가 없습니다.');
+    // }
+
+    // console.log(updateFields, 'updateFields');
+    console.log(heavyEquipmentInfo, 'heavyEquipmentInfo');
 
     const result = await this.heavyEquipmentModel.updateOne(
       { _id: id },
-      { $set: updateFields },
+      { $set: heavyEquipmentInfo },
     );
 
     if (result.modifiedCount === 0) {
@@ -87,8 +93,12 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
   }
 
   async remove(id: string) {
-    const result = await this.heavyEquipmentModel.deleteOne({ _id: id });
-    if (result.deletedCount > 0) return result;
-    return null;
+    try {
+      const result = await this.heavyEquipmentModel.deleteOne({ _id: id });
+      if (result.deletedCount > 0) return result;
+      return null;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 }

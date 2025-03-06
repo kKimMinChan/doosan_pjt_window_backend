@@ -25,6 +25,7 @@ import {
 } from '@nestjs/swagger';
 import {
   UpdateUserRequest,
+  UserFindRoleDto,
   UserPaginationDto,
   UserRequest,
 } from './dto/request.dto';
@@ -63,6 +64,16 @@ export class UserController {
   @ApiResponse({ type: UserResponse })
   async findAllPaginated(@Query() userPaginationDto: UserPaginationDto) {
     const users = await this.userService.findAllPaginated(userPaginationDto);
+    return users;
+  }
+
+  @Get('not-paginated')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(UserResponse, '', true, true),
+  )
+  @ApiResponse({ type: UserResponse })
+  async findRoleAll(@Query() userFindRoleDto: UserFindRoleDto) {
+    const users = await this.userService.findAllPaginated(userFindRoleDto);
     return users;
   }
 

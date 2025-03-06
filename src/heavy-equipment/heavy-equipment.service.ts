@@ -8,6 +8,7 @@ import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
+import { HeavyEquipment } from './entities/heavy-equipment.entity';
 
 @Injectable()
 export class HeavyEquipmentService {
@@ -80,10 +81,17 @@ export class HeavyEquipmentService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      return await this.heavyEquipmentRepository.update(
-        id,
-        updateHeavyEquipmentDto,
-      );
+
+      const equipment: Partial<HeavyEquipment> = {
+        equipmentNumber: updateHeavyEquipmentDto.equipmentNumber,
+        factoryName: updateHeavyEquipmentDto.factoryName,
+        type: updateHeavyEquipmentDto.type,
+        inspectors: updateHeavyEquipmentDto.inspectors,
+        reviewers: updateHeavyEquipmentDto.reviewers,
+        drivers: updateHeavyEquipmentDto.drivers,
+      };
+
+      return await this.heavyEquipmentRepository.update(id, equipment);
     } catch (error) {
       ErrorHelper.handleError(error);
     }

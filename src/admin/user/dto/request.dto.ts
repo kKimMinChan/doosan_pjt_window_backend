@@ -114,3 +114,16 @@ export class UserPaginationDto extends PartialType(PaginationDto) {
   @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
   role?: UserRole = 'driver';
 }
+
+export class UserFindRoleDto {
+  @ApiProperty({
+    description:
+      'role에 대한 필터링 (driver, inspector, reviewer, admin) 기본 값 driver',
+    enum: ['driver', 'inspector', 'reviewer', 'admin'],
+    example: 'driver',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
+  role?: UserRole = 'driver';
+}

@@ -54,6 +54,16 @@ export class CreateImage {
   @ApiProperty({ description: '이미지 순번', example: 1 })
   @IsNumber()
   index: number;
+}
+
+export class UpdateImage {
+  @ApiProperty({ description: '이미지 제목', example: '안전벨트' })
+  @IsString()
+  title: string;
+
+  @ApiProperty({ description: '이미지 순번', example: 1 })
+  @IsNumber()
+  index: number;
 
   @ApiProperty({ description: '존재 여부', example: true })
   @IsBoolean()
@@ -99,7 +109,7 @@ export class CheckSheetRequest {
 
   @ApiProperty({
     description:
-      '이미지 제목, 인덱스 formData에 객체를 여러번 append해서 배열로 전달 fileInfo[]',
+      '이미지 새로 업로드시 이미지 제목, 인덱스 formData에 객체를 여러번 append해서 배열로 전달 fileInfo[]',
     type: [CreateImage],
     required: false,
   })
@@ -109,7 +119,7 @@ export class CheckSheetRequest {
 
   @ApiProperty({
     description:
-      '이미지 제목, 인덱스, 이미지 주소 formData에 객체를 여러번 append해서 배열로 전달 existingImage[]',
+      '기존 이미지 있을 때 url 전달, 이미지 제목, 인덱스, 이미지 주소 formData에 객체를 여러번 append해서 배열로 전달 existingImage[]',
     type: [ExistingImage],
     required: false,
   })
@@ -194,12 +204,12 @@ export class UpdateCheckSheetRequest {
 
   @ApiProperty({
     description: '이미지 제목, 인덱스',
-    type: [CreateImage],
+    type: [UpdateImage],
     required: false,
   })
   @IsArray()
-  @Type(() => CreateImage)
-  fileInfo: CreateImage[];
+  @Type(() => UpdateImage)
+  fileInfo: UpdateImage[];
 
   @ApiProperty({
     description: '이슈사항',

@@ -76,8 +76,8 @@ export class HeavyEquipmentController {
 
   @Delete(':id')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
-  remove(@Param('id') id: string) {
-    this.heavyEquipmentService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.heavyEquipmentService.remove(id);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };

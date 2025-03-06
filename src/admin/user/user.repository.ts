@@ -13,6 +13,7 @@ import { UserRole } from './dto/request.dto';
 export interface UsersRepository {
   findAllPaginated(skip: number, limit: number, role: UserRole);
   findAll();
+  findRoleAll(role: UserRole);
   countUsers(role: UserRole);
   findOne(id: string);
   createUser(userInfo: UserInfo);
@@ -36,6 +37,11 @@ export class usersMongoRepository implements UsersRepository {
       .skip(skip)
       .limit(limit);
   }
+
+  async findRoleAll(role: UserRole) {
+    return await this.usersModel.find({ role }).sort({ _id: -1 });
+  }
+
   async findAll() {
     const users = await this.usersModel.find().sort({ _id: -1 });
     return users;

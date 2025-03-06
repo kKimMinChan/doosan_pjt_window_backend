@@ -280,6 +280,8 @@ export class CheckSheetService {
         heavyEquipment: body.heavyEquipment,
       };
 
+      console.log(updateDto, 'update ------------------------------');
+
       return await this.checkSheetRepository.update(id, updateDto);
     } catch (error) {
       console.log(error);

@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   UpdateUserRequest,
+  UserFindRoleDto,
   UserPaginationDto,
   UserRequest,
 } from './dto/request.dto';
@@ -68,6 +69,15 @@ export class UserService {
         page,
         data,
       };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async findRoleAll(userFindRoleDto: UserFindRoleDto) {
+    try {
+      const { role } = userFindRoleDto;
+      return await this.usersRepository.findRoleAll(role);
     } catch (error) {
       ErrorHelper.handleError(error);
     }
