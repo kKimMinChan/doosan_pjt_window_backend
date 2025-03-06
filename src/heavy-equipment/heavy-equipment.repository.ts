@@ -11,6 +11,7 @@ export interface HeavyEquipmentRepository {
   createHeavyEquipment(heavyEquipmentInfo: HeavyEquipment);
   findOne(id: string);
   findAll();
+  exists(ids: string[]);
   findAllPaginated(skip: number, limit: number);
   countEquipments();
   update(id: string, heavyEquipmentInfo: Partial<HeavyEquipment>);
@@ -51,6 +52,13 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
       .populate('inspectors reviewers');
 
     return equipmentDocument;
+  }
+
+  async exists(ids: string[]) {
+    const count = await this.heavyEquipmentModel.countDocuments({
+      _id: { $in: ids },
+    });
+    return count === ids.length;
   }
 
   async update(id: string, heavyEquipmentInfo: Partial<HeavyEquipment>) {

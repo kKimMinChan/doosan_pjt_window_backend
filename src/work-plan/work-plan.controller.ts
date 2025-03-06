@@ -38,8 +38,8 @@ export class WorkPlanController {
   @Post()
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   @ApiBody({ type: WorkPlanRequest })
-  async create(@Body() workPlanDto: WorkPlanRequest) {
-    return { data: await this.workPlanService.create(workPlanDto) };
+  async create(@Body() body: WorkPlanRequest) {
+    return { data: await this.workPlanService.create(body) };
   }
 
   @Get('heavyEquipment/:id')

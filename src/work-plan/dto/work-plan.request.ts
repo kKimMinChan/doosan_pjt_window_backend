@@ -1,5 +1,6 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEnum,
   IsIn,
   IsNotEmpty,
@@ -9,40 +10,44 @@ import {
 } from 'class-validator';
 import { SignatureType } from '../entities/work-plan.schema';
 
-class WorkPlanData {
+class MutableData {
   @ApiProperty({
-    description: '작성자',
-    example: '홍길동',
-    required: true,
+    description: '작성자 id',
+    example: '67ac4cc798a6e79ea2369d39',
+    required: false,
   })
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   writer: string;
 
   @ApiProperty({
     description: '제목',
     example: '작업 계획서',
-    required: true,
+    required: false,
   })
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   title: string;
 
   @ApiProperty({
     description: '부서',
     example: '기획부',
-    required: true,
+    required: false,
   })
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   department: string;
 
   @ApiProperty({
     description: '작업 지휘자',
     example: '김철수',
-    required: true,
+    required: false,
   })
   @IsString()
+  @IsOptional()
   @IsNotEmpty()
   leader: string;
 
@@ -72,124 +77,35 @@ class WorkPlanData {
   @IsString()
   @IsOptional()
   route: string;
-
-  @ApiProperty({
-    description: '작업 방법',
-    example: ['방법1', '방법2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  methods: string[];
-
-  @ApiProperty({
-    description: '이동경로 위험사항',
-    example: ['위험사항1', '위험사항2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  movingPathHazards: string[];
-
-  @ApiProperty({
-    description: '하역운반 작업 위험사항',
-    example: ['위험사항1', '위험사항2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  loadingUnloadingHazards: string[];
-
-  @ApiProperty({
-    description: '전도위험방지',
-    example: ['방지1', '방지2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  tipOverPrevention: string[];
-
-  @ApiProperty({
-    description: '낙하위험방지',
-    example: ['방지1', '방지2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  fallPrevention: string[];
-
-  @ApiProperty({
-    description: '접촉충돌 위험방지',
-    example: ['방지1', '방지2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  contactCollisionPrevention: string[];
-
-  @ApiProperty({
-    description: '협착위험방지',
-    example: ['방지1', '방지2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  crushPrevention: string[];
-
-  @ApiProperty({
-    description: '붕괴위험방지',
-    example: ['방지1', '방지2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  collapsePrevention: string[];
-
-  @ApiProperty({
-    description: '추락위험방비',
-    example: ['방지1', '방지2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  fallHazardPrevention: string[];
-
-  @ApiProperty({
-    description: '안전점검',
-    example: ['점검1', '점검2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  safetyInspection: string[];
-
-  @ApiProperty({
-    description: '안전수칙',
-    example: ['수칙1', '수칙2'],
-    required: false,
-  })
-  @IsString({ each: true })
-  @IsOptional()
-  safetyRegulations: string[];
 }
 
 export class WorkPlanRequest {
   @ApiProperty({
     description: '작업 계획서 데이터',
-    required: true,
-    type: WorkPlanData,
+    required: false,
+    type: MutableData,
   })
   @IsNotEmpty()
-  data: WorkPlanData;
+  @IsOptional()
+  mutableData: MutableData;
+
+  @ApiProperty({
+    description: '고정 데이터',
+    example: '고정 데이터입니다.',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  fixedData: string;
 
   @ApiProperty({
     description: '중장비 id',
     example: '67a2fc0c89ca50f1cee44e03',
     required: false,
   })
-  @IsString()
+  @IsArray()
   @IsOptional()
-  equipment: string;
+  equipment: string[];
 }
 
 export class WorkPlanDetailsRequest extends PartialType(WorkPlanRequest) {}

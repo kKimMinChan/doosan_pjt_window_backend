@@ -15,7 +15,7 @@ import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
 @ApiTags('녹화 설정')
-@Controller('configuration/recording')
+@Controller('configuration/recording-ips')
 export class RecordingController {
   constructor(private readonly recordingService: RecordingService) {}
 

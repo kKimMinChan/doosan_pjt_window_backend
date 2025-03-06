@@ -10,17 +10,20 @@ export enum SignatureType {
   FINISH = 'finish',
 }
 
-class WorkPlanData {
-  @Prop({ required: true })
+class MutableData {
+  @Prop({
+    type: { type: mongoose.Schema.ObjectId, ref: 'UserInfo' },
+    autopopulate: true,
+  })
   writer: string;
 
-  @Prop({ required: true })
+  @Prop()
   title: string;
 
-  @Prop({ required: true })
+  @Prop()
   department: string;
 
-  @Prop({ required: true })
+  @Prop()
   leader: string;
 
   @Prop()
@@ -31,39 +34,6 @@ class WorkPlanData {
 
   @Prop()
   route: string;
-
-  @Prop({ type: [String] })
-  methods: string[];
-
-  @Prop({ type: [String] })
-  movingPathHazards: string[]; // 이동경로 위험사항
-
-  @Prop({ type: [String] })
-  loadingUnloadingHazards: string[]; // 하역운반 작업 위험사항
-
-  @Prop({ type: [String] })
-  tipOverPrevention: string[]; // 전도위험방지
-
-  @Prop({ type: [String] })
-  fallPrevention: string[]; // 낙하위험방지
-
-  @Prop({ type: [String] })
-  contactCollisionPrevention: string[]; // 접촉충돌 위험방지
-
-  @Prop({ type: [String] })
-  crushPrevention: string[]; // 협착위험방지
-
-  @Prop({ type: [String] })
-  collapsePrevention: string[]; // 붕괴위험방지
-
-  @Prop({ type: [String] })
-  fallHazardPrevention: string[]; // 추락위험방비
-
-  @Prop({ type: [String] })
-  safetyInspection: string[]; // 안전점검
-
-  @Prop({ type: [String] })
-  safetyRegulations: string[]; // 안전수칙
 }
 
 class AdminSignature {
@@ -85,8 +55,11 @@ class AdminSignature {
   },
 })
 export class WorkPlan {
-  @Prop({ type: WorkPlanData, required: true })
-  workPlanData: WorkPlanData;
+  @Prop({ type: MutableData, required: true })
+  mutableData: MutableData;
+
+  @Prop()
+  fixedData: string;
 
   @Prop({ type: [AdminSignature], required: false })
   adminSignatures?: AdminSignature[];
@@ -106,11 +79,11 @@ export class WorkPlan {
   }[];
 
   @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'HeavyEquipment',
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'HeavyEquipment' }],
     required: false,
+    autopopulate: true,
   })
-  equipment: string | null;
+  equipment: string[] | null;
 }
 
 export const WorkPlanSchema = SchemaFactory.createForClass(WorkPlan);

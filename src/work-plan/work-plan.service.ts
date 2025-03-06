@@ -25,15 +25,24 @@ export class WorkPlanService {
   ) {}
   async create(workPlanDto: WorkPlanRequest) {
     try {
-      if (!workPlanDto.data)
+      console.log(workPlanDto, 'workPlanDto --------------');
+      if (!workPlanDto.mutableData || !workPlanDto.fixedData)
         throw new BadRequestException('데이터를 입력해주세요.');
       console.log(workPlanDto);
 
+      const isEquipment = await this.heavyEquipmentRepository.exists(
+        workPlanDto.equipment,
+      );
+
+      if (!isEquipment)
+        throw new NotFoundException('해당 id의 중장비가 존재하지 않습니다.');
+
       const workPlan: Partial<WorkPlan> = {
-        workPlanData: workPlanDto.data,
+        mutableData: workPlanDto.mutableData,
+        fixedData: workPlanDto.fixedData,
         equipment: workPlanDto.equipment,
       };
-      if (!workPlanDto.equipment) delete workPlan.equipment;
+      if (!isEquipment) delete workPlan.equipment;
       console.log(workPlan);
       return await this.workPlanRepository.create(workPlan);
     } catch (error) {
@@ -75,18 +84,22 @@ export class WorkPlanService {
 
   async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
     try {
-      const { equipment, data } = workPlanDto;
+      const { equipment, mutableData, fixedData } = workPlanDto;
 
-      const isEquipment =
-        await this.heavyEquipmentRepository.findOne(equipment);
+      const isEquipment = await this.heavyEquipmentRepository.exists(equipment);
+      if (!isEquipment)
+        throw new NotFoundException('해당 id의 중장비가 존재하지 않습니다.');
 
       const workPlan: Partial<WorkPlan> = {
         equipment,
-        workPlanData: data,
+        mutableData,
+        fixedData,
       };
       if (!isEquipment) delete workPlan.equipment;
-      if (!data) delete workPlan.workPlanData;
-      console.log(equipment, data, '------------', workPlan);
+      if (!mutableData) delete workPlan.mutableData;
+      if (!fixedData) delete workPlan.fixedData;
+
+      console.log(equipment, mutableData, fixedData, '------------', workPlan);
       const result = await this.workPlanRepository.updateDetails(id, workPlan);
       if (result.matchedCount === 0)
         throw new NotFoundException(
