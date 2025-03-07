@@ -101,9 +101,10 @@ class Register {
   @ApiProperty({
     description: '운전자 id',
     example: '67a2fc0c89ca50f1cee44e03',
-    required: true,
+    required: false,
   })
   @IsString()
+  @IsOptional()
   driver: string;
 }
 

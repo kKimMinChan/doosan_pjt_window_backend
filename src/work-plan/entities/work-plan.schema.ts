@@ -81,7 +81,7 @@ export class WorkPlan {
   })
   driverSignatures: {
     driver: string;
-    url: string;
+    url?: string;
   }[];
 
   @Prop({

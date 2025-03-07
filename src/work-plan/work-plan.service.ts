@@ -41,6 +41,7 @@ export class WorkPlanService {
         mutableData: workPlanDto.mutableData,
         fixedData: workPlanDto.fixedData,
         equipment: workPlanDto.equipment,
+        driverSignatures: workPlanDto.driverSignatures,
       };
       if (!isEquipment) delete workPlan.equipment;
       console.log(workPlan);
