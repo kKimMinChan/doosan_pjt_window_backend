@@ -10,12 +10,14 @@ export enum SignatureType {
   FINISH = 'finish',
 }
 
+@Schema({ _id: false }) // ✅ _id 생성 방지 & 자동 populate 활성화
 class MutableData {
   @Prop({
-    type: { type: mongoose.Schema.ObjectId, ref: 'UserInfo' },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UserInfo',
     autopopulate: true,
   })
-  writer: string;
+  writer: mongoose.Types.ObjectId;
 
   @Prop()
   title: string;
@@ -36,6 +38,10 @@ class MutableData {
   route: string;
 }
 
+// ✅ MutableData 서브 스키마 등록
+const MutableDataSchema = SchemaFactory.createForClass(MutableData);
+MutableDataSchema.plugin(require('mongoose-autopopulate'));
+
 class AdminSignature {
   @Prop({ type: String, enum: SignatureType, required: true })
   type: SignatureType;
@@ -55,7 +61,7 @@ class AdminSignature {
   },
 })
 export class WorkPlan {
-  @Prop({ type: MutableData, required: true })
+  @Prop({ type: MutableDataSchema, required: true })
   mutableData: MutableData;
 
   @Prop()
@@ -74,7 +80,7 @@ export class WorkPlan {
     _id: false,
   })
   driverSignatures: {
-    driver: SignatureType;
+    driver: string;
     url: string;
   }[];
 
@@ -87,3 +93,5 @@ export class WorkPlan {
 }
 
 export const WorkPlanSchema = SchemaFactory.createForClass(WorkPlan);
+
+WorkPlanSchema.plugin(require('mongoose-autopopulate'));

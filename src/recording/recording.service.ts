@@ -22,7 +22,7 @@ export class RecordingService {
     return await this.recordingRepository.update(updateRecordingDto);
   }
 
-  // remove(id: number) {
-  //   return `This action removes a #${id} recording`;
-  // }
+  async remove() {
+    return await this.recordingRepository.remove();
+  }
 }

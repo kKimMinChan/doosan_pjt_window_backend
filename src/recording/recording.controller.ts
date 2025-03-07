@@ -47,8 +47,8 @@ export class RecordingController {
     return await this.recordingService.update(updateRecordingDto);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.recordingService.remove(+id);
-  // }
+  @Delete()
+  remove() {
+    return this.recordingService.remove();
+  }
 }

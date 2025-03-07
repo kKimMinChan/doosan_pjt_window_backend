@@ -6,6 +6,7 @@ import { Model } from 'mongoose';
 export interface WorkPlanRepository {
   create(workPlanDto: WorkPlan);
   findOne(id: string);
+  findOneLatest(id: string);
   findAll(id, skip: number, limit: number);
   countWorkPlan(id: string);
   updateSignature(
@@ -29,6 +30,14 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
   }
   async findOne(id: string) {
     const workPlan = await this.workPlanModel.findById(id);
+    return workPlan;
+  }
+
+  async findOneLatest(id: string) {
+    const workPlan = await this.workPlanModel
+      .findOne({ equipment: id })
+      .sort({ _id: -1 })
+      .exec();
     return workPlan;
   }
   async findAll(id: any, skip: number, limit: number) {

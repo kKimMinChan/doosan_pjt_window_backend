@@ -42,17 +42,6 @@ export class WorkPlanController {
     return { data: await this.workPlanService.create(body) };
   }
 
-  @Get('heavyEquipment/:id')
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(WorkPlanResponse, '', true, true),
-  )
-  async findAll(
-    @Query() paginationDto: PaginationDto,
-    @Param('id') id: string,
-  ) {
-    return await this.workPlanService.findAll(id, paginationDto);
-  }
-
   @Get(':id')
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(WorkPlanResponse, '', false, true),
@@ -62,6 +51,28 @@ export class WorkPlanController {
     return {
       data: await this.workPlanService.findOne(id),
     };
+  }
+
+  @Get(':equipmentId/latest')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(WorkPlanResponse, '', false, true),
+  )
+  @ApiResponse({ type: WorkPlanResponse })
+  async findOneLatest(@Param('equipmentId') id: string) {
+    return {
+      data: await this.workPlanService.findOneLatest(id),
+    };
+  }
+
+  @Get('heavyEquipment/:id')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(WorkPlanResponse, '', true, true),
+  )
+  async findAll(
+    @Query() paginationDto: PaginationDto,
+    @Param('id') id: string,
+  ) {
+    return await this.workPlanService.findAll(id, paginationDto);
   }
 
   @Put(':id/details')

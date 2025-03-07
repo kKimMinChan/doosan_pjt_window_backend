@@ -46,7 +46,6 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
 
   async create(checkSheetDto: CheckSheet) {
     const newCheckSheet = await new this.checkSheetModel(checkSheetDto).save();
-    console.log(newCheckSheet, 'createNewCheckSheet');
     return newCheckSheet;
   }
 
@@ -70,8 +69,6 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       .sort({ _id: -1 })
       .populate('items.checkItem')
       .exec(); // ✅ `exec()` 호출하여 실행
-
-    console.log(checkSheet, 'checkSheet');
 
     return checkSheet;
   }

@@ -9,6 +9,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { SignatureType } from '../entities/work-plan.schema';
+import mongoose from 'mongoose';
 
 class MutableData {
   @ApiProperty({
@@ -19,7 +20,7 @@ class MutableData {
   @IsString()
   @IsOptional()
   @IsNotEmpty()
-  writer: string;
+  writer: mongoose.Types.ObjectId;
 
   @ApiProperty({
     description: '제목',
@@ -79,6 +80,33 @@ class MutableData {
   route: string;
 }
 
+export class DriverSignatureRequest {
+  @ApiProperty({
+    description: '서명 파일',
+    format: 'binary',
+    required: true,
+  })
+  file: string;
+
+  @ApiProperty({
+    description: '운전자 id',
+    example: '67a2fc0c89ca50f1cee44e03',
+    required: true,
+  })
+  @IsString()
+  driver: string;
+}
+
+class Register {
+  @ApiProperty({
+    description: '운전자 id',
+    example: '67a2fc0c89ca50f1cee44e03',
+    required: true,
+  })
+  @IsString()
+  driver: string;
+}
+
 export class WorkPlanRequest {
   @ApiProperty({
     description: '작업 계획서 데이터',
@@ -100,12 +128,21 @@ export class WorkPlanRequest {
 
   @ApiProperty({
     description: '중장비 id',
-    example: '67a2fc0c89ca50f1cee44e03',
+    example: ['67ad5a268f3d88a7ce6657d7'],
     required: false,
   })
   @IsArray()
   @IsOptional()
   equipment: string[];
+
+  @ApiProperty({
+    description: '운전자 명단',
+    required: false,
+    type: [Register],
+  })
+  @IsArray()
+  @IsOptional()
+  driverSignatures: Register[];
 }
 
 export class WorkPlanDetailsRequest extends PartialType(WorkPlanRequest) {}
@@ -128,21 +165,4 @@ export class AdminSignatureRequest {
     message: 'type 값은 create, finish 중 하나여야 합니다.',
   })
   type: SignatureType;
-}
-
-export class DriverSignatureRequest {
-  @ApiProperty({
-    description: '서명 파일',
-    format: 'binary',
-    required: true,
-  })
-  file: string;
-
-  @ApiProperty({
-    description: '운전자 id',
-    example: '67a2fc0c89ca50f1cee44e03',
-    required: true,
-  })
-  @IsString()
-  driver: string;
 }

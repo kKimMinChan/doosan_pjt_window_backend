@@ -82,6 +82,15 @@ export class WorkPlanService {
     }
   }
 
+  async findOneLatest(id: string) {
+    try {
+      const workPlan = await this.workPlanRepository.findOneLatest(id);
+      return workPlan;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
   async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
     try {
       const { equipment, mutableData, fixedData } = workPlanDto;

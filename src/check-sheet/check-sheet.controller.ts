@@ -47,7 +47,6 @@ export class CheckSheetController {
     @UploadedFiles() files: Express.MulterS3.File[],
     @Body() body: any,
   ) {
-    console.log(body);
     return await this.checkSheetService.create(body, files);
   }
 
@@ -119,7 +118,6 @@ export class CheckSheetController {
   @Delete(':id')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async remove(@Param('id', ObjectIdValidationPipe) id: string) {
-    console.log(id);
     return await this.checkSheetService.remove(id);
   }
 

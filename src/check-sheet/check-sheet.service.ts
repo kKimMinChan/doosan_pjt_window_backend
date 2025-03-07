@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -23,20 +24,36 @@ export class CheckSheetService {
   ) {}
   async create(checkSheetDto: any, files: Express.MulterS3.File[]) {
     try {
-      const date = new Date();
-      const latestCheckSheet = await this.checkSheetRepository.findOneLatest(
-        checkSheetDto?.equipment,
-      );
-
+      // 중장비 id 확인
       const isEquipment = await this.heavyEquipmentRepository.findOne(
         checkSheetDto?.equipment,
       );
 
-      const users = [checkSheetDto?.inspector, checkSheetDto?.reviewer];
-      const missingUsers = await this.userRepository.findMissingUsers(users);
-
       if (!isEquipment)
         throw new NotFoundException('해당 장비가 존재하지 않습니다.');
+
+      // 날짜 확인
+      const date = new Date(
+        new Date().getTime() + 1000 * 60 * 60 * 9,
+      ).toISOString();
+      const latestCheckSheet = await this.checkSheetRepository.findOneLatest(
+        checkSheetDto?.equipment,
+      );
+      const kstLatestCheckSheet = latestCheckSheet?.createdAt
+        ? new Date(
+            new Date(latestCheckSheet.createdAt).getTime() + 1000 * 60 * 60 * 9,
+          ).toISOString()
+        : null; // createdAt이 없을 경우 null 반환
+
+      if (kstLatestCheckSheet) {
+        if (date.split('T')[0] === kstLatestCheckSheet.split('T')[0])
+          console.log(date, kstLatestCheckSheet);
+        throw new ConflictException('금일 데이터가 존재합니다.');
+      }
+
+      // 사용자 id 확인
+      const users = [checkSheetDto?.inspector, checkSheetDto?.reviewer];
+      const missingUsers = await this.userRepository.findMissingUsers(users);
 
       if (missingUsers.length > 0) {
         throw new NotFoundException(
@@ -102,7 +119,6 @@ export class CheckSheetService {
 
       return await this.checkSheetRepository.create(newCheckSheet);
     } catch (error) {
-      console.error(error);
       ErrorHelper.handleError(error);
     }
   }
@@ -175,7 +191,7 @@ export class CheckSheetService {
   async findOne(id: string) {
     try {
       const checkSheet = await this.checkSheetRepository.findOne(id);
-      console.log(checkSheet, 'findOne');
+      console.log('findOne');
       return checkSheet;
     } catch (error) {
       ErrorHelper.handleError(error);
@@ -185,7 +201,8 @@ export class CheckSheetService {
   async findOneLatest(id: string) {
     try {
       const latest = await this.checkSheetRepository.findOneLatest(id);
-      console.log('findOneLatest');
+      console.log('findOneLatest', latest?.createdAt);
+
       return latest;
       // if (!latest)
       //   throw new NotFoundException('생성된 안전 점검표가 없습니다.');
@@ -209,7 +226,6 @@ export class CheckSheetService {
         id,
         isToday,
       );
-      console.log(issue, 'findOneLatestIssue');
       return issue;
     } catch (error) {
       ErrorHelper.handleError(error);

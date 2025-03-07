@@ -6,6 +6,7 @@ import { Model } from 'mongoose';
 export interface RecordingRepository {
   findAll();
   update(ips: Recording);
+  remove();
 }
 
 @Injectable()
@@ -33,5 +34,9 @@ export class RecordingMongoRepository implements RecordingRepository {
       session.endSession();
       throw error;
     }
+  }
+
+  async remove() {
+    return await this.recordingModel.deleteOne().exec();
   }
 }
