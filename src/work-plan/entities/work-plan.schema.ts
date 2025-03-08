@@ -38,6 +38,19 @@ class MutableData {
   route: string;
 }
 
+@Schema({ _id: false })
+class driverSignatures {
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UserInfo',
+    autopopulate: true,
+  })
+  driver: mongoose.Types.ObjectId;
+
+  @Prop()
+  url?: string;
+}
+
 // ✅ MutableData 서브 스키마 등록
 const MutableDataSchema = SchemaFactory.createForClass(MutableData);
 MutableDataSchema.plugin(require('mongoose-autopopulate'));
@@ -70,19 +83,8 @@ export class WorkPlan {
   @Prop({ type: [AdminSignature], required: false })
   adminSignatures?: AdminSignature[];
 
-  @Prop({
-    type: [
-      {
-        driver: { type: mongoose.Schema.Types.ObjectId },
-        url: { type: String },
-      },
-    ],
-    _id: false,
-  })
-  driverSignatures: {
-    driver: string;
-    url?: string;
-  }[];
+  @Prop({ type: [driverSignatures], required: false })
+  driverSignatures: driverSignatures[];
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'HeavyEquipment' }],

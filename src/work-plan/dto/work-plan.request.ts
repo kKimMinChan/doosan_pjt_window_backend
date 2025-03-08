@@ -105,7 +105,15 @@ class Register {
   })
   @IsString()
   @IsOptional()
-  driver: string;
+  driver: mongoose.Types.ObjectId;
+
+  @ApiProperty({
+    description: 'url',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  url?: string;
 }
 
 export class WorkPlanRequest {
