@@ -1,96 +1,104 @@
-// import { Injectable } from '@nestjs/common';
-// import { WorkPlan, WorkPlanDocument, WorkPlanItem } from './work-plan.schema';
-// import { InjectModel } from '@nestjs/mongoose';
-// import { Model } from 'mongoose';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { WorkPlan, WorkPlanDocument } from './entities/work-plan.schema';
+import { Model } from 'mongoose';
 
-// export interface WorkPlanRepository {
-//   createWorkPlan(workPlanItem: WorkPlanItem);
-//   getWorkPlan();
-//   signature(signatureUrl: string, signatureType: string, name: string);
-//   updatedDriver(workPlanItem: WorkPlanItem);
-// }
+export interface WorkPlanRepository {
+  create(workPlanDto: WorkPlan);
+  findOne(id: string);
+  findOneLatest(id: string);
+  findAll(id, skip: number, limit: number);
+  countWorkPlan(id: string);
+  updateSignature(
+    id: string,
+    key: 'adminSignatures' | 'driverSignatures',
+    matchValue: string,
+    url: string,
+  );
+  updateDetails(id: string, workPlanDto: WorkPlan);
+  remove(id: string);
+}
 
-// @Injectable()
-// export class WorkPlanMongoRepository implements WorkPlanRepository {
-//   constructor(
-//     @InjectModel(WorkPlan.name)
-//     private workPlanModel: Model<WorkPlanDocument>,
-//   ) {}
+@Injectable()
+export class WorkPlanMongoRepository implements WorkPlanRepository {
+  constructor(
+    @InjectModel(WorkPlan.name) private workPlanModel: Model<WorkPlanDocument>,
+  ) {}
+  async create(workPlanDto: Partial<WorkPlan>) {
+    const workPlan = new this.workPlanModel(workPlanDto);
+    return await workPlan.save();
+  }
+  async findOne(id: string) {
+    const workPlan = await this.workPlanModel.findById(id);
+    return workPlan;
+  }
 
-//   async getWorkPlan() {
-//     const workPlan = await this.workPlanModel.findOne();
-//     if (workPlan) {
-//       return workPlan;
-//     }
-//     return null;
-//   }
+  async findOneLatest(id: string) {
+    const workPlan = await this.workPlanModel
+      .findOne({ equipment: id })
+      .sort({ _id: -1 })
+      .exec();
+    return workPlan;
+  }
+  async findAll(id: any, skip: number, limit: number) {
+    const workPlans = await this.workPlanModel
+      .find({ equipment: id })
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit);
+    return workPlans;
+  }
+  async countWorkPlan(id: string) {
+    return await this.workPlanModel.countDocuments({ equipment: id });
+  }
 
-//   async updatedDriver(workPlanItem: WorkPlanItem) {
-//     const workPlanDocument = await this.workPlanModel.findOne();
-//     const workPlanList = workPlanDocument.workPlanList;
-//     workPlanList.pop();
-//     workPlanDocument.workPlanList.push(workPlanItem);
-//     await workPlanDocument.save();
-//   }
+  async updateDetails(id: string, workPlanDto: Partial<WorkPlan>) {
+    const result = await this.workPlanModel.updateOne(
+      { _id: id },
+      { $set: workPlanDto },
+    );
 
-//   async createWorkPlan(workPlanItem: WorkPlanItem) {
-//     const workPlanDocument = await this.workPlanModel.findOne();
-//     const workPlanItemCopy = JSON.parse(JSON.stringify(workPlanItem));
-//     if (workPlanDocument) {
-//       const workPlanList = workPlanDocument?.workPlanList;
-//       const workPlan = workPlanList[workPlanDocument.workPlanList.length - 1];
-//       console.log(workPlan, workPlanItem, '이미지 변경');
-//       workPlanDocument.workPlanList.push(workPlanItem);
-//       await workPlanDocument.save();
-//       return workPlanDocument.workPlanList[
-//         workPlanDocument.workPlanList.length - 1
-//       ];
-//     } else {
-//       const createWorkPlan = new this.workPlanModel({
-//         workPlanList: [workPlanItemCopy],
-//       });
-//       return await createWorkPlan.save();
-//     }
-//   }
+    return result;
+  }
 
-//   async signature(signatureUrl: string, signatureType: string, name: string) {
-//     try {
-//       const workPlanDocument = await this.workPlanModel.findOne();
-//       const workPlanList = workPlanDocument.workPlanList;
-//       const workPlan = workPlanList.pop();
-//       if (!workPlan) {
-//         console.log('workPlan not found');
-//         return null;
-//       }
+  async updateSignature(
+    id: string,
+    key: 'adminSignatures' | 'driverSignatures',
+    matchValue: string,
+    url: string,
+  ) {
+    const matchField = key === 'adminSignatures' ? 'type' : 'driver';
 
-//       if (name) {
-//         const driverIdx = workPlan.signature.driver.findIndex(
-//           (driver) => driver.name === name,
-//         );
+    console.log(id, key, matchValue, url);
+    const updateSignature = await this.workPlanModel.updateOne(
+      {
+        _id: id,
+        [key]: { $elemMatch: { [matchField]: matchValue } },
+      },
+      {
+        $set: { [`${key}.$.url`]: url },
+      },
+    );
+    if (updateSignature.matchedCount === 0) {
+      const addSignature = await this.workPlanModel.updateOne(
+        {
+          _id: id,
+        },
+        {
+          $push: {
+            [key]: {
+              [matchField]: matchValue,
+              url,
+            },
+          },
+        },
+      );
+      return addSignature;
+    }
+    return updateSignature;
+  }
 
-//         if (driverIdx !== -1) {
-//           workPlan.signature.driver[driverIdx].signatureImage = {
-//             ...workPlan.signature.driver[driverIdx].signatureImage,
-//             image_url: signatureUrl,
-//           };
-//         }
-//       } else {
-//         if (signatureType) {
-//           workPlan.signature[signatureType] = {
-//             image_url: signatureUrl,
-//           };
-//         }
-//       }
-
-//       workPlanList.push(workPlan);
-
-//       // 전체 workPlanDocument를 저장합니다.
-//       workPlanDocument.workPlanList = workPlanList;
-//       await workPlanDocument.save();
-//       return workPlanList;
-//     } catch (error) {
-//       console.error('Error fetching checkItem: ', error);
-//       throw error;
-//     }
-//   }
-// }
+  async remove(id: string) {
+    return await this.workPlanModel.deleteOne({ _id: id });
+  }
+}

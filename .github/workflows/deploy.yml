@@ -1,0 +1,75 @@
+name: Deploy to AWS ECS
+on:
+  pull_request:
+    branches:
+      - deploy
+    types:
+      - closed # PR이 merge될 때만 실행
+  push:
+    branches:
+      - deploy # :흰색_확인_표시: PR 없이 직접 merge해도 배포 실행됨
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    name: Build, Push to ECR and Deploy to ECS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+      - name: Build and Push Docker image to Amazon ECR
+        run: |
+          docker buildx build --platform linux/amd64 \
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest \
+            --push .
+      - name: Download latest task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ secrets.ECS_TASK_DEFINITION }} \
+            --query taskDefinition \
+            --output json > task-definition.json
+      - name: Update Task Definition with Latest Image
+        run: |
+          jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) |
+              .containerDefinitions[0].image = "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest"' \
+            task-definition.json > updated-task-definition.json
+      - name: Register New Task Definition
+        run: |
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition --cli-input-json file://updated-task-definition.json --query "taskDefinition.taskDefinitionArn" --output text)
+          echo "NEW_TASK_DEF_ARN=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+      - name: Deploy to Amazon ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --task-definition $NEW_TASK_DEF_ARN
+      - name: Notify Slack (Success)
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":":짠: *배포 성공!* :로켓: \n:흰색_확인_표시: Repository: ${{ github.repository }}\n:흰색_확인_표시: Branch: ${{ github.ref }}"}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Capture Failure Message
+        if: failure()
+        run: |
+          echo "$(tail -n 20 $GITHUB_WORKSPACE/deploy.log || echo 'No logs available')" >> failure_log.txt
+          echo "ERROR_MESSAGE=$(cat failure_log.txt)" >> $GITHUB_ENV
+      - name: Notify Slack (Failure)
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\":x: *배포 실패!* :경고: \n:느낌표: Repository: ${{ github.repository }}\n:느낌표: Branch: ${{ github.ref }}\n:느낌표: Error: \`\`\`${{ env.ERROR_MESSAGE }}\`\`\`\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}

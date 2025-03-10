@@ -1,7 +1,12 @@
 import { getSchemaPath } from '@nestjs/swagger';
 
 export class SwaggerHelper {
-  static getApiResponseSchema(dto?: any, description = '', pagination = false) {
+  static getApiResponseSchema(
+    dto?: any,
+    description = '',
+    pagination = false,
+    isGet = false,
+  ) {
     const paginationProperties = pagination
       ? {
           totalCount: {
@@ -35,12 +40,12 @@ export class SwaggerHelper {
           statusCode: {
             type: 'number',
             description: 'HTTP 상태 코드',
-            example: 204,
+            example: isGet ? 200 : 204,
           },
           message: {
             type: 'string',
             description: '응답 메시지',
-            example: 'No Content',
+            example: isGet ? 'Ok' : 'No Content',
           },
           result: {
             type: 'boolean',

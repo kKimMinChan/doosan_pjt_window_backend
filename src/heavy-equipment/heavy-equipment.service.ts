@@ -3,16 +3,18 @@ import {
   CreateHeavyEquipmentRequest,
   UpdateHeavyEquipmentRequest,
 } from './dto/request';
-import { UpdateHeavyEquipmentDto } from './dto/response';
 import { HeavyEquipmentMongoRepository } from './heavy-equipment.repository';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
+import { usersMongoRepository } from 'src/admin/user/user.repository';
+import { HeavyEquipment } from './entities/heavy-equipment.entity';
 
 @Injectable()
 export class HeavyEquipmentService {
   constructor(
     private heavyEquipmentRepository: HeavyEquipmentMongoRepository,
+    private usersRepository: usersMongoRepository,
   ) {}
 
   async create(createHeavyEquipmentDto: CreateHeavyEquipmentRequest) {
@@ -21,14 +23,18 @@ export class HeavyEquipmentService {
     );
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll() {
+    return await this.heavyEquipmentRepository.findAll();
+  }
+
+  async findAllPaginated(paginationDto: PaginationDto) {
     try {
       const { limit, page } = paginationDto;
 
       const skip = (page - 1) * limit;
 
       const [data, totalCount] = await Promise.all([
-        this.heavyEquipmentRepository.findAll(skip, limit),
+        this.heavyEquipmentRepository.findAllPaginated(skip, limit),
         this.heavyEquipmentRepository.countEquipments(),
       ]);
 
@@ -62,10 +68,33 @@ export class HeavyEquipmentService {
     id: string,
     updateHeavyEquipmentDto: UpdateHeavyEquipmentRequest,
   ) {
-    return await this.heavyEquipmentRepository.update(
-      id,
-      updateHeavyEquipmentDto,
-    );
+    try {
+      const mergedArray = [
+        updateHeavyEquipmentDto.inspectors,
+        updateHeavyEquipmentDto.reviewers,
+      ].flat();
+      const missingUsers =
+        await this.usersRepository.findMissingUsers(mergedArray);
+      if (missingUsers.length > 0) {
+        throw new HttpException(
+          `존재하지 않는 ID: ${missingUsers}`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const equipment: Partial<HeavyEquipment> = {
+        equipmentNumber: updateHeavyEquipmentDto.equipmentNumber,
+        factoryName: updateHeavyEquipmentDto.factoryName,
+        type: updateHeavyEquipmentDto.type,
+        inspectors: updateHeavyEquipmentDto.inspectors,
+        reviewers: updateHeavyEquipmentDto.reviewers,
+        drivers: updateHeavyEquipmentDto.drivers,
+      };
+
+      return await this.heavyEquipmentRepository.update(id, equipment);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
   }
 
   async remove(id: string) {

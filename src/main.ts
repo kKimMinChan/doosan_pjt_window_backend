@@ -5,9 +5,10 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { AllExceptionsFilter } from './\bfilters/all-exceptions.filter';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { ResponseInterceptor } from './response/response.interceptor';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ObjectIdValidationPipe } from './pipes/objectid-validation.pipe';
 
 // import * as fs from 'fs';
 
@@ -65,7 +66,13 @@ async function bootstrap() {
     },
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // ✅ DTO 타입 변환 활성화
+      whitelist: true, // ✅ DTO에 정의되지 않은 필드 자동 제거
+    }),
+  );
+
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
@@ -87,6 +94,8 @@ async function bootstrap() {
 
   app.use(passport.initialize());
   app.use(passport.session());
+
+  console.log('✅ Loaded MONGO_URI:', process.env.MONGO_URI);
 
   await app.listen(4000);
 }

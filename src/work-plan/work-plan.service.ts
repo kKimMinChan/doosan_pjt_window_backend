@@ -1,308 +1,189 @@
-// import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-// import { WorkPlanMongoRepository } from './work-plan.repository';
-// import { DriverSignature, WorkPlanItem } from './work-plan.schema';
-// // import { DriversService } from 'src/drivers/drivers.service';
-// // import { DriversImage } from 'src/drivers/drviers.schema';
-// import { Image } from 'src/common_schema/Image.schema';
-// import { getBase64Image } from 'src/lib/getBase64Image';
-// import * as ExcelJS from 'exceljs';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  AdminSignatureRequest,
+  DriverSignatureRequest,
+  WorkPlanDetailsRequest,
+  WorkPlanRequest,
+} from './dto/work-plan.request';
+import { ErrorHelper } from 'src/helper/ErrorHelper';
+import { WorkPlanMongoRepository } from './work-plan.repository';
+import { WorkPlan } from './entities/work-plan.schema';
+import { usersMongoRepository } from 'src/admin/user/user.repository';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
+import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
 
-// @Injectable()
-// export class WorkPlanService {
-//   constructor(
-//     private workPlanRepository: WorkPlanMongoRepository,
-//     // private driversService: DriversService,
-//   ) {}
+@Injectable()
+export class WorkPlanService {
+  constructor(
+    private workPlanRepository: WorkPlanMongoRepository,
+    private userRepository: usersMongoRepository,
+    private heavyEquipmentRepository: HeavyEquipmentMongoRepository,
+  ) {}
+  async create(workPlanDto: WorkPlanRequest) {
+    try {
+      console.log(workPlanDto, 'workPlanDto --------------');
+      if (!workPlanDto.mutableData || !workPlanDto.fixedData)
+        throw new BadRequestException('데이터를 입력해주세요.');
+      console.log(workPlanDto);
 
-//   async getWorkPlanList() {
-//     const workPlanList = await this.workPlanRepository.getWorkPlan();
+      const isEquipment = await this.heavyEquipmentRepository.exists(
+        workPlanDto.equipment,
+      );
 
-//     if (workPlanList) {
-//       const workPlanListToBase64 = await Promise.all(
-//         workPlanList.workPlanList.map(async (workPlan) => {
-//           workPlan.workPlanImage = await getBase64Image(
-//             workPlan.workPlanImage?.image_url,
-//           );
-//           workPlan.signature.approval = await getBase64Image(
-//             workPlan.signature.approval?.image_url,
-//           );
-//           workPlan.signature.draft = await getBase64Image(
-//             workPlan.signature.draft?.image_url,
-//           );
-//           workPlan.signature.authorization = await getBase64Image(
-//             workPlan.signature.authorization?.image_url,
-//           );
+      if (!isEquipment)
+        throw new NotFoundException('해당 id의 중장비가 존재하지 않습니다.');
 
-//           workPlan.signature.driver = await Promise.all(
-//             workPlan.signature.driver.map(async (driver) => {
-//               if (driver.signatureImage?.image_url) {
-//                 driver.signatureImage = await getBase64Image(
-//                   driver.signatureImage.image_url,
-//                 );
-//               }
-//               return driver;
-//             }),
-//           );
+      const workPlan: Partial<WorkPlan> = {
+        mutableData: workPlanDto.mutableData,
+        fixedData: workPlanDto.fixedData,
+        equipment: workPlanDto.equipment,
+        driverSignatures: workPlanDto.driverSignatures,
+      };
+      if (!isEquipment) delete workPlan.equipment;
+      console.log(workPlan);
+      return await this.workPlanRepository.create(workPlan);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
 
-//           return workPlan;
-//         }),
-//       );
+  async findAll(id: string, paginationDto: PaginationDto) {
+    try {
+      const { page, limit } = paginationDto;
 
-//       return workPlanListToBase64;
-//     }
-//     return workPlanList;
-//   }
+      const skip = (page - 1) * limit;
 
-//   async getWorkPlan() {
-//     const workPlanList = await this.workPlanRepository.getWorkPlan();
-//     if (workPlanList !== null) {
-//       const workPlan = workPlanList.workPlanList.pop();
-//       workPlan.workPlanImage = await getBase64Image(
-//         workPlan.workPlanImage?.image_url,
-//       );
-//       workPlan.signature.approval = await getBase64Image(
-//         workPlan.signature.approval?.image_url,
-//       );
-//       workPlan.signature.draft = await getBase64Image(
-//         workPlan.signature.draft?.image_url,
-//       );
-//       workPlan.signature.authorization = await getBase64Image(
-//         workPlan.signature.authorization?.image_url,
-//       );
+      const [data, totalCount] = await Promise.all([
+        this.workPlanRepository.findAll(id, skip, limit),
+        this.workPlanRepository.countWorkPlan(id),
+      ]);
 
-//       workPlan.signature.driver = await Promise.all(
-//         workPlan.signature.driver.map(async (driver) => {
-//           if (driver.signatureImage?.image_url) {
-//             driver.signatureImage = await getBase64Image(
-//               driver.signatureImage.image_url,
-//             );
-//           }
-//           return driver;
-//         }),
-//       );
+      return {
+        pageSize: limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        page,
+        data,
+      };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
 
-//       return workPlan;
-//     }
-//     return null;
-//   }
+  async findOne(id: string) {
+    try {
+      const workPlan = await this.workPlanRepository.findOne(id);
+      return workPlan;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
 
-//   async newWeekWorkPlan(originWorkPlanPath: string) {
-//     const driverImages = await this.getDriverImages();
-//     if (driverImages) {
-//       const driverNames = driverImages.map(
-//         (image: DriversImage): DriverSignature => ({
-//           name: image.name,
-//         }),
-//       );
+  async findOneLatest(id: string) {
+    try {
+      const workPlan = await this.workPlanRepository.findOneLatest(id);
+      return workPlan;
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
 
-//       const workPlanImage: Image = {
-//         image_url: originWorkPlanPath,
-//       };
+  async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
+    try {
+      const { equipment, mutableData, fixedData } = workPlanDto;
 
-//       const workPlanItem: WorkPlanItem = {
-//         workPlanImage: workPlanImage,
-//         signature: {
-//           driver: driverNames,
-//         },
-//       };
-//       const workPlan = await this.workPlanRepository.createWorkPlan(
-//         workPlanItem,
-//       );
-//       return workPlan;
-//     }
-//   }
+      const isEquipment = await this.heavyEquipmentRepository.exists(equipment);
+      if (!isEquipment)
+        throw new NotFoundException('해당 id의 중장비가 존재하지 않습니다.');
 
-//   async updatedDriver(originWorkPlanPath: string) {
-//     const driverImages = await this.getDriverImages();
-//     const driverNames = driverImages.map(
-//       (image: DriversImage): DriverSignature => ({
-//         name: image.name,
-//       }),
-//     );
-//     const workPlanDocument = await this.workPlanRepository.getWorkPlan();
-//     const originWorkPlan = workPlanDocument.workPlanList.pop();
+      const workPlan: Partial<WorkPlan> = {
+        equipment,
+        mutableData,
+        fixedData,
+      };
+      if (!isEquipment) delete workPlan.equipment;
+      if (!mutableData) delete workPlan.mutableData;
+      if (!fixedData) delete workPlan.fixedData;
 
-//     const updatedDriversSignature = driverNames.map((driver) => {
-//       // 기존의 일치하는 driver를 찾습니다.
-//       const matchedSignature = originWorkPlan.signature.driver.find(
-//         (originSignature) => driver.name === originSignature.name,
-//       );
+      console.log(equipment, mutableData, fixedData, '------------', workPlan);
+      const result = await this.workPlanRepository.updateDetails(id, workPlan);
+      if (result.matchedCount === 0)
+        throw new NotFoundException(
+          '해당 id의 작업 계획서가 존재하지 않습니다.',
+        );
 
-//       // 일치하는 것이 있으면 그대로 반환하고, 없으면 name만 포함된 객체 반환
-//       if (matchedSignature) {
-//         return matchedSignature;
-//       } else {
-//         return { name: driver.name }; // 일치하는 것이 없을 때 name만 포함
-//       }
-//     });
+      if (result.modifiedCount === 0) {
+        return {
+          translate: '요청이 완료되었지만 변경된 내용이 없습니다.',
+          message: 'No Changes',
+        };
+      }
+      return {
+        translate: '요청이 성공적으로 완료되었습니다.',
+      };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
 
-//     const workPlanImage: Image = {
-//       image_url: originWorkPlanPath,
-//     };
+  async adminSignature(
+    id: string,
+    body: AdminSignatureRequest,
+    file: Express.MulterS3.File,
+  ) {
+    try {
+      if (!file)
+        throw new BadRequestException(
+          '서명 이미지 파일을 전달받지 못했습니다.',
+        );
 
-//     const workPlanItem: WorkPlanItem = {
-//       ...originWorkPlan,
-//       workPlanImage: workPlanImage,
-//       signature: {
-//         ...originWorkPlan.signature, // 기존의 signature를 유지하고
-//         driver: updatedDriversSignature, // driver 부분만 업데이트
-//       },
-//     };
+      const url = `${file.key}`;
+      return await this.workPlanRepository.updateSignature(
+        id,
+        'adminSignatures',
+        body.type,
+        url,
+      );
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
 
-//     const workPlan = await this.workPlanRepository.updatedDriver(workPlanItem);
-//     return workPlan;
-//   }
+  async driverSignature(
+    id: string,
+    body: DriverSignatureRequest,
+    file: Express.MulterS3.File,
+  ) {
+    try {
+      if (!file)
+        throw new BadRequestException(
+          '서명 이미지 파일을 전달받지 못했습니다.',
+        );
 
-//   async createWorkPlan(workPlanFile: Express.Multer.File) {
-//     const driverImages = await this.getDriverImages();
-//     const driverNames = driverImages.map(
-//       (image: DriversImage): DriverSignature => ({
-//         name: image.name,
-//       }),
-//     );
+      const url = `${file.key}`;
+      const user = await this.userRepository.findOne(body.driver);
+      if (!user)
+        throw new NotFoundException('해당 id의 사용자가 존재하지 않습니다.');
+      return await this.workPlanRepository.updateSignature(
+        id,
+        'driverSignatures',
+        body.driver,
+        url,
+      );
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
 
-//     const workPlanImage: Image = {
-//       image_url: workPlanFile.path,
-//     };
-
-//     const workPlanItem: WorkPlanItem = {
-//       workPlanImage: workPlanImage,
-//       signature: {
-//         driver: driverNames,
-//       },
-//     };
-//     const workPlan = await this.workPlanRepository.createWorkPlan(workPlanItem);
-//     return workPlan;
-//   }
-
-//   async getDriverImages() {
-//     return await this.driversService.getDriverImages();
-//   }
-
-//   async signature(signatureUrl: string, signatureType: string, name?: string) {
-//     return await this.workPlanRepository.signature(
-//       signatureUrl,
-//       signatureType,
-//       name,
-//     );
-//   }
-
-//   async workPlanToExcel() {
-//     const workPlanList = await this.getWorkPlanList();
-//     if (Array.isArray(workPlanList)) {
-//       // 열 이름을 생성하는 함수
-//       const getColumnLetter = (colIndex: number): string => {
-//         let letter = '';
-//         while (colIndex >= 0) {
-//           letter = String.fromCharCode((colIndex % 26) + 65) + letter;
-//           colIndex = Math.floor(colIndex / 26) - 1;
-//         }
-//         return letter;
-//       };
-
-//       const workbook = new ExcelJS.Workbook();
-//       const worksheet = workbook.addWorksheet('WorkPlan');
-
-//       // 이미지 추가 함수
-//       const addImageToWorksheet = (base64: string, cell: string) => {
-//         const imageId = workbook.addImage({
-//           base64: base64,
-//           extension: 'png',
-//         });
-//         worksheet.addImage(imageId, cell);
-//       };
-
-//       // workPlanList.forEach((workPlanData) => {
-
-//       let startingRow = 1; // 각 workPlanData의 시작 행을 동적으로 설정
-
-//       workPlanList.forEach((workPlanData) => {
-//         // 기본 데이터 추가
-//         worksheet.addRow([
-//           '생성일',
-//           workPlanData.createdAt
-//             ? workPlanData.createdAt.toLocaleDateString()
-//             : '',
-//         ]);
-//         worksheet.getCell(`A${startingRow}`).value = '생성일';
-//         worksheet.getCell(`B${startingRow}`).value = workPlanData.createdAt
-//           ? workPlanData.createdAt.toLocaleDateString()
-//           : '';
-//         startingRow += 2;
-
-//         worksheet.addRow([
-//           '작업계획서',
-//           '',
-//           '',
-//           '기안 서명',
-//           '',
-//           '',
-//           '결재 서명',
-//           '',
-//           '',
-//           '승인 서명',
-//         ]);
-
-//         // 이미지가 추가될 행 설정
-//         const imageRow = startingRow + 1;
-
-//         // Work Plan Image
-//         if (workPlanData.workPlanImage?.base64) {
-//           addImageToWorksheet(
-//             workPlanData.workPlanImage.base64,
-//             `A${imageRow}:B${imageRow + 7}`,
-//           );
-//         }
-
-//         // Signature Images
-//         if (workPlanData.signature?.draft?.base64) {
-//           addImageToWorksheet(
-//             workPlanData.signature.draft.base64,
-//             `D${imageRow}:E${imageRow + 7}`,
-//           );
-//         }
-//         if (workPlanData.signature?.authorization?.base64) {
-//           addImageToWorksheet(
-//             workPlanData.signature.authorization.base64,
-//             `G${imageRow}:H${imageRow + 7}`,
-//           );
-//         }
-//         if (workPlanData.signature?.approval?.base64) {
-//           addImageToWorksheet(
-//             workPlanData.signature.approval.base64,
-//             `J${imageRow}:K${imageRow + 7}`,
-//           );
-//         }
-
-//         // 운전자 서명 이미지와 이름 설정 (가로로 나열)
-//         workPlanData.signature?.driver.forEach((driver, index) => {
-//           const colIndex = index * 2;
-//           const startCol = getColumnLetter(colIndex);
-//           const endCol = getColumnLetter(colIndex + 1);
-//           const cellAddress = `${startCol}${imageRow + 10}:${endCol}${
-//             imageRow + 16
-//           }`; // 이미지 위치 조정
-
-//           if (driver.signatureImage?.base64) {
-//             addImageToWorksheet(driver.signatureImage.base64, cellAddress);
-//           }
-//           // 운전자 이름을 해당 열의 위에 추가
-//           worksheet.getCell(
-//             `${startCol}${imageRow + 9}`,
-//           ).value = `${driver.name}`;
-//         });
-
-//         // 각 workPlanData 항목 사이에 충분한 공백을 추가하기 위해 시작 행을 조정합니다.
-//         startingRow += 20; // 다음 workPlanData의 시작 행 위치 설정
-//       });
-
-//       // 엑셀 파일을 Buffer로 생성하여 응답으로 보내기
-//       return await workbook.xlsx.writeBuffer();
-//     } else {
-//       throw new HttpException(
-//         '작업 계획서 데이터가 없습니다. 작업 계획서를 추가해주세요.',
-//         HttpStatus.NOT_FOUND,
-//       );
-//     }
-//   }
-// }
+  async remove(id: string) {
+    try {
+      return await this.workPlanRepository.remove(id);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+}

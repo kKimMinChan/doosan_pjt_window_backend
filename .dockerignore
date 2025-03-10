@@ -1,0 +1,32 @@
+# Node.js dependencies
+node_modules
+npm-debug.log
+pnpm-debug.log
+yarn.lock
+# 환경 변수 및 보안 파일
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.pem
+*.key
+# Git 관련
+.git
+.gitignore
+# IDE 설정 파일
+.vscode
+.idea
+# Logs & Temporary files
+logs
+*.log
+log.*
+pids
+*.pid
+*.seed
+*.pid.lock
+# 빌드 결과물
+dist
+build
+.cache
+coverage
