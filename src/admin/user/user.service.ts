@@ -20,7 +20,7 @@ export class UserService {
           '프로필 이미지를 업로드해야 합니다.',
           HttpStatus.BAD_REQUEST,
         );
-      // console.log(userFile, process.env.NODE_ENV, 'userFile');
+      console.log(userFile, process.env.NODE_ENV, 'userFile');
       const { file, ...rest } = {
         ...userInfo,
         imageUrl:

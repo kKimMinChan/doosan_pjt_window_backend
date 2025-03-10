@@ -5,7 +5,7 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { AllExceptionsFilter } from './\bfilters/all-exceptions.filter';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { ResponseInterceptor } from './response/response.interceptor';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ObjectIdValidationPipe } from './pipes/objectid-validation.pipe';
