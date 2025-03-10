@@ -45,29 +45,6 @@ export class usersMongoRepository implements UsersRepository {
   async findAll() {
     const users = await this.usersModel.find().sort({ _id: -1 });
     return users;
-    // const result = await this.usersModel.aggregate([
-    //   {
-    //     $group: {
-    //       _id: '$role', // role을 기준으로 그룹화
-    //       users: { $push: '$$ROOT' }, // 해당 role의 사용자 목록을 users 배열에 저장
-    //     },
-    //   },
-    //   {
-    //     $project: {
-    //       _id: 0, // `_id` 필드 제거
-    //       role: '$_id', // 기존 `_id` 값을 role 필드로 변경
-    //       users: 1, // users 배열 유지
-    //     },
-    //   },
-    // ]);
-
-    // console.log(result, 'result');
-
-    // // ✅ 반환된 배열을 객체 형태로 변환
-    // return result.reduce((acc, curr) => {
-    //   acc[curr.role] = curr.users; // role을 키로 하고 users 배열을 값으로 설정
-    //   return acc;
-    // }, {});
   }
 
   async countUsers(role: UserRole) {

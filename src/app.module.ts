@@ -14,6 +14,7 @@ import { CheckSheetModule } from './check-sheet/check-sheet.module';
 import { WorkPlanModule } from './work-plan/work-plan.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { RecordingModule } from './recording/recording.module';
+import { SystemStatusModule } from './system-status/system-status.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RecordingModule } from './recording/recording.module';
     CheckSheetModule,
     WorkPlanModule,
     RecordingModule,
+    SystemStatusModule,
   ],
   controllers: [AppController],
   providers: [AppService],

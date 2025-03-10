@@ -13,7 +13,10 @@ export interface WorkPlanRepository {
     id: string,
     key: 'adminSignatures' | 'driverSignatures',
     matchValue: string,
-    url: string,
+    urlMode: {
+      dark: string;
+      white: string;
+    },
   );
   updateDetails(id: string, workPlanDto: WorkPlan);
   remove(id: string);
@@ -65,18 +68,21 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     id: string,
     key: 'adminSignatures' | 'driverSignatures',
     matchValue: string,
-    url: string,
+    urlMode: {
+      dark: string;
+      white: string;
+    },
   ) {
     const matchField = key === 'adminSignatures' ? 'type' : 'driver';
 
-    console.log(id, key, matchValue, url);
+    console.log(id, key, matchValue, urlMode);
     const updateSignature = await this.workPlanModel.updateOne(
       {
         _id: id,
         [key]: { $elemMatch: { [matchField]: matchValue } },
       },
       {
-        $set: { [`${key}.$.url`]: url },
+        $set: { [`${key}.$.urlMode`]: urlMode },
       },
     );
     if (updateSignature.matchedCount === 0) {
@@ -88,7 +94,7 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
           $push: {
             [key]: {
               [matchField]: matchValue,
-              url,
+              urlMode,
             },
           },
         },

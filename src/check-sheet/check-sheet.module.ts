@@ -37,5 +37,6 @@ import { HeavyEquipmentModule } from 'src/heavy-equipment/heavy-equipment.module
     usersMongoRepository,
     HeavyEquipmentMongoRepository,
   ],
+  exports: [MongooseModule],
 })
 export class CheckSheetModule {}

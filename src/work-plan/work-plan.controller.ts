@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
+  UploadedFiles,
 } from '@nestjs/common';
 import { WorkPlanService } from './work-plan.service';
 import {
@@ -26,7 +27,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { WorkPlanResponse } from './dto/work-plan.response';
 
@@ -88,26 +93,38 @@ export class WorkPlanController {
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   @ApiBody({ type: AdminSignatureRequest })
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'dark', maxCount: 1 }, // 첫 번째 파일 필드
+      { name: 'white', maxCount: 1 }, // 두 번째 파일 필드
+    ]),
+  )
   async updateSignature(
     @Param('id') id: string,
     @Body() body: AdminSignatureRequest,
-    @UploadedFile() file: Express.MulterS3.File,
+    @UploadedFiles()
+    files: { dark?: Express.MulterS3.File[]; white?: Express.MulterS3.File[] },
   ) {
-    return await this.workPlanService.adminSignature(id, body, file);
+    return await this.workPlanService.adminSignature(id, body, files);
   }
 
   @Put(':id/driver-signature')
   @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   @ApiBody({ type: DriverSignatureRequest })
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'dark', maxCount: 1 }, // 첫 번째 파일 필드
+      { name: 'white', maxCount: 1 }, // 두 번째 파일 필드
+    ]),
+  )
   async driverSignature(
     @Param('id') id: string,
     @Body() body: DriverSignatureRequest,
-    @UploadedFile() file: Express.MulterS3.File,
+    @UploadedFiles()
+    files: { dark?: Express.MulterS3.File[]; white?: Express.MulterS3.File[] },
   ) {
-    return await this.workPlanService.driverSignature(id, body, file);
+    return await this.workPlanService.driverSignature(id, body, files);
   }
 
   @Delete(':id')

@@ -1,4 +1,3 @@
-import { Optional } from '@nestjs/common';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
@@ -189,7 +188,7 @@ export class UpdateCheckSheetRequest {
     type: [Item],
     required: false,
   })
-  @Optional()
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true }) // ✅ 배열 내부 객체 검사
   @Type(() => Item) // ✅ 내부 객체 매핑
@@ -216,7 +215,7 @@ export class UpdateCheckSheetRequest {
     example: '안전벨트 불량',
     required: false,
   })
-  @Optional()
+  @IsOptional()
   @IsString()
   issue: string;
 
@@ -225,7 +224,7 @@ export class UpdateCheckSheetRequest {
     example: '67a31a37993b5f84b50e32c3',
     required: false,
   })
-  @Optional()
+  @IsOptional()
   @IsString()
   inspector: string;
 
@@ -234,7 +233,7 @@ export class UpdateCheckSheetRequest {
     example: '67a31a37993b5f84b50e32c3',
     required: false,
   })
-  @Optional()
+  @IsOptional()
   @IsString()
   reviewer: string;
 }

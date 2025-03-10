@@ -34,5 +34,6 @@ import { multerOptionsFactory } from 'src/config/multer.s3';
     usersMongoRepository,
     HeavyEquipmentMongoRepository,
   ],
+  exports: [MongooseModule],
 })
 export class WorkPlanModule {}

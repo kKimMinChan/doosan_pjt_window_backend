@@ -133,20 +133,25 @@ export class WorkPlanService {
   async adminSignature(
     id: string,
     body: AdminSignatureRequest,
-    file: Express.MulterS3.File,
+    files: { dark?: Express.MulterS3.File[]; white?: Express.MulterS3.File[] },
   ) {
     try {
-      if (!file)
+      const { dark = [], white = [] } = files ?? {};
+
+      if (dark.length === 0 && white.length === 0)
         throw new BadRequestException(
           '서명 이미지 파일을 전달받지 못했습니다.',
         );
 
-      const url = `${file.key}`;
+      const urlMode = {
+        dark: dark.length > 0 ? dark[0].key : null,
+        white: white.length > 0 ? white[0].key : null,
+      };
       return await this.workPlanRepository.updateSignature(
         id,
         'adminSignatures',
         body.type,
-        url,
+        urlMode,
       );
     } catch (error) {
       ErrorHelper.handleError(error);
@@ -156,15 +161,20 @@ export class WorkPlanService {
   async driverSignature(
     id: string,
     body: DriverSignatureRequest,
-    file: Express.MulterS3.File,
+    files: { dark?: Express.MulterS3.File[]; white?: Express.MulterS3.File[] },
   ) {
     try {
-      if (!file)
+      const { dark = [], white = [] } = files ?? {};
+
+      if (dark.length === 0 && white.length === 0)
         throw new BadRequestException(
           '서명 이미지 파일을 전달받지 못했습니다.',
         );
 
-      const url = `${file.key}`;
+      const urlMode = {
+        dark: dark.length > 0 ? dark[0].key : null,
+        white: white.length > 0 ? white[0].key : null,
+      };
       const user = await this.userRepository.findOne(body.driver);
       if (!user)
         throw new NotFoundException('해당 id의 사용자가 존재하지 않습니다.');
@@ -172,7 +182,7 @@ export class WorkPlanService {
         id,
         'driverSignatures',
         body.driver,
-        url,
+        urlMode,
       );
     } catch (error) {
       ErrorHelper.handleError(error);

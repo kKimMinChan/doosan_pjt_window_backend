@@ -44,17 +44,23 @@ class MutableData {
   endDay: string;
 }
 
+class UrlMode {
+  dark: string;
+  white: string;
+}
+
 @Schema({ _id: false })
 class driverSignatures {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',
+    required: false,
     autopopulate: true,
   })
   driver: mongoose.Types.ObjectId;
 
-  @Prop()
-  url?: string;
+  @Prop({ type: UrlMode, required: false })
+  urlMode?: UrlMode;
 }
 
 // ✅ MutableData 서브 스키마 등록
@@ -62,11 +68,11 @@ const MutableDataSchema = SchemaFactory.createForClass(MutableData);
 MutableDataSchema.plugin(require('mongoose-autopopulate'));
 
 class AdminSignature {
-  @Prop({ type: String, enum: SignatureType, required: true })
+  @Prop({ type: String, enum: SignatureType, required: false })
   type: SignatureType;
 
-  @Prop({ type: String, required: true })
-  url: string;
+  @Prop({ type: UrlMode, required: false })
+  url: UrlMode;
 }
 
 @Schema({
