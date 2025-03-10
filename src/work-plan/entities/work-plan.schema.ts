@@ -36,6 +36,12 @@ class MutableData {
 
   @Prop()
   route: string;
+
+  @Prop()
+  startDay: string;
+
+  @Prop()
+  endDay: string;
 }
 
 @Schema({ _id: false })

@@ -2,11 +2,9 @@ import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
-  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
-  ValidateIf,
 } from 'class-validator';
 import { SignatureType } from '../entities/work-plan.schema';
 import mongoose from 'mongoose';
@@ -78,6 +76,24 @@ class MutableData {
   @IsString()
   @IsOptional()
   route: string;
+
+  @ApiProperty({
+    description: '작업 일시(시작)',
+    example: '2025-03-10',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  startDay: string;
+
+  @ApiProperty({
+    description: '작업 일시(끝)',
+    example: '2025-03-16',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  endDay: string;
 }
 
 export class DriverSignatureRequest {
