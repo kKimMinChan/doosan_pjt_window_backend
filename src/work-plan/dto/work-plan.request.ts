@@ -102,7 +102,14 @@ export class DriverSignatureRequest {
     format: 'binary',
     required: true,
   })
-  file: string;
+  dark: string;
+
+  @ApiProperty({
+    description: '서명 파일',
+    format: 'binary',
+    required: true,
+  })
+  white: string;
 
   @ApiProperty({
     description: '운전자 id',
@@ -178,7 +185,14 @@ export class AdminSignatureRequest {
     format: 'binary',
     required: true,
   })
-  file: string;
+  dark: string;
+
+  @ApiProperty({
+    description: '서명 파일',
+    format: 'binary',
+    required: true,
+  })
+  white: string;
 
   @ApiProperty({
     description: '서명 유형 (create, finish)',

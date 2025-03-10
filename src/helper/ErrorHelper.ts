@@ -41,6 +41,17 @@ export class ErrorHelper {
       );
     }
 
+    // ✅ ObjectId 형식 오류 검출
+    if (
+      error.message.includes('Cast to ObjectId') ||
+      error.message.includes('input must be a 24 character hex string')
+    ) {
+      throw new HttpException(
+        `잘못된 ID 형식입니다. 유효한 ObjectId를 제공해주세요: ${error.message}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     console.error(error);
 
     // 기본 에러 처리

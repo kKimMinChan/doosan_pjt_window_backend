@@ -11,12 +11,16 @@ export interface WorkPlanRepository {
   countWorkPlan(id: string);
   updateSignature(
     id: string,
-    key: 'adminSignatures' | 'driverSignatures',
     matchValue: string,
     urlMode: {
       dark: string;
       white: string;
     },
+  );
+  updateAdminSignature(
+    id: string,
+    type: 'create' | 'finish',
+    urlMode: { dark: string; white: string },
   );
   updateDetails(id: string, workPlanDto: WorkPlan);
   remove(id: string);
@@ -32,7 +36,9 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     return await workPlan.save();
   }
   async findOne(id: string) {
-    const workPlan = await this.workPlanModel.findById(id);
+    const workPlan = await this.workPlanModel
+      .findById(id)
+      .populate('driverSignatures.driver');
     return workPlan;
   }
 
@@ -40,15 +46,26 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     const workPlan = await this.workPlanModel
       .findOne({ equipment: id })
       .sort({ _id: -1 })
+      .populate('driverSignatures.driver')
       .exec();
     return workPlan;
   }
+
+  async findOneLatestNotPopulate(id: string) {
+    const workPlan = await this.workPlanModel
+      .findOne({ equipment: id })
+      .sort({ _id: -1 })
+      .exec();
+    return workPlan;
+  }
+
   async findAll(id: any, skip: number, limit: number) {
     const workPlans = await this.workPlanModel
       .find({ equipment: id })
       .sort({ _id: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate('driverSignatures.driver');
     return workPlans;
   }
   async countWorkPlan(id: string) {
@@ -66,23 +83,20 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
 
   async updateSignature(
     id: string,
-    key: 'adminSignatures' | 'driverSignatures',
     matchValue: string,
     urlMode: {
       dark: string;
       white: string;
     },
   ) {
-    const matchField = key === 'adminSignatures' ? 'type' : 'driver';
-
-    console.log(id, key, matchValue, urlMode);
+    console.log(id, matchValue, urlMode);
     const updateSignature = await this.workPlanModel.updateOne(
       {
         _id: id,
-        [key]: { $elemMatch: { [matchField]: matchValue } },
+        ['driverSignatures']: { $elemMatch: { ['driver']: matchValue } },
       },
       {
-        $set: { [`${key}.$.urlMode`]: urlMode },
+        $set: { [`${'driverSignatures'}.$.urlMode`]: urlMode },
       },
     );
     if (updateSignature.matchedCount === 0) {
@@ -92,8 +106,8 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
         },
         {
           $push: {
-            [key]: {
-              [matchField]: matchValue,
+            ['driverSignatures']: {
+              ['driver']: matchValue,
               urlMode,
             },
           },
@@ -101,7 +115,45 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
       );
       return addSignature;
     }
+    // const updateSignature = await this.workPlanModel.updateOne(
+    //   {
+    //     _id: id,
+    //     [key]: { $elemMatch: { [matchField]: matchValue } },
+    //   },
+    //   {
+    //     $set: { [`${key}.$.urlMode`]: urlMode },
+    //   },
+    // );
+    // if (updateSignature.matchedCount === 0) {
+    //   const addSignature = await this.workPlanModel.updateOne(
+    //     {
+    //       _id: id,
+    //     },
+    //     {
+    //       $push: {
+    //         [key]: {
+    //           [matchField]: matchValue,
+    //           urlMode,
+    //         },
+    //       },
+    //     },
+    //   );
+    //   return addSignature;
+    // }
     return updateSignature;
+  }
+
+  async updateAdminSignature(
+    id: string,
+    type: 'create' | 'finish',
+    urlMode: { dark: string; white: string },
+  ) {
+    const updateResult = await this.workPlanModel.updateOne(
+      { _id: id },
+      { $set: { [`adminSignatures.${type}`]: urlMode } }, // ✅ Map 키 값을 동적으로 업데이트
+    );
+
+    return updateResult;
   }
 
   async remove(id: string) {

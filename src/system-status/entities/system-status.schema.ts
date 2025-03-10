@@ -2,7 +2,14 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export type SystemStatusDocument = SystemStatus & Document;
 
-@Schema()
+@Schema({
+  toJSON: {
+    transform: (doc, ret) => {
+      delete ret._id; // _id 제거
+      delete ret.__v; // __v 제거
+    },
+  },
+})
 export class SystemStatus {
   @Prop()
   hasValidCheck: boolean;

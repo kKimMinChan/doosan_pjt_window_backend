@@ -147,9 +147,8 @@ export class WorkPlanService {
         dark: dark.length > 0 ? dark[0].key : null,
         white: white.length > 0 ? white[0].key : null,
       };
-      return await this.workPlanRepository.updateSignature(
+      return await this.workPlanRepository.updateAdminSignature(
         id,
-        'adminSignatures',
         body.type,
         urlMode,
       );
@@ -180,7 +179,6 @@ export class WorkPlanService {
         throw new NotFoundException('해당 id의 사용자가 존재하지 않습니다.');
       return await this.workPlanRepository.updateSignature(
         id,
-        'driverSignatures',
         body.driver,
         urlMode,
       );

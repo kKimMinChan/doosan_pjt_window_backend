@@ -15,6 +15,7 @@ import { CheckSheetModule } from 'src/check-sheet/check-sheet.module';
 import { CheckItemModule } from 'src/check-item/check-item.module';
 import { WorkPlanModule } from 'src/work-plan/work-plan.module';
 import { WorkPlanMongoRepository } from 'src/work-plan/work-plan.repository';
+import { SystemStatusMongoRepository } from './system-status.repository';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { WorkPlanMongoRepository } from 'src/work-plan/work-plan.repository';
     CheckSheetModule,
     CheckItemModule,
     WorkPlanModule,
+    HeavyEquipmentModule,
   ],
   controllers: [SystemStatusController],
   providers: [
@@ -32,6 +34,8 @@ import { WorkPlanMongoRepository } from 'src/work-plan/work-plan.repository';
     CheckSheetMongoRepository,
     usersMongoRepository,
     WorkPlanMongoRepository,
+    HeavyEquipmentMongoRepository,
+    SystemStatusMongoRepository,
   ],
 })
 export class SystemStatusModule {}

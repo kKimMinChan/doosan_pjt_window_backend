@@ -28,8 +28,12 @@ export class SystemStatusController {
     SwaggerHelper.getApiResponseSchema(SystemStatusResponse, '', false, true),
   )
   @ApiResponse({ type: SystemStatusResponse })
-  findOne(@Query() systemStatusRequest: SystemStatusRequest) {
-    return this.systemStatusService.findOne(systemStatusRequest);
+  async update(@Query() systemStatusRequest: SystemStatusRequest) {
+    const systemStatus =
+      await this.systemStatusService.update(systemStatusRequest);
+    return {
+      data: systemStatus,
+    };
   }
 
   // @Get(':id')

@@ -31,7 +31,6 @@ export class RecordingController {
   @ApiResponse({ type: RecordingResponse })
   async findAll() {
     const data = await this.recordingService.findAll();
-    console.log(data);
     return {
       data,
     };

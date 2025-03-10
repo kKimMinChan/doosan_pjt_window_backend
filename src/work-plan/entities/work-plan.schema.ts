@@ -44,10 +44,16 @@ class MutableData {
   endDay: string;
 }
 
+@Schema({ _id: false })
 class UrlMode {
-  dark: string;
-  white: string;
+  @Prop({ type: String, required: false })
+  dark?: string;
+
+  @Prop({ type: String, required: false })
+  white?: string;
 }
+
+const UrlModeSchema = SchemaFactory.createForClass(UrlMode);
 
 @Schema({ _id: false })
 class driverSignatures {
@@ -55,7 +61,7 @@ class driverSignatures {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',
     required: false,
-    autopopulate: true,
+    autopopulate: false,
   })
   driver: mongoose.Types.ObjectId;
 
@@ -68,9 +74,6 @@ const MutableDataSchema = SchemaFactory.createForClass(MutableData);
 MutableDataSchema.plugin(require('mongoose-autopopulate'));
 
 class AdminSignature {
-  @Prop({ type: String, enum: SignatureType, required: false })
-  type: SignatureType;
-
   @Prop({ type: UrlMode, required: false })
   url: UrlMode;
 }
@@ -92,8 +95,8 @@ export class WorkPlan {
   @Prop()
   fixedData: string;
 
-  @Prop({ type: [AdminSignature], required: false })
-  adminSignatures?: AdminSignature[];
+  @Prop({ type: Object, required: false })
+  adminSignatures?: Record<SignatureType, UrlMode>;
 
   @Prop({ type: [driverSignatures], required: false })
   driverSignatures: driverSignatures[];
