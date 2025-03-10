@@ -177,7 +177,34 @@ export class WorkPlanRequest {
   driverSignatures: Register[];
 }
 
-export class WorkPlanDetailsRequest extends PartialType(WorkPlanRequest) {}
+export class WorkPlanDetailsRequest {
+  @ApiProperty({
+    description: '작업 계획서 데이터',
+    required: false,
+    type: MutableData,
+  })
+  @IsNotEmpty()
+  @IsOptional()
+  mutableData: MutableData;
+
+  @ApiProperty({
+    description: '고정 데이터',
+    example: '고정 데이터입니다.',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  fixedData: string;
+
+  @ApiProperty({
+    description: '중장비 id',
+    example: ['67ad5a268f3d88a7ce6657d7'],
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  equipment: string[];
+}
 
 export class AdminSignatureRequest {
   @ApiProperty({

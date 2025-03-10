@@ -49,8 +49,8 @@ export class SystemStatusController {
   //   return this.systemStatusService.update(+id, updateSystemStatusDto);
   // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.systemStatusService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.systemStatusService.remove(+id);
+  // }
 }
