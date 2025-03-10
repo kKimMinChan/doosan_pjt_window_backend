@@ -14,8 +14,7 @@ import { FileStorageService } from './file-storage.service';
 import { FileRequest, FilesRequest } from './dto/create-file-storage.dto';
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { FileStorageMulterConfig } from 'storage-multer.config';
-import { FileInfoResponse } from './dto/response.dto';
+import { FileStorageMulterConfig } from 'src/config/storage-multer.config';
 
 @Controller('file-storage')
 export class FileStorageController {

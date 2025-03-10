@@ -7,8 +7,10 @@ export type UsersDocument = UserInfo & Document;
   timestamps: true,
   toJSON: {
     transform: (doc, ret) => {
-      ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
-      delete ret._id; // _id 제거
+      if (ret._id) {
+        ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
+        delete ret._id; // _id 제거
+      }
       delete ret.__v; // __v 제거
     },
   },
@@ -23,26 +25,28 @@ export class UserInfo {
   @Prop({ required: true })
   imageUrl: string;
 
-  @Prop({ required: true, enum: ['운전자', '점검자', '확인자', '관리자'] })
+  @Prop({ required: true, enum: ['driver', 'inspector', 'reviewer', 'admin'] })
   role: string;
 
-  @Prop({ default: false })
-  isDeleted?: boolean;
+  // @Prop({ default: false })
+  // status?: boolean;
 
   @Prop({
     type: mongoose.Schema.ObjectId,
     ref: 'HeavyEquipment',
     required: false,
   })
-  heavyEquipmentId: string;
+  equipmentId?: string;
 }
 
 export const UsersSchema = SchemaFactory.createForClass(UserInfo);
 
-UsersSchema.index(
-  { role: 1, heavyEquipmentId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { role: { $in: ['점검자', '확인자'] } },
-  },
-);
+// UsersSchema.index(
+//   { role: 1, equipmentId: 1 },
+//   {
+//     unique: false,
+//     partialFilterExpression: {
+//       role: { $in: ['inspector', 'reviewer'] },
+//     },
+//   },
+// );

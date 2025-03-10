@@ -82,6 +82,7 @@ export class ResponseInterceptor<T>
         }
 
         const { totalCount, totalPages, page, pageSize, data } = responseData;
+
         return {
           statusCode,
           message,
@@ -91,7 +92,12 @@ export class ResponseInterceptor<T>
           totalPages,
           pageSize,
           page,
-          data,
+          data:
+            data == null
+              ? ([] as unknown as T) // ✅ null 또는 undefined일 경우 빈 배열 반환
+              : Array.isArray(data)
+                ? (data as T) // ✅ 배열이면 그대로 반환
+                : ([data] as unknown as T), // ✅ 단일 객체라면 배열로 변환
         };
       }),
     );

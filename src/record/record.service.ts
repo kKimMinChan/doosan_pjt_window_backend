@@ -307,7 +307,7 @@ export class RecordService {
               if (fs.existsSync(thumbnailPath) && fs.existsSync(extraPath)) {
                 const base64Thumbnail = await getBase64Thumbnail(thumbnailPath);
                 items.push({
-                  thumbnail: base64Thumbnail,
+                  thumbnail: thumbnailPath,
                   extra: path.basename(extraPath),
                   time: path.basename(recordFolderPath),
                 });

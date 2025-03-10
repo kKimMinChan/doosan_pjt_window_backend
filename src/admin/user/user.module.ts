@@ -6,7 +6,7 @@ import { UserInfo, UsersSchema } from './entities/user.entity';
 import { usersMongoRepository } from './user.repository';
 import { MulterModule } from '@nestjs/platform-express';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { multerOptionsFactory } from 'multer.s3';
+import { multerOptionsFactory } from 'src/config/multer.s3';
 
 @Module({
   imports: [
@@ -20,5 +20,6 @@ import { multerOptionsFactory } from 'multer.s3';
   ],
   controllers: [UserController],
   providers: [UserService, usersMongoRepository],
+  exports: [MongooseModule],
 })
 export class UserModule {}

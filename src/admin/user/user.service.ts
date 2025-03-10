@@ -1,7 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UpdateUserRequest, UserRequest } from './dto/request.dto';
+import {
+  UpdateUserRequest,
+  UserFindRoleDto,
+  UserPaginationDto,
+  UserRequest,
+} from './dto/request.dto';
 import { usersMongoRepository } from './user.repository';
-import { UserInfo } from './entities/user.entity';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
@@ -16,10 +20,21 @@ export class UserService {
           '프로필 이미지를 업로드해야 합니다.',
           HttpStatus.BAD_REQUEST,
         );
+      console.log(userFile, process.env.NODE_ENV, 'userFile');
       const { file, ...rest } = {
         ...userInfo,
-        imageUrl: userFile.location,
+        imageUrl:
+          process.env.NODE_ENV === 'production'
+            ? 'path' in userFile
+              ? userFile.path
+              : null
+            : 'key' in userFile
+              ? userFile.key
+              : null,
+        // : `https://${process.env.CLOUDFRONT_URL}/${userFile.key}`,
       };
+
+      console.log(rest, 'rest');
 
       const result = await this.usersRepository.createUser(rest);
       console.log(result, 'result');
@@ -36,15 +51,15 @@ export class UserService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAllPaginated(userPaginationDto: UserPaginationDto) {
     try {
-      const { limit, page } = paginationDto;
+      const { limit, page, role } = userPaginationDto;
 
       const skip = (page - 1) * limit;
 
       const [data, totalCount] = await Promise.all([
-        this.usersRepository.findAll(skip, limit),
-        this.usersRepository.countUsers(),
+        this.usersRepository.findAllPaginated(skip, limit, role),
+        this.usersRepository.countUsers(role),
       ]);
 
       return {
@@ -54,6 +69,23 @@ export class UserService {
         page,
         data,
       };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async findRoleAll(userFindRoleDto: UserFindRoleDto) {
+    try {
+      const { role } = userFindRoleDto;
+      return await this.usersRepository.findRoleAll(role);
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
+  async findAll() {
+    try {
+      return await this.usersRepository.findAll();
     } catch (error) {
       ErrorHelper.handleError(error);
     }
@@ -76,12 +108,12 @@ export class UserService {
   async update(
     id: string,
     userInfo: UpdateUserRequest,
-    userFile: Express.Multer.File,
+    userFile: Express.MulterS3.File,
   ) {
     try {
       const updateData = {
         ...userInfo,
-        ...(userFile && { imageUrl: userFile.path }),
+        ...(userFile && { imageUrl: userFile.key }),
       };
 
       const result = await this.usersRepository.update(id, updateData as any);
@@ -101,6 +133,7 @@ export class UserService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      console.error(error, 'asdfoniwe');
       ErrorHelper.handleError(error);
     }
   }

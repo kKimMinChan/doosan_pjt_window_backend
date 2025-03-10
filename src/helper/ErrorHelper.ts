@@ -16,9 +16,15 @@ export class ResourceNotFoundError extends Error {
 }
 
 export class ErrorHelper {
-  static handleError(error: unknown): never {
+  static handleError(error: Error): never {
     if (error instanceof HttpException) {
-      throw new HttpException(error.message, error.getStatus());
+      // ✅ getStatus()가 없으면 500으로 처리
+      const statusCode =
+        typeof error.getStatus === 'function'
+          ? error.getStatus()
+          : HttpStatus.INTERNAL_SERVER_ERROR;
+
+      throw new HttpException(error.message, statusCode);
     }
 
     if (error instanceof DuplicateDateError) {
@@ -28,12 +34,14 @@ export class ErrorHelper {
       throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
 
-    if (error instanceof mongoose.Error.CastError && error.path === '_id') {
+    if (error.message.includes('Cast to ObjectId')) {
       throw new HttpException(
-        '잘못된 ID 형식입니다. 유효한 ObjectId를 제공해주세요.',
+        `잘못된 ID 형식입니다. 유효한 ObjectId를 제공해주세요 : ${error.message}`,
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    console.error(error);
 
     // 기본 에러 처리
     const errorMessage =

@@ -8,15 +8,19 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserInfo, UsersDocument } from './entities/user.entity';
 import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
+import { UserRole } from './dto/request.dto';
 
 export interface UsersRepository {
-  findAll(skip: number, limit: number);
-  countUsers();
+  findAllPaginated(skip: number, limit: number, role: UserRole);
+  findAll();
+  findRoleAll(role: UserRole);
+  countUsers(role: UserRole);
   findOne(id: string);
   createUser(userInfo: UserInfo);
   update(id: string, userInfo: UserInfo);
   remove(id: string);
-  findRole(id: string, role: '점검자' | '확인자');
+  findRole(id: string, role: 'INSPECTOR' | 'REVIEWER');
+  findMissingUsers(userIds: string[]): Promise<string[]>;
 }
 
 @Injectable()
@@ -26,32 +30,58 @@ export class usersMongoRepository implements UsersRepository {
     private usersModel: Model<UsersDocument>,
   ) {}
 
-  async findAll(skip: number, limit: number) {
-    try {
-      return (await this.usersModel.find().skip(skip).limit(limit)).reverse();
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw error;
-    }
+  async findAllPaginated(skip: number, limit: number, role: UserRole) {
+    return await this.usersModel
+      .find({ role })
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit);
   }
 
-  async countUsers() {
-    return this.usersModel.countDocuments().exec();
+  async findRoleAll(role: UserRole) {
+    return await this.usersModel.find({ role }).sort({ _id: -1 });
   }
 
-  // async findAll() {
-  //   try {
-  //     const usersDocument = await this.usersModel
-  //       .findOne()
-  //       .then((result) => result?.users);
-  //     if (!usersDocument)
-  //       throw new ResourceNotFoundError('등록된 사용자가 없습니다.');
-  //     return usersDocument;
-  //   } catch (error) {
-  //     console.error('Error fetching users:', error);
-  //     throw error;
-  //   }
-  // }
+  async findAll() {
+    const users = await this.usersModel.find().sort({ _id: -1 });
+    return users;
+    // const result = await this.usersModel.aggregate([
+    //   {
+    //     $group: {
+    //       _id: '$role', // role을 기준으로 그룹화
+    //       users: { $push: '$$ROOT' }, // 해당 role의 사용자 목록을 users 배열에 저장
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       _id: 0, // `_id` 필드 제거
+    //       role: '$_id', // 기존 `_id` 값을 role 필드로 변경
+    //       users: 1, // users 배열 유지
+    //     },
+    //   },
+    // ]);
+
+    // console.log(result, 'result');
+
+    // // ✅ 반환된 배열을 객체 형태로 변환
+    // return result.reduce((acc, curr) => {
+    //   acc[curr.role] = curr.users; // role을 키로 하고 users 배열을 값으로 설정
+    //   return acc;
+    // }, {});
+  }
+
+  async countUsers(role: UserRole) {
+    return this.usersModel.countDocuments({ role }).exec();
+  }
+
+  async findMissingUsers(userIds: string[]): Promise<string[]> {
+    const existingUsers = await this.usersModel
+      .find({ _id: { $in: userIds } })
+      .select('_id')
+      .lean();
+    const existingIds = existingUsers.map((user) => user._id.toString());
+    return userIds.filter((id) => !existingIds.includes(id));
+  }
 
   async findOne(id: string) {
     const userDocument = await this.usersModel.findOne({ _id: id });
@@ -60,19 +90,19 @@ export class usersMongoRepository implements UsersRepository {
     return userDocument;
   }
 
-  async findRole(id: string, role: '점검자' | '확인자') {
+  async findRole(id: string, role: 'INSPECTOR' | 'REVIEWER') {
     return await this.usersModel.findOne({
-      heavyEquipmentId: id,
+      equipmentId: id,
       role,
       isDeleted: false,
     });
   }
 
   async createUser(userInfo: UserInfo) {
-    if (userInfo.role === '점검자' || userInfo.role === '확인자') {
+    if (userInfo.role === 'INSPECTOR' || userInfo.role === 'REVIEWER') {
       const existingUser = await this.usersModel.findOne({
         role: userInfo.role,
-        heavyEquipmentId: userInfo.heavyEquipmentId,
+        equipmentId: userInfo.equipmentId,
       });
 
       if (existingUser) {
@@ -90,22 +120,23 @@ export class usersMongoRepository implements UsersRepository {
     // return null;
   }
 
-  async update(id: string, userInfo: UserInfo) {
+  async update(id: string, userInfo: Partial<UserInfo>) {
+    console.log(userInfo, 'info');
+
     const updateFields: Partial<UserInfo> = {};
     // 업데이트할 필드만 동적으로 추가
     if (userInfo.name) updateFields['name'] = userInfo.name;
     if (userInfo.department) updateFields['department'] = userInfo.department;
     if (userInfo.role) updateFields['role'] = userInfo.role;
     if (userInfo.imageUrl) updateFields['imageUrl'] = userInfo.imageUrl;
-    if (typeof userInfo.isDeleted !== 'undefined')
-      updateFields['isActive'] = userInfo.isDeleted;
+    // if (userInfo.isActive) updateFields['isActive'] = userInfo.isActive;
 
     // 업데이트할 값이 없으면 바로 반환
     if (Object.keys(updateFields).length === 0) {
       throw new Error('변경할 데이터가 없습니다.');
     }
 
-    console.log(updateFields);
+    console.log(updateFields, 'updateFields');
 
     const result = await this.usersModel.updateOne(
       { _id: id }, // 바로 해당 사용자의 ID로 업데이트
