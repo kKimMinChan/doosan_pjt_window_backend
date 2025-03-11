@@ -12,7 +12,7 @@ export type SystemStatusDocument = SystemStatus & Document;
 })
 export class SystemStatus {
   @Prop()
-  hasValidCheck: boolean;
+  hasValidCheckSheet: boolean;
 
   @Prop()
   hasValidWorkPlan: boolean;

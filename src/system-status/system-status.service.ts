@@ -52,6 +52,8 @@ export class SystemStatusService {
 
       const isWithinRange = today >= startDay && today <= endDay;
 
+      console.log(startDay, endDay, workPlan);
+
       // const driver = workPlan?.driverSignatures?.map(
       //   (item, _) => item.driver as unknown as UserInfo,
       // );
@@ -66,7 +68,7 @@ export class SystemStatusService {
       // console.log(driverSignature, 'driverSignature');
 
       const systemStatus: SystemStatus = {
-        hasValidCheck: checkSheet?.issue != null,
+        hasValidCheckSheet: checkSheet?.issue != null,
         hasValidWorkPlan: isWithinRange,
         isSignedWorkPlan: isWithinRange
           ? workPlan?.adminSignatures?.finish

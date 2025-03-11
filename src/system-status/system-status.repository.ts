@@ -28,7 +28,6 @@ export class SystemStatusMongoRepository implements SystemStatusRepository {
       await session.commitTransaction();
       session.endSession();
 
-      console.log(newRecord);
       return newRecord;
     } catch (error) {
       await session.abortTransaction();
