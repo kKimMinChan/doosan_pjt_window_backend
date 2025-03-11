@@ -35,6 +35,8 @@ export class SystemStatusService {
         throw new BadRequestException('해당 중장비 id가 존재하지 않습니다.');
 
       const user = await this.userRepository.findOne(userId);
+      if (!user)
+        throw new BadRequestException('해당 사용자 id가 존재하지 않습니다.');
       // 오늘 checkSheet인지 확인
       const LatestCheckSheet =
         await this.checkSheetRepository.findOneLatest(equipmentId);
@@ -44,8 +46,8 @@ export class SystemStatusService {
       const workPlan =
         await this.workPlanRepository.findOneLatestNotPopulate(equipmentId);
 
-      const startDay = workPlan.mutableData.startDay;
-      const endDay = workPlan.mutableData.endDay;
+      const startDay = workPlan?.mutableData?.startDay;
+      const endDay = workPlan?.mutableData?.endDay;
       const today = new Date().toISOString().split('T')[0];
 
       const isWithinRange = today >= startDay && today <= endDay;
@@ -59,12 +61,12 @@ export class SystemStatusService {
         (item) => item.driver.toString() === userId,
       );
 
-      console.log(workPlan.driverSignatures);
+      // console.log(workPlan.driverSignatures);
 
-      console.log(driverSignature, 'driverSignature');
+      // console.log(driverSignature, 'driverSignature');
 
       const systemStatus: SystemStatus = {
-        hasValidCheck: checkSheet?.issue !== null,
+        hasValidCheck: checkSheet?.issue != null,
         hasValidWorkPlan: isWithinRange,
         isSignedWorkPlan: isWithinRange
           ? workPlan?.adminSignatures?.finish

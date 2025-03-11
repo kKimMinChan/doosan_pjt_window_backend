@@ -147,6 +147,9 @@ export class WorkPlanService {
         dark: dark.length > 0 ? dark[0].key : null,
         white: white.length > 0 ? white[0].key : null,
       };
+
+      console.log(id, body.type, urlMode);
+
       return await this.workPlanRepository.updateAdminSignature(
         id,
         body.type,
