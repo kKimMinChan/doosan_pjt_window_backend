@@ -271,7 +271,10 @@ export class CheckSheetService {
           return {
             title,
             index,
-            url: `${file.key}`,
+            url:
+              process.env.NODE_ENV === 'production'
+                ? `${file.path}`
+                : `${file.key}`,
           };
         }) || [];
 

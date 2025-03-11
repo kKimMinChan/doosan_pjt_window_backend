@@ -106,6 +106,10 @@ export class WorkPlanService {
         mutableData,
         fixedData,
         driverSignatures,
+        adminSignatures: {
+          create: null,
+          finish: null,
+        },
       };
       // if (!isEquipment) delete workPlan.equipment;
       // if (!mutableData) delete workPlan.mutableData;
@@ -147,8 +151,20 @@ export class WorkPlanService {
         );
 
       const urlMode = {
-        dark: dark.length > 0 ? dark[0].key : null,
-        white: white.length > 0 ? white[0].key : null,
+        dark:
+          dark.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? dark[0].path
+              : dark[0].key
+            : null,
+        white:
+          white.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? white[0].path
+              : white[0].key
+            : null,
+        // dark: dark.length > 0 ? dark[0].key : null,
+        // white: white.length > 0 ? white[0].key : null,
       };
 
       console.log(id, body.type, urlMode);
@@ -177,8 +193,18 @@ export class WorkPlanService {
         );
 
       const urlMode = {
-        dark: dark.length > 0 ? dark[0].key : null,
-        white: white.length > 0 ? white[0].key : null,
+        dark:
+          dark.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? dark[0].path
+              : dark[0].key
+            : null,
+        white:
+          white.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? white[0].path
+              : white[0].key
+            : null,
       };
       const user = await this.userRepository.findOne(body.driver);
       if (!user)
