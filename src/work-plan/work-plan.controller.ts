@@ -69,7 +69,7 @@ export class WorkPlanController {
     };
   }
 
-  @Get('heavyEquipment/:id')
+  @Get('equipment/:id')
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(WorkPlanResponse, '', true, true),
   )
