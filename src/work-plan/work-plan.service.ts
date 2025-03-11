@@ -94,7 +94,8 @@ export class WorkPlanService {
 
   async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
     try {
-      const { equipment, mutableData, fixedData } = workPlanDto;
+      const { equipment, mutableData, fixedData, driverSignatures } =
+        workPlanDto;
 
       const isEquipment = await this.heavyEquipmentRepository.exists(equipment);
       if (!isEquipment)
@@ -104,10 +105,12 @@ export class WorkPlanService {
         equipment,
         mutableData,
         fixedData,
+        driverSignatures,
       };
-      if (!isEquipment) delete workPlan.equipment;
-      if (!mutableData) delete workPlan.mutableData;
-      if (!fixedData) delete workPlan.fixedData;
+      // if (!isEquipment) delete workPlan.equipment;
+      // if (!mutableData) delete workPlan.mutableData;
+      // if (!fixedData) delete workPlan.fixedData;
+      // if (!driverSignatures) delete workPlan.driverSignatures
 
       console.log(equipment, mutableData, fixedData, '------------', workPlan);
       const result = await this.workPlanRepository.updateDetails(id, workPlan);

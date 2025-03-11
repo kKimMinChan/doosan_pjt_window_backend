@@ -204,6 +204,15 @@ export class WorkPlanDetailsRequest {
   @IsArray()
   @IsOptional()
   equipment: string[];
+
+  @ApiProperty({
+    description: '운전자 명단',
+    required: false,
+    type: [Register],
+  })
+  @IsArray()
+  @IsOptional()
+  driverSignatures: Register[];
 }
 
 export class AdminSignatureRequest {
