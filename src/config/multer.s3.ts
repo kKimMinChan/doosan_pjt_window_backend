@@ -47,7 +47,7 @@ export const multerOptionsFactory = (
           // console.log('Full file object:', file);
           const ext = path.extname(file.originalname);
           // const basename = path.basename(file.originalname, ext);
-          done(null, `images/${Date.now()}${ext}`);
+          done(null, `images/${Date.now()}${ext}_${baseName}`);
           // done(null, `images/${baseName}_${Date.now()}${ext}`);
 
           console.log('이미지 등록');

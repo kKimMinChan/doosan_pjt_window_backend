@@ -198,6 +198,8 @@ export class WorkPlanService {
           '서명 이미지 파일을 전달받지 못했습니다.',
         );
 
+      console.log(files, '-----------------');
+
       const urlMode = {
         dark:
           dark.length > 0
