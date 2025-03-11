@@ -6,7 +6,7 @@ export class SystemStatusResponse {
     example: true,
     required: false,
   })
-  hasValidCheck: boolean;
+  hasValidCheckSheet: boolean;
 
   @ApiProperty({
     description: '오늘이 포함된 작업 기간을 갖는 작업계획서가 있는지 ',
