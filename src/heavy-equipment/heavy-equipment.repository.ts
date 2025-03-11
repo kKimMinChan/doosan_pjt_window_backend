@@ -58,7 +58,7 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
     const count = await this.heavyEquipmentModel.countDocuments({
       _id: { $in: ids },
     });
-    return count === ids.length;
+    return count === ids?.length;
   }
 
   async update(id: string, heavyEquipmentInfo: Partial<HeavyEquipment>) {

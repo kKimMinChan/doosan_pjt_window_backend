@@ -184,7 +184,7 @@ export class WorkPlanDetailsRequest {
     type: MutableData,
   })
   @IsNotEmpty()
-  @IsOptional()
+  // @IsOptional()
   mutableData: MutableData;
 
   @ApiProperty({
@@ -193,7 +193,7 @@ export class WorkPlanDetailsRequest {
     required: false,
   })
   @IsString()
-  @IsOptional()
+  // @IsOptional()
   fixedData: string;
 
   @ApiProperty({
@@ -202,7 +202,7 @@ export class WorkPlanDetailsRequest {
     required: false,
   })
   @IsArray()
-  @IsOptional()
+  // @IsOptional()
   equipment: string[];
 
   @ApiProperty({
@@ -211,7 +211,7 @@ export class WorkPlanDetailsRequest {
     type: [Register],
   })
   @IsArray()
-  @IsOptional()
+  // @IsOptional()
   driverSignatures: Register[];
 }
 

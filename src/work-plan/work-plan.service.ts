@@ -42,6 +42,10 @@ export class WorkPlanService {
         fixedData: workPlanDto.fixedData,
         equipment: workPlanDto.equipment,
         driverSignatures: workPlanDto.driverSignatures,
+        adminSignatures: {
+          create: null,
+          finish: null,
+        },
       };
       if (!isEquipment) delete workPlan.equipment;
       console.log(workPlan);
@@ -94,6 +98,8 @@ export class WorkPlanService {
 
   async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
     try {
+      console.log(id, workPlanDto, '--------');
+
       const { equipment, mutableData, fixedData, driverSignatures } =
         workPlanDto;
 
@@ -111,9 +117,9 @@ export class WorkPlanService {
           finish: null,
         },
       };
-      // if (!isEquipment) delete workPlan.equipment;
-      // if (!mutableData) delete workPlan.mutableData;
-      // if (!fixedData) delete workPlan.fixedData;
+      if (!isEquipment) delete workPlan.equipment;
+      if (!mutableData) delete workPlan.mutableData;
+      if (!fixedData) delete workPlan.fixedData;
       // if (!driverSignatures) delete workPlan.driverSignatures
 
       console.log(equipment, mutableData, fixedData, '------------', workPlan);
