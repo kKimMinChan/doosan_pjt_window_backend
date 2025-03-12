@@ -2,12 +2,15 @@ import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
 } from 'class-validator';
 import { SignatureType } from '../entities/work-plan.schema';
 import mongoose from 'mongoose';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 class MutableData {
   @ApiProperty({
@@ -240,4 +243,41 @@ export class AdminSignatureRequest {
     message: 'type 값은 create, finish 중 하나여야 합니다.',
   })
   type: SignatureType;
+}
+
+export class WorkPlanPaginationDto extends PartialType(PaginationDto) {
+  @ApiProperty({
+    description:
+      '점검 여부 유(checked), 무(unChecked), 전체(all) 기본 값 = all',
+    enum: ['checked', 'unChecked', 'all'],
+    example: 'all',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(['checked', 'unChecked', 'all'])
+  inspectionStatus?: string = 'all';
+
+  @ApiProperty({
+    description: '검색 시작 날짜',
+    example: '2025-02-19',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'startDay는 YYYY-MM-DD 형식이어야 합니다.',
+  })
+  startDay?: string;
+
+  @ApiProperty({
+    description: '검색 종료 날짜',
+    example: '2025-02-28',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'startDay는 YYYY-MM-DD 형식이어야 합니다.',
+  })
+  endDay?: string;
 }

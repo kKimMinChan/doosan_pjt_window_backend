@@ -7,6 +7,7 @@ import {
   AdminSignatureRequest,
   DriverSignatureRequest,
   WorkPlanDetailsRequest,
+  WorkPlanPaginationDto,
   WorkPlanRequest,
 } from './dto/work-plan.request';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
@@ -55,16 +56,33 @@ export class WorkPlanService {
     }
   }
 
-  async findAll(id: string, paginationDto: PaginationDto) {
+  async findAll(id: string, paginationDto: WorkPlanPaginationDto) {
     try {
-      const { page, limit } = paginationDto;
+      const { page, limit, order, inspectionStatus, startDay, endDay } =
+        paginationDto;
+
+      const today = new Date().toISOString();
+      const includingTodayWorkPlan =
+        await this.workPlanRepository.findTodayEntry(id);
+      const todayId = includingTodayWorkPlan?._id?.toString();
 
       const skip = (page - 1) * limit;
 
       const [data, totalCount] = await Promise.all([
-        this.workPlanRepository.findAll(id, skip, limit),
+        this.workPlanRepository.findAll(
+          id,
+          skip,
+          limit,
+          todayId,
+          order,
+          inspectionStatus,
+          startDay,
+          endDay,
+        ),
         this.workPlanRepository.countWorkPlan(id),
       ]);
+
+      console.log(data, '-------', totalCount);
 
       return {
         pageSize: limit,
@@ -87,9 +105,9 @@ export class WorkPlanService {
     }
   }
 
-  async findOneLatest(id: string) {
+  async findTodayEntry(id: string) {
     try {
-      const workPlan = await this.workPlanRepository.findOneLatest(id);
+      const workPlan = await this.workPlanRepository.findTodayEntry(id);
       return workPlan;
     } catch (error) {
       ErrorHelper.handleError(error);

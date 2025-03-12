@@ -102,12 +102,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     startDay: string,
     endDay: string,
   ) {
-    const sortOrder: SortOrder = ['asc', 'desc'].includes(order as string)
-      ? order === 'asc'
-        ? 1
-        : -1 // ✅ 문자열을 숫자로 변환
-      : -1; // 기본값: 최신순
-
+    const sortOrder: SortOrder = order === 'asc' ? 1 : -1;
     const filter: any = {};
 
     // ✅ 날짜가 있으면 필터 추가

@@ -43,6 +43,7 @@ export class RecordingController {
 
   @Put()
   async update(@Body() updateRecordingDto: RecordingRequest) {
+    console.log(updateRecordingDto, ' 0----');
     return await this.recordingService.update(updateRecordingDto);
   }
 

@@ -1,13 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { WorkPlan, WorkPlanDocument } from './entities/work-plan.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model, SortOrder } from 'mongoose';
 
 export interface WorkPlanRepository {
   create(workPlanDto: WorkPlan);
   findOne(id: string);
-  findOneLatest(id: string);
-  findAll(id, skip: number, limit: number);
+  findTodayEntry(id: string);
+  findAll(
+    id: string,
+    skip: number,
+    limit: number,
+    order: string,
+    todayId: string,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  );
   countWorkPlan(id: string);
   updateSignature(
     id: string,
@@ -42,13 +51,19 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     return workPlan;
   }
 
-  async findOneLatest(id: string) {
-    const workPlan = await this.workPlanModel
-      .findOne({ equipment: id })
-      .sort({ _id: -1 })
+  async findTodayEntry(id: string) {
+    const today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
+
+    const includingTodayData = await this.workPlanModel
+      .findOne({
+        equipment: id,
+        'mutableData.startDay': { $lte: today }, // 시작일이 오늘 이전 또는 동일
+        'mutableData.endDay': { $gte: today }, // 종료일이 오늘 이후 또는 동일
+      })
       .populate('driverSignatures.driver')
       .exec();
-    return workPlan;
+
+    return includingTodayData;
   }
 
   async findOneLatestNotPopulate(id: string) {
@@ -59,14 +74,60 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     return workPlan;
   }
 
-  async findAll(id: any, skip: number, limit: number) {
-    const workPlans = await this.workPlanModel
-      .find({ equipment: id })
-      .sort({ _id: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate('driverSignatures.driver');
+  async findAll(
+    id: string,
+    skip: number,
+    limit: number,
+    todayId: string,
+    order: string,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  ) {
+    console.log(inspectionStatus, startDay, endDay);
+    const sortOrder: SortOrder = order === 'asc' ? 1 : -1;
+
+    const filter: any = {};
+
+    // ✅ 날짜가 있으면 필터 추가
+    if (startDay && endDay) {
+      filter.$or = [
+        { 'mutableData.endDay': { $gte: new Date(startDay) } }, // ✅ endDay가 startDay 이후
+        { 'mutableData.startDay': { $lte: new Date(endDay) } }, // ✅ startDay가 endDay 이전
+      ];
+    }
+
+    // ✅ 점검 상태 필터 추가
+    if (inspectionStatus === 'checked') {
+      filter['adminSignatures.finish'] = { $ne: null };
+    } else if (inspectionStatus === 'unChecked') {
+      filter['adminSignatures.finish'] = null;
+    }
+
+    const pipeline: any[] = [
+      {
+        $match: {
+          equipment: new mongoose.Types.ObjectId(id),
+          _id: { $ne: new mongoose.Types.ObjectId(todayId) }, // ✅ todayId 제외
+        },
+      },
+      { $match: filter },
+      { $sort: { createdAt: sortOrder } },
+      { $skip: skip },
+      { $limit: limit },
+    ];
+
+    const workPlans = await this.workPlanModel.aggregate(pipeline);
+
     return workPlans;
+
+    // const workPlans = await this.workPlanModel
+    //   .find({ equipment: id })
+    //   .sort({ _id: -1 })
+    //   .skip(skip)
+    //   .limit(limit)
+    //   .populate('driverSignatures.driver');
+    // return workPlans;
   }
   async countWorkPlan(id: string) {
     return await this.workPlanModel.countDocuments({ equipment: id });

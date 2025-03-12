@@ -18,21 +18,10 @@ export class SystemStatusMongoRepository implements SystemStatusRepository {
   ) {}
 
   async update(systemStatus: SystemStatus) {
-    const session = await this.systemStatusModel.startSession();
-    session.startTransaction();
-    try {
-      await this.systemStatusModel.deleteMany({}, { session }); // ✅ 기존 문서 삭제
-      const newRecord = await this.systemStatusModel.create([systemStatus], {
-        session,
-      }); // ✅ 새 문서 생성
-      await session.commitTransaction();
-      session.endSession();
-
-      return newRecord;
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      throw error;
-    }
+    return await this.systemStatusModel.replaceOne(
+      {}, // ✅ 모든 문서를 대상으로 적용 (즉, 하나만 유지)
+      systemStatus, // ✅ 새로운 데이터로 교체
+      { upsert: true }, // ✅ 기존 문서가 없으면 새로 생성
+    );
   }
 }
