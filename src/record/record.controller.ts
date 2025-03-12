@@ -119,7 +119,7 @@ export class RecordController {
       'extra.mp4',
     );
 
-    console.log(videoPath, foldName);
+    console.log(videoPath);
 
     if (fs.existsSync(videoPath)) {
       const stat = fs.statSync(videoPath);
