@@ -82,7 +82,7 @@ export class WorkPlanService {
         this.workPlanRepository.countWorkPlan(id),
       ]);
 
-      console.log(data, '-------', totalCount);
+      // console.log(data, '-------', totalCount);
 
       return {
         pageSize: limit,
@@ -108,6 +108,7 @@ export class WorkPlanService {
   async findTodayEntry(id: string) {
     try {
       const workPlan = await this.workPlanRepository.findTodayEntry(id);
+      console.log(workPlan, 'including');
       return workPlan;
     } catch (error) {
       ErrorHelper.handleError(error);

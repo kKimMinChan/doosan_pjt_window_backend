@@ -33,10 +33,18 @@ export class ResponseInterceptor<T>
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ApiResponse<T>> {
+    const response = context.switchToHttp().getResponse();
+    const request = context.switchToHttp().getRequest();
+
+    if (request.url.includes('/play')) {
+      console.log(
+        '[Interceptor] 비디오 스트리밍 요청 감지 - Interceptor 적용 안 함',
+      );
+      return next.handle();
+    }
+
     return next.handle().pipe(
       map((responseData) => {
-        const response = context.switchToHttp().getResponse();
-        const request = context.switchToHttp().getRequest();
         let statusCode = response.statusCode;
 
         const result = statusCode >= 200 && statusCode < 400;

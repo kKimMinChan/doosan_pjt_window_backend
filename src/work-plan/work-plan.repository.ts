@@ -84,16 +84,23 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     startDay: string,
     endDay: string,
   ) {
-    console.log(inspectionStatus, startDay, endDay);
+    console.log(inspectionStatus, startDay, endDay, new Date());
     const sortOrder: SortOrder = order === 'asc' ? 1 : -1;
 
-    const filter: any = {};
+    const filter: any = {
+      equipment: new mongoose.Types.ObjectId(id),
+      _id: { $ne: new mongoose.Types.ObjectId(todayId) }, // ✅ 특정 문서 제외
+    };
 
-    // ✅ 날짜가 있으면 필터 추가
+    // ✅ 날짜 필터 추가
     if (startDay && endDay) {
       filter.$or = [
-        { 'mutableData.endDay': { $gte: new Date(startDay) } }, // ✅ endDay가 startDay 이후
-        { 'mutableData.startDay': { $lte: new Date(endDay) } }, // ✅ startDay가 endDay 이전
+        { 'mutableData.startDay': { $gte: startDay, $lte: endDay } }, // 시작일이 기준 범위 내
+        { 'mutableData.endDay': { $gte: startDay, $lte: endDay } }, // 종료일이 기준 범위 내
+        {
+          'mutableData.startDay': { $lte: startDay },
+          'mutableData.endDay': { $gte: endDay },
+        }, // 전체 포함
       ];
     }
 
@@ -104,20 +111,14 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
       filter['adminSignatures.finish'] = null;
     }
 
-    const pipeline: any[] = [
-      {
-        $match: {
-          equipment: new mongoose.Types.ObjectId(id),
-          _id: { $ne: new mongoose.Types.ObjectId(todayId) }, // ✅ todayId 제외
-        },
-      },
-      { $match: filter },
-      { $sort: { createdAt: sortOrder } },
-      { $skip: skip },
-      { $limit: limit },
-    ];
-
-    const workPlans = await this.workPlanModel.aggregate(pipeline);
+    // ✅ find()로 쿼리 실행
+    const workPlans = await this.workPlanModel
+      .find(filter)
+      .sort({ 'mutableData.startDay': sortOrder }) // ✅ 시작일 기준 오름차순 정렬
+      .skip(skip)
+      .limit(limit)
+      .populate('driverSignatures.driver')
+      .exec();
 
     return workPlans;
 
