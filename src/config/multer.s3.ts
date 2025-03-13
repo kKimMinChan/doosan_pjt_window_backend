@@ -4,7 +4,7 @@ import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer
 import { diskStorage } from 'multer';
 import * as multerS3 from 'multer-s3';
 import * as path from 'path';
-import os from 'os';
+import * as os from 'os';
 
 export const multerOptionsFactory = (
   configService: ConfigService,
@@ -65,7 +65,7 @@ export const multerOptionsFactory = (
     );
     return {
       storage: diskStorage({
-        destination: '/Users/kimminchan/Desktop/transGuard_storage', // 파일이 저장될 경로
+        destination: storagePath, // 파일이 저장될 경로
         filename: (req, file, callback) => {
           const ext = path.extname(file.originalname);
 
