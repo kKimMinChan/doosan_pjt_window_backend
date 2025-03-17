@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { WorkPlan, WorkPlanDocument } from './entities/work-plan.schema';
 import mongoose, { Model, SortOrder } from 'mongoose';
+import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
 
 export interface WorkPlanRepository {
   create(workPlanDto: WorkPlan);
@@ -48,6 +49,11 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     const workPlan = await this.workPlanModel
       .findById(id)
       .populate('driverSignatures.driver');
+
+    if (!workPlan)
+      throw new ResourceNotFoundError(
+        '해당 id의 작업 계획서가 존재하지 않습니다.',
+      );
     return workPlan;
   }
 

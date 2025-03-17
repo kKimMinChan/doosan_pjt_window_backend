@@ -190,7 +190,10 @@ export class CheckSheetService {
 
   async findOneLatest(id: string) {
     try {
+      await this.heavyEquipmentRepository.findOne(id);
+
       const latest = await this.checkSheetRepository.findOneLatest(id);
+
       console.log('findOneLatest', latest?.createdAt);
 
       return latest;
@@ -203,6 +206,7 @@ export class CheckSheetService {
 
   async findOneLatestIssue(id: string) {
     try {
+      await this.heavyEquipmentRepository.findOne(id);
       const latest = await this.checkSheetRepository.findOneLatest(id);
       if (!latest) return [];
       const date = new Date();

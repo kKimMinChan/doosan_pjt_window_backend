@@ -58,6 +58,8 @@ export class WorkPlanService {
 
   async findAll(id: string, paginationDto: WorkPlanPaginationDto) {
     try {
+      await this.heavyEquipmentRepository.findOne(id);
+
       const { page, limit, order, inspectionStatus, startDay, endDay } =
         paginationDto;
 
@@ -107,6 +109,7 @@ export class WorkPlanService {
 
   async findTodayEntry(id: string) {
     try {
+      await this.heavyEquipmentRepository.findOne(id);
       const workPlan = await this.workPlanRepository.findTodayEntry(id);
       console.log(workPlan, 'including');
       return workPlan;

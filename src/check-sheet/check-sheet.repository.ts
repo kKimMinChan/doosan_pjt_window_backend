@@ -6,6 +6,7 @@ import {
   CheckItem,
   CheckItemDocument,
 } from 'src/check-item/entities/check-item.schema';
+import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
 
 export interface CheckSheetRepository {
   create(checkSheetDto: CheckSheet);
@@ -53,6 +54,11 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     const checkSheet = await this.checkSheetModel
       .findOne({ _id: id })
       .populate('items.checkItem');
+
+    if (!checkSheet)
+      throw new ResourceNotFoundError(
+        '해당 id의 안전 점검표가 존재하지 않습니다.',
+      );
     return checkSheet;
   }
 
