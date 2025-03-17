@@ -15,6 +15,7 @@ import { WorkPlanModule } from './work-plan/work-plan.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { RecordingModule } from './recording/recording.module';
 import { SystemStatusModule } from './system-status/system-status.module';
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { SystemStatusModule } from './system-status/system-status.module';
     WorkPlanModule,
     RecordingModule,
     SystemStatusModule,
+    LogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
