@@ -5,7 +5,7 @@ import {
 } from './entities/heavy-equipment.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ErrorHelper } from 'src/helper/ErrorHelper';
+import { ErrorHelper, ResourceNotFoundError } from 'src/helper/ErrorHelper';
 
 export interface HeavyEquipmentRepository {
   createHeavyEquipment(heavyEquipmentInfo: HeavyEquipment);
@@ -50,6 +50,9 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
     const equipmentDocument = await this.heavyEquipmentModel
       .findById(id)
       .populate('inspectors reviewers');
+
+    if (!equipmentDocument)
+      throw new ResourceNotFoundError('등록된 중장비가 없습니다.');
 
     return equipmentDocument;
   }
