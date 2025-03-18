@@ -6,37 +6,44 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { LogsService } from './logs.service';
-import { CreateLogDto } from './dto/log.request';
-import { UpdateLogDto } from './dto/log.response';
+import { UserLogPaginationDto, UserLogRequest } from './dto/log.request';
+import { UserLogResponse } from './dto/log.response';
+import { ApiConsumes, ApiCreatedResponse, ApiResponse } from '@nestjs/swagger';
+import { SwaggerHelper } from 'src/helper/SwaggerHelper';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-@Controller('logs')
+@Controller('user-logs')
 export class LogsController {
   constructor(private readonly logsService: LogsService) {}
 
   @Post()
-  create(@Body() createLogDto: CreateLogDto) {
-    return this.logsService.create(createLogDto);
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  async create(
+    @Body() createLogDto: UserLogRequest,
+    @UploadedFile() file: Express.MulterS3.File,
+  ) {
+    return this.logsService.create(createLogDto, file);
   }
 
   @Get()
-  findAll() {
-    return this.logsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.logsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLogDto: UpdateLogDto) {
-    return this.logsService.update(+id, updateLogDto);
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(UserLogResponse, '', true, true),
+  )
+  @ApiResponse({ type: UserLogResponse })
+  async findAll(@Query() userLogPaginationDto: UserLogPaginationDto) {
+    const userLogs = await this.logsService.findAll(userLogPaginationDto);
+    return userLogs;
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.logsService.remove(+id);
   }
 }

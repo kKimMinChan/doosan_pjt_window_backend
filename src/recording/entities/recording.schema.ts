@@ -13,6 +13,9 @@ export type RecordingDocument = Recording & Document;
 export class Recording {
   @Prop()
   ip: string[];
+
+  @Prop()
+  cameraBeIp: string[];
 }
 
 export const RecordingSchema = SchemaFactory.createForClass(Recording);

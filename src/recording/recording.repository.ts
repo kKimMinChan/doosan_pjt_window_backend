@@ -20,11 +20,11 @@ export class RecordingMongoRepository implements RecordingRepository {
     return await this.recordingModel.findOne().exec();
   }
 
-  async update(ips: Recording) {
-    return await this.recordingModel.replaceOne(
-      {}, // ✅ 모든 문서를 대상으로 적용 (즉, 하나만 유지)
-      ips, // ✅ 새로운 데이터로 교체
-      { upsert: true }, // ✅ 기존 문서가 없으면 새로 생성
+  async update(ips: Partial<Recording>) {
+    return await this.recordingModel.updateOne(
+      {}, // ✅ 조건 (첫 번째 문서 선택)
+      { $set: ips }, // ✅ 기존 데이터 유지하면서 `ip`만 변경
+      { upsert: true }, // ✅ 기존 문서 없으면 생성
     );
   }
 
