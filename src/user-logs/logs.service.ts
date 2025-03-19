@@ -5,6 +5,7 @@ import { ErrorHelper } from 'src/helper/ErrorHelper';
 import { userLogsMongoRepository } from './logs.repository';
 import { UserLog } from './entities/log.schema';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class LogsService {
@@ -16,16 +17,29 @@ export class LogsService {
   async create(createLogDto: UserLogRequest, file: Express.MulterS3.File) {
     try {
       console.log(createLogDto, file);
-      const missUser = await this.usersRepository.findMissingUsers([
-        createLogDto.user.toString(),
-      ]);
 
-      console.log(missUser, 'missUser');
+      // user 값을 저장할 변수 선언 (기본값은 null)
+      let userValue: mongoose.Types.ObjectId | null = null;
+
+      // createLogDto.user가 올바른 ObjectId 형식이면
+      if (mongoose.Types.ObjectId.isValid(createLogDto.user)) {
+        // 누락된 사용자가 있는지 조회 (user ID를 문자열로 변환)
+        const missUser = await this.usersRepository.findMissingUsers([
+          createLogDto.user.toString(),
+        ]);
+        console.log(missUser, 'missUser');
+
+        // 누락된 사용자가 있으면 userValue는 null, 없으면 createLogDto.user 할당
+        userValue = missUser.length > 0 ? null : createLogDto.user;
+      } else {
+        // createLogDto.user가 유효하지 않으면 null 할당
+        userValue = null;
+      }
 
       const userLog: Partial<UserLog> = {
         event: createLogDto.event,
         result: createLogDto?.result,
-        user: missUser.length > 0 ? null : createLogDto.user,
+        user: userValue,
         imageUrl:
           process.env.NODE_ENV === 'production'
             ? 'path' in file
