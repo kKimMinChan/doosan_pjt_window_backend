@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CameraBeIpRequest, RecordingRequest } from './dto/recording.request';
+import { RecordingRequest } from './dto/recording.request';
 import { RecordingMongoRepository } from './recording.repository';
 import { Recording } from './entities/recording.schema';
 
@@ -12,9 +12,12 @@ export class RecordingService {
   }
 
   async update(updateRecordingDto: RecordingRequest) {
+    console.log(updateRecordingDto, 'dto');
     const updateIp: Partial<Recording> = {
-      ip: updateRecordingDto.ip,
+      recordingTargets: updateRecordingDto?.recordingTargets,
+      cameraStatusTargets: updateRecordingDto?.cameraStatusTargets,
     };
+    console.log(updateIp, 'update');
     return await this.recordingRepository.update(updateIp);
   }
 
@@ -22,15 +25,15 @@ export class RecordingService {
     return await this.recordingRepository.remove();
   }
 
-  async updateCameraBe(updateRecordingDto: CameraBeIpRequest) {
-    const updateCameraBeIp: Partial<Recording> = {
-      cameraBeIp: updateRecordingDto.cameraBeIp,
-    };
+  // async updateCameraBe(updateRecordingDto: CameraBeIpRequest) {
+  //   const updateCameraBeIp: Partial<Recording> = {
+  //     cameraStatusTargets: updateRecordingDto.cameraStatusTargets,
+  //   };
 
-    return await this.recordingRepository.update(updateCameraBeIp);
-  }
+  //   return await this.recordingRepository.update(updateCameraBeIp);
+  // }
 
-  async removeCameraBe() {
-    return await this.recordingRepository.remove();
-  }
+  // async removeCameraBe() {
+  //   return await this.recordingRepository.remove();
+  // }
 }
