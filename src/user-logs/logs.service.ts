@@ -6,12 +6,14 @@ import { userLogsMongoRepository } from './logs.repository';
 import { UserLog } from './entities/log.schema';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
 import mongoose from 'mongoose';
+import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
 
 @Injectable()
 export class LogsService {
   constructor(
     private userLogsRepository: userLogsMongoRepository,
     private usersRepository: usersMongoRepository,
+    private equipmentRepository: HeavyEquipmentMongoRepository,
   ) {}
 
   async create(createLogDto: UserLogRequest, file: Express.MulterS3.File) {
@@ -20,6 +22,7 @@ export class LogsService {
 
       // user 값을 저장할 변수 선언 (기본값은 null)
       let userValue: mongoose.Types.ObjectId | null = null;
+      let equipmentValue: mongoose.Types.ObjectId | null = null;
 
       // createLogDto.user가 올바른 ObjectId 형식이면
       if (mongoose.Types.ObjectId.isValid(createLogDto.user)) {
@@ -36,10 +39,24 @@ export class LogsService {
         userValue = null;
       }
 
+      if (mongoose.Types.ObjectId.isValid(createLogDto.equipment)) {
+        // 누락된 사용자가 있는지 조회 (user ID를 문자열로 변환)
+        const equipment = await this.equipmentRepository.findOne(
+          createLogDto.equipment.toString(),
+        );
+
+        // 누락된 사용자가 있으면 userValue는 null, 없으면 createLogDto.user 할당
+        equipmentValue = equipment ? null : createLogDto.user;
+      } else {
+        // createLogDto.user가 유효하지 않으면 null 할당
+        equipmentValue = null;
+      }
+
       const userLog: Partial<UserLog> = {
         event: createLogDto.event,
         result: createLogDto?.result,
         user: userValue,
+        equipment: equipmentValue,
         imageUrl:
           process.env.NODE_ENV === 'production'
             ? 'path' in file

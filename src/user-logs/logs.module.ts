@@ -9,6 +9,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { multerOptionsFactory } from 'src/config/multer.s3';
 import { UserModule } from 'src/admin/user/user.module';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
+import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
+import { HeavyEquipmentModule } from 'src/heavy-equipment/heavy-equipment.module';
 
 @Module({
   imports: [
@@ -20,8 +22,14 @@ import { usersMongoRepository } from 'src/admin/user/user.repository';
         multerOptionsFactory(configService),
     }),
     UserModule,
+    HeavyEquipmentModule,
   ],
   controllers: [LogsController],
-  providers: [LogsService, userLogsMongoRepository, usersMongoRepository],
+  providers: [
+    LogsService,
+    userLogsMongoRepository,
+    usersMongoRepository,
+    HeavyEquipmentMongoRepository,
+  ],
 })
 export class LogsModule {}
