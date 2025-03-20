@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EventType } from '../entities/log.schema';
 import { UserInfo } from 'src/admin/user/entities/user.entity';
+import { HeavyEquipment } from 'src/heavy-equipment/entities/heavy-equipment.entity';
 
 export class UserLogResponse {
   @ApiProperty({
@@ -29,6 +30,23 @@ export class UserLogResponse {
     },
   })
   user: UserInfo | null;
+
+  @ApiProperty({
+    description: '중장비 id',
+    example: {
+      drivers: [],
+      factoryName: '원자력 공장(min)',
+      type: 'FORKLIFT',
+      equipmentNumber: 'A55',
+      isActive: true,
+      createdAt: '2025-02-05T05:50:04.116Z',
+      updatedAt: '2025-02-18T09:28:32.981Z',
+      inspectors: [],
+      reviewers: [],
+      id: '67a2fc0c89ca50f1cee44e03',
+    },
+  })
+  equipment: HeavyEquipment | null;
 
   @ApiProperty({
     description: '이미지 주소',

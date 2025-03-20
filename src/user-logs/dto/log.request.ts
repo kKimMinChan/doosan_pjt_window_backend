@@ -33,6 +33,15 @@ export class UserLogRequest {
   user: mongoose.Types.ObjectId | null;
 
   @ApiProperty({
+    description: '중장비 id',
+    example: '67d7dcdaba6ebc84e0add560',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  equipment: mongoose.Types.ObjectId | null;
+
+  @ApiProperty({
     description: '업로드할 파일',
     type: 'string',
     format: 'binary',

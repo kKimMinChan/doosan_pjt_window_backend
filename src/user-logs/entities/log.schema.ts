@@ -37,6 +37,14 @@ export class UserLog {
   })
   user: mongoose.Types.ObjectId | null;
 
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'HeavyEquipment',
+    required: false,
+    autopopulate: true,
+  })
+  equipment: mongoose.Types.ObjectId | null;
+
   @Prop()
   imageUrl: string;
 }

@@ -29,23 +29,23 @@ export class RecordingController {
     SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
   )
   @ApiResponse({ type: RecordingResponse })
+  async findAlla() {
+    const data = await this.recordingService.findAll();
+    return {
+      data,
+    };
+  }
+  @Get()
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
+  )
+  @ApiResponse({ type: RecordingResponse })
   async findAll() {
     const data = await this.recordingService.findAll();
     return {
       data,
     };
   }
-  // @Get()
-  // @ApiCreatedResponse(
-  //   SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
-  // )
-  // @ApiResponse({ type: RecordingResponse })
-  // async findAll() {
-  //   const data = await this.recordingService.findAll();
-  //   return {
-  //     data,
-  //   };
-  // }
 
   @Put()
   async update(@Body() updateRecordingDto: RecordingRequest) {
