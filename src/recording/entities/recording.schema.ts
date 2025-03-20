@@ -12,10 +12,10 @@ export type RecordingDocument = Recording & Document;
 })
 export class Recording {
   @Prop()
-  recordingTargets: string[] | [];
+  cameraIps: string[] | [];
 
   @Prop()
-  cameraStatusTargets: string[] | [];
+  pythonServerIps: string[] | [];
 }
 
 export const RecordingSchema = SchemaFactory.createForClass(Recording);

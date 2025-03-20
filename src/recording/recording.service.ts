@@ -14,8 +14,8 @@ export class RecordingService {
   async update(updateRecordingDto: RecordingRequest) {
     console.log(updateRecordingDto, 'dto');
     const updateIp: Partial<Recording> = {
-      recordingTargets: updateRecordingDto?.recordingTargets,
-      cameraStatusTargets: updateRecordingDto?.cameraStatusTargets,
+      cameraIps: updateRecordingDto?.cameraIps,
+      pythonServerIps: updateRecordingDto?.pythonServerIps,
     };
     console.log(updateIp, 'update');
     return await this.recordingRepository.update(updateIp);

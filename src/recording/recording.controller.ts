@@ -19,22 +19,6 @@ import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 export class RecordingController {
   constructor(private readonly recordingService: RecordingService) {}
 
-  // @Post()
-  // create(@Body() createRecordingDto: CreateRecordingDto) {
-  //   return this.recordingService.create(createRecordingDto);
-  // }
-
-  // @Get('recording-ips')
-  // @ApiCreatedResponse(
-  //   SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
-  // )
-  // @ApiResponse({ type: RecordingResponse })
-  // async findAlla() {
-  //   const data = await this.recordingService.findAll();
-  //   return {
-  //     data,
-  //   };
-  // }
   @Get()
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
