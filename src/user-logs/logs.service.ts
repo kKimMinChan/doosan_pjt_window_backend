@@ -46,7 +46,7 @@ export class LogsService {
         );
 
         // 누락된 사용자가 있으면 userValue는 null, 없으면 createLogDto.user 할당
-        equipmentValue = equipment ? null : createLogDto.user;
+        equipmentValue = equipment ? createLogDto.equipment : null;
       } else {
         // createLogDto.user가 유효하지 않으면 null 할당
         equipmentValue = null;
