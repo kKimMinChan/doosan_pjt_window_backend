@@ -15,7 +15,7 @@ import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
 @ApiTags('녹화 설정')
-@Controller('configuration')
+@Controller('configurations')
 export class RecordingController {
   constructor(private readonly recordingService: RecordingService) {}
 
@@ -24,17 +24,17 @@ export class RecordingController {
   //   return this.recordingService.create(createRecordingDto);
   // }
 
-  @Get('recording-ips')
-  @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
-  )
-  @ApiResponse({ type: RecordingResponse })
-  async findAlla() {
-    const data = await this.recordingService.findAll();
-    return {
-      data,
-    };
-  }
+  // @Get('recording-ips')
+  // @ApiCreatedResponse(
+  //   SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
+  // )
+  // @ApiResponse({ type: RecordingResponse })
+  // async findAlla() {
+  //   const data = await this.recordingService.findAll();
+  //   return {
+  //     data,
+  //   };
+  // }
   @Get()
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(RecordingResponse, '', false, true),
