@@ -113,7 +113,16 @@ export class UserService {
     try {
       const updateData = {
         ...userInfo,
-        ...(userFile && { imageUrl: userFile.key }),
+        ...(userFile && {
+          imageUrl:
+            process.env.NODE_ENV === 'production'
+              ? 'path' in userFile
+                ? userFile.path
+                : null
+              : 'key' in userFile
+                ? userFile.key
+                : null,
+        }),
       };
 
       const result = await this.usersRepository.update(id, updateData as any);

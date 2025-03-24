@@ -15,14 +15,9 @@ import { ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 
 @ApiTags('녹화 설정')
-@Controller('configuration/recording-ips')
+@Controller('configurations')
 export class RecordingController {
   constructor(private readonly recordingService: RecordingService) {}
-
-  // @Post()
-  // create(@Body() createRecordingDto: CreateRecordingDto) {
-  //   return this.recordingService.create(createRecordingDto);
-  // }
 
   @Get()
   @ApiCreatedResponse(
@@ -31,19 +26,14 @@ export class RecordingController {
   @ApiResponse({ type: RecordingResponse })
   async findAll() {
     const data = await this.recordingService.findAll();
-    console.log(data);
     return {
       data,
     };
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.recordingService.findOne(+id);
-  // }
-
   @Put()
   async update(@Body() updateRecordingDto: RecordingRequest) {
+    console.log(updateRecordingDto, ' 0----');
     return await this.recordingService.update(updateRecordingDto);
   }
 
@@ -51,4 +41,27 @@ export class RecordingController {
   remove() {
     return this.recordingService.remove();
   }
+
+  // @Get('/camera-be')
+  // @ApiCreatedResponse(
+  //   SwaggerHelper.getApiResponseSchema(CameraBeIpRequest, '', false, true),
+  // )
+  // @ApiResponse({ type: CameraBeIpRequest })
+  // async findCameraBe() {
+  //   const data = await this.recordingService.findAll();
+  //   return {
+  //     data,
+  //   };
+  // }
+
+  // @Put('/camera-be')
+  // async updateCameraBe(@Body() updateRecordingDto: CameraBeIpRequest) {
+  //   console.log(updateRecordingDto, ' 0----');
+  //   return await this.recordingService.updateCameraBe(updateRecordingDto);
+  // }
+
+  // @Delete('/camera-be')
+  // removeCameraBe() {
+  //   return this.recordingService.removeCameraBe();
+  // }
 }

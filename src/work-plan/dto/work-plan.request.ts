@@ -6,10 +6,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  ValidateIf,
+  Matches,
 } from 'class-validator';
 import { SignatureType } from '../entities/work-plan.schema';
 import mongoose from 'mongoose';
+import { PaginationDto } from 'src/common-dto/pagination.dto';
 
 class MutableData {
   @ApiProperty({
@@ -78,6 +79,24 @@ class MutableData {
   @IsString()
   @IsOptional()
   route: string;
+
+  @ApiProperty({
+    description: '작업 일시(시작)',
+    example: '2025-03-10',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  startDay: string;
+
+  @ApiProperty({
+    description: '작업 일시(끝)',
+    example: '2025-03-16',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  endDay: string;
 }
 
 export class DriverSignatureRequest {
@@ -86,7 +105,14 @@ export class DriverSignatureRequest {
     format: 'binary',
     required: true,
   })
-  file: string;
+  dark: string;
+
+  @ApiProperty({
+    description: '서명 파일',
+    format: 'binary',
+    required: true,
+  })
+  white: string;
 
   @ApiProperty({
     description: '운전자 id',
@@ -154,7 +180,43 @@ export class WorkPlanRequest {
   driverSignatures: Register[];
 }
 
-export class WorkPlanDetailsRequest extends PartialType(WorkPlanRequest) {}
+export class WorkPlanDetailsRequest {
+  @ApiProperty({
+    description: '작업 계획서 데이터',
+    required: false,
+    type: MutableData,
+  })
+  @IsNotEmpty()
+  // @IsOptional()
+  mutableData: MutableData;
+
+  @ApiProperty({
+    description: '고정 데이터',
+    example: '고정 데이터입니다.',
+    required: false,
+  })
+  @IsString()
+  // @IsOptional()
+  fixedData: string;
+
+  @ApiProperty({
+    description: '중장비 id',
+    example: ['67ad5a268f3d88a7ce6657d7'],
+    required: false,
+  })
+  @IsArray()
+  // @IsOptional()
+  equipment: string[];
+
+  @ApiProperty({
+    description: '운전자 명단',
+    required: false,
+    type: [Register],
+  })
+  @IsArray()
+  // @IsOptional()
+  driverSignatures: Register[];
+}
 
 export class AdminSignatureRequest {
   @ApiProperty({
@@ -162,7 +224,14 @@ export class AdminSignatureRequest {
     format: 'binary',
     required: true,
   })
-  file: string;
+  dark: string;
+
+  @ApiProperty({
+    description: '서명 파일',
+    format: 'binary',
+    required: true,
+  })
+  white: string;
 
   @ApiProperty({
     description: '서명 유형 (create, finish)',
@@ -174,4 +243,41 @@ export class AdminSignatureRequest {
     message: 'type 값은 create, finish 중 하나여야 합니다.',
   })
   type: SignatureType;
+}
+
+export class WorkPlanPaginationDto extends PartialType(PaginationDto) {
+  @ApiProperty({
+    description:
+      '점검 여부 유(checked), 무(unChecked), 전체(all) 기본 값 = all',
+    enum: ['checked', 'unChecked', 'all'],
+    example: 'all',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(['checked', 'unChecked', 'all'])
+  inspectionStatus?: string = 'all';
+
+  @ApiProperty({
+    description: '검색 시작 날짜',
+    example: '2025-02-19',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'startDay는 YYYY-MM-DD 형식이어야 합니다.',
+  })
+  startDay?: string;
+
+  @ApiProperty({
+    description: '검색 종료 날짜',
+    example: '2025-02-28',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'startDay는 YYYY-MM-DD 형식이어야 합니다.',
+  })
+  endDay?: string;
 }

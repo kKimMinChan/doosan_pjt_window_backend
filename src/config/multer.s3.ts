@@ -4,6 +4,7 @@ import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer
 import { diskStorage } from 'multer';
 import * as multerS3 from 'multer-s3';
 import * as path from 'path';
+import * as os from 'os';
 
 export const multerOptionsFactory = (
   configService: ConfigService,
@@ -47,7 +48,7 @@ export const multerOptionsFactory = (
           // console.log('Full file object:', file);
           const ext = path.extname(file.originalname);
           // const basename = path.basename(file.originalname, ext);
-          done(null, `images/${Date.now()}${ext}`);
+          done(null, `images/${Date.now()}${ext}_${baseName}`);
           // done(null, `images/${baseName}_${Date.now()}${ext}`);
 
           console.log('이미지 등록');
@@ -57,9 +58,14 @@ export const multerOptionsFactory = (
     };
   } else {
     console.log(process.env.NODE_ENV === 'production', isDevelopment);
+    const storagePath = path.join(
+      os.homedir(),
+      'Desktop',
+      'transGuard_storage',
+    );
     return {
       storage: diskStorage({
-        destination: '/Users/kimminchan/Desktop/transGuard_storage', // 파일이 저장될 경로
+        destination: storagePath, // 파일이 저장될 경로
         filename: (req, file, callback) => {
           const ext = path.extname(file.originalname);
 

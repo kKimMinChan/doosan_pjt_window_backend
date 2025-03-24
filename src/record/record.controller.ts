@@ -119,10 +119,14 @@ export class RecordController {
       'extra.mp4',
     );
 
+    console.log(videoPath);
+
     if (fs.existsSync(videoPath)) {
       const stat = fs.statSync(videoPath);
       const fileSize = stat.size;
       const range = res.req.headers.range;
+
+      console.log(stat, fileSize, range, '=========');
 
       if (range) {
         const parts = range.replace(/bytes=/, '').split('-');

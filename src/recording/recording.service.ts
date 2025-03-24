@@ -1,28 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { RecordingRequest } from './dto/recording.request';
 import { RecordingMongoRepository } from './recording.repository';
+import { Recording } from './entities/recording.schema';
 
 @Injectable()
 export class RecordingService {
   constructor(private recordingRepository: RecordingMongoRepository) {}
 
-  // create(createRecordingDto: RecordingRequest) {
-  //   return 'This action adds a new recording';
-  // }
-
   async findAll() {
     return await this.recordingRepository.findAll();
   }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} recording`;
-  // }
-
   async update(updateRecordingDto: RecordingRequest) {
-    return await this.recordingRepository.update(updateRecordingDto);
+    console.log(updateRecordingDto, 'dto');
+    const updateIp: Partial<Recording> = {
+      cameraIps: updateRecordingDto?.cameraIps,
+      pythonServerIps: updateRecordingDto?.pythonServerIps,
+    };
+    console.log(updateIp, 'update');
+    return await this.recordingRepository.update(updateIp);
   }
 
   async remove() {
     return await this.recordingRepository.remove();
   }
+
+  // async updateCameraBe(updateRecordingDto: CameraBeIpRequest) {
+  //   const updateCameraBeIp: Partial<Recording> = {
+  //     cameraStatusTargets: updateRecordingDto.cameraStatusTargets,
+  //   };
+
+  //   return await this.recordingRepository.update(updateCameraBeIp);
+  // }
+
+  // async removeCameraBe() {
+  //   return await this.recordingRepository.remove();
+  // }
 }

@@ -9,6 +9,7 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { ResponseInterceptor } from './response/response.interceptor';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ObjectIdValidationPipe } from './pipes/objectid-validation.pipe';
+import { RecordingSeedService } from './recording/recording.seed.service';
 
 // import * as fs from 'fs';
 
@@ -96,6 +97,18 @@ async function bootstrap() {
   app.use(passport.session());
 
   console.log('✅ Loaded MONGO_URI:', process.env.MONGO_URI);
+
+  try {
+    // 초기 데이터 삽입을 위한 서비스 가져오기
+    const recordingSeedService = app.get(RecordingSeedService);
+
+    // Seed 로직 실행 (seed() 메서드에서 초기 데이터 삽입)
+    await recordingSeedService.seed();
+
+    console.log('Seed 작업이 완료되었습니다.');
+  } catch (error) {
+    console.error('Seed 작업 중 에러 발생:', error);
+  }
 
   await app.listen(4000);
 }

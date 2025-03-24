@@ -7,6 +7,7 @@ import {
   AdminSignatureRequest,
   DriverSignatureRequest,
   WorkPlanDetailsRequest,
+  WorkPlanPaginationDto,
   WorkPlanRequest,
 } from './dto/work-plan.request';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
@@ -42,6 +43,10 @@ export class WorkPlanService {
         fixedData: workPlanDto.fixedData,
         equipment: workPlanDto.equipment,
         driverSignatures: workPlanDto.driverSignatures,
+        adminSignatures: {
+          create: null,
+          finish: null,
+        },
       };
       if (!isEquipment) delete workPlan.equipment;
       console.log(workPlan);
@@ -51,16 +56,35 @@ export class WorkPlanService {
     }
   }
 
-  async findAll(id: string, paginationDto: PaginationDto) {
+  async findAll(id: string, paginationDto: WorkPlanPaginationDto) {
     try {
-      const { page, limit } = paginationDto;
+      await this.heavyEquipmentRepository.findOne(id);
+
+      const { page, limit, order, inspectionStatus, startDay, endDay } =
+        paginationDto;
+
+      const today = new Date().toISOString();
+      const includingTodayWorkPlan =
+        await this.workPlanRepository.findTodayEntry(id);
+      const todayId = includingTodayWorkPlan?._id?.toString();
 
       const skip = (page - 1) * limit;
 
       const [data, totalCount] = await Promise.all([
-        this.workPlanRepository.findAll(id, skip, limit),
+        this.workPlanRepository.findAll(
+          id,
+          skip,
+          limit,
+          todayId,
+          order,
+          inspectionStatus,
+          startDay,
+          endDay,
+        ),
         this.workPlanRepository.countWorkPlan(id),
       ]);
+
+      // console.log(data, '-------', totalCount);
 
       return {
         pageSize: limit,
@@ -83,9 +107,11 @@ export class WorkPlanService {
     }
   }
 
-  async findOneLatest(id: string) {
+  async findTodayEntry(id: string) {
     try {
-      const workPlan = await this.workPlanRepository.findOneLatest(id);
+      await this.heavyEquipmentRepository.findOne(id);
+      const workPlan = await this.workPlanRepository.findTodayEntry(id);
+      console.log(workPlan, 'including');
       return workPlan;
     } catch (error) {
       ErrorHelper.handleError(error);
@@ -94,7 +120,10 @@ export class WorkPlanService {
 
   async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
     try {
-      const { equipment, mutableData, fixedData } = workPlanDto;
+      console.log(id, workPlanDto, '--------');
+
+      const { equipment, mutableData, fixedData, driverSignatures } =
+        workPlanDto;
 
       const isEquipment = await this.heavyEquipmentRepository.exists(equipment);
       if (!isEquipment)
@@ -104,10 +133,16 @@ export class WorkPlanService {
         equipment,
         mutableData,
         fixedData,
+        driverSignatures,
+        adminSignatures: {
+          create: null,
+          finish: null,
+        },
       };
       if (!isEquipment) delete workPlan.equipment;
       if (!mutableData) delete workPlan.mutableData;
       if (!fixedData) delete workPlan.fixedData;
+      // if (!driverSignatures) delete workPlan.driverSignatures
 
       console.log(equipment, mutableData, fixedData, '------------', workPlan);
       const result = await this.workPlanRepository.updateDetails(id, workPlan);
@@ -133,20 +168,39 @@ export class WorkPlanService {
   async adminSignature(
     id: string,
     body: AdminSignatureRequest,
-    file: Express.MulterS3.File,
+    files: { dark?: Express.MulterS3.File[]; white?: Express.MulterS3.File[] },
   ) {
     try {
-      if (!file)
+      const { dark = [], white = [] } = files ?? {};
+
+      if (dark.length === 0 && white.length === 0)
         throw new BadRequestException(
           '서명 이미지 파일을 전달받지 못했습니다.',
         );
 
-      const url = `${file.key}`;
-      return await this.workPlanRepository.updateSignature(
+      const urlMode = {
+        dark:
+          dark.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? dark[0].path
+              : dark[0].key
+            : null,
+        white:
+          white.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? white[0].path
+              : white[0].key
+            : null,
+        // dark: dark.length > 0 ? dark[0].key : null,
+        // white: white.length > 0 ? white[0].key : null,
+      };
+
+      console.log(id, body.type, urlMode);
+
+      return await this.workPlanRepository.updateAdminSignature(
         id,
-        'adminSignatures',
         body.type,
-        url,
+        urlMode,
       );
     } catch (error) {
       ErrorHelper.handleError(error);
@@ -156,23 +210,39 @@ export class WorkPlanService {
   async driverSignature(
     id: string,
     body: DriverSignatureRequest,
-    file: Express.MulterS3.File,
+    files: { dark?: Express.MulterS3.File[]; white?: Express.MulterS3.File[] },
   ) {
     try {
-      if (!file)
+      const { dark = [], white = [] } = files ?? {};
+
+      if (dark.length === 0 && white.length === 0)
         throw new BadRequestException(
           '서명 이미지 파일을 전달받지 못했습니다.',
         );
 
-      const url = `${file.key}`;
+      console.log(files, '-----------------');
+
+      const urlMode = {
+        dark:
+          dark.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? dark[0].path
+              : dark[0].key
+            : null,
+        white:
+          white.length > 0
+            ? process.env.NODE_ENV === 'production'
+              ? white[0].path
+              : white[0].key
+            : null,
+      };
       const user = await this.userRepository.findOne(body.driver);
       if (!user)
         throw new NotFoundException('해당 id의 사용자가 존재하지 않습니다.');
       return await this.workPlanRepository.updateSignature(
         id,
-        'driverSignatures',
         body.driver,
-        url,
+        urlMode,
       );
     } catch (error) {
       ErrorHelper.handleError(error);

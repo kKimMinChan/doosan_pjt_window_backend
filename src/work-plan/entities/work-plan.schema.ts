@@ -36,19 +36,37 @@ class MutableData {
 
   @Prop()
   route: string;
+
+  @Prop()
+  startDay: string;
+
+  @Prop()
+  endDay: string;
 }
+
+@Schema({ _id: false })
+class UrlMode {
+  @Prop({ type: String, required: false })
+  dark?: string;
+
+  @Prop({ type: String, required: false })
+  white?: string;
+}
+
+const UrlModeSchema = SchemaFactory.createForClass(UrlMode);
 
 @Schema({ _id: false })
 class driverSignatures {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',
-    autopopulate: true,
+    required: false,
+    autopopulate: false,
   })
   driver: mongoose.Types.ObjectId;
 
-  @Prop()
-  url?: string;
+  @Prop({ type: UrlMode, required: false })
+  urlMode?: UrlMode;
 }
 
 // ✅ MutableData 서브 스키마 등록
@@ -56,18 +74,15 @@ const MutableDataSchema = SchemaFactory.createForClass(MutableData);
 MutableDataSchema.plugin(require('mongoose-autopopulate'));
 
 class AdminSignature {
-  @Prop({ type: String, enum: SignatureType, required: true })
-  type: SignatureType;
-
-  @Prop({ type: String, required: true })
-  url: string;
+  @Prop({ type: UrlMode, required: false })
+  url: UrlMode;
 }
 
 @Schema({
   timestamps: true,
   toJSON: {
     transform: (doc, ret) => {
-      ret.id = ret._id.toString(); // _id를 문자열로 변환 후 id로 매핑
+      ret.id = ret._id?.toString(); // _id를 문자열로 변환 후 id로 매핑
       delete ret._id; // _id 제거
       delete ret.__v; // __v 제거
     },
@@ -80,8 +95,8 @@ export class WorkPlan {
   @Prop()
   fixedData: string;
 
-  @Prop({ type: [AdminSignature], required: false })
-  adminSignatures?: AdminSignature[];
+  @Prop({ type: Object, required: false })
+  adminSignatures?: Record<SignatureType, UrlMode>;
 
   @Prop({ type: [driverSignatures], required: false })
   driverSignatures: driverSignatures[];

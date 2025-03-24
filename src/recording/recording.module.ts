@@ -4,6 +4,7 @@ import { RecordingController } from './recording.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Recording, RecordingSchema } from './entities/recording.schema';
 import { RecordingMongoRepository } from './recording.repository';
+import { RecordingSeedService } from './recording.seed.service';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { RecordingMongoRepository } from './recording.repository';
     ]),
   ],
   controllers: [RecordingController],
-  providers: [RecordingService, RecordingMongoRepository],
+  providers: [RecordingService, RecordingMongoRepository, RecordingSeedService],
+  exports: [RecordingSeedService],
 })
 export class RecordingModule {}

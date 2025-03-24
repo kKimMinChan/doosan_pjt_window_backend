@@ -13,6 +13,7 @@ import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
 import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
+import { filterTodayData } from 'src/lib/filterTodayData';
 
 @Injectable()
 export class CheckSheetService {
@@ -32,24 +33,13 @@ export class CheckSheetService {
       if (!isEquipment)
         throw new NotFoundException('해당 장비가 존재하지 않습니다.');
 
-      // 날짜 확인
-      const date = new Date(
-        new Date().getTime() + 1000 * 60 * 60 * 9,
-      ).toISOString();
       const latestCheckSheet = await this.checkSheetRepository.findOneLatest(
         checkSheetDto?.equipment,
       );
-      const kstLatestCheckSheet = latestCheckSheet?.createdAt
-        ? new Date(
-            new Date(latestCheckSheet.createdAt).getTime() + 1000 * 60 * 60 * 9,
-          ).toISOString()
-        : null; // createdAt이 없을 경우 null 반환
 
-      if (kstLatestCheckSheet) {
-        if (date.split('T')[0] === kstLatestCheckSheet.split('T')[0])
-          console.log(date, kstLatestCheckSheet);
+      const todayCheckSheet = filterTodayData(latestCheckSheet);
+      if (todayCheckSheet)
         throw new ConflictException('금일 데이터가 존재합니다.');
-      }
 
       // 사용자 id 확인
       const users = [checkSheetDto?.inspector, checkSheetDto?.reviewer];
@@ -200,7 +190,10 @@ export class CheckSheetService {
 
   async findOneLatest(id: string) {
     try {
+      await this.heavyEquipmentRepository.findOne(id);
+
       const latest = await this.checkSheetRepository.findOneLatest(id);
+
       console.log('findOneLatest', latest?.createdAt);
 
       return latest;
@@ -213,6 +206,7 @@ export class CheckSheetService {
 
   async findOneLatestIssue(id: string) {
     try {
+      await this.heavyEquipmentRepository.findOne(id);
       const latest = await this.checkSheetRepository.findOneLatest(id);
       if (!latest) return [];
       const date = new Date();
@@ -281,7 +275,10 @@ export class CheckSheetService {
           return {
             title,
             index,
-            url: `${file.key}`,
+            url:
+              process.env.NODE_ENV === 'production'
+                ? `${file.path}`
+                : `${file.key}`,
           };
         }) || [];
 
