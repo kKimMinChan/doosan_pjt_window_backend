@@ -112,12 +112,7 @@ export class RecordController {
   })
   streamVideo(@Query('foldName') foldName: string, @Res() res: Response) {
     // 경로에서 날짜 및 시간 폴더 정보를 추출하여 파일 경로를 설정
-    const videoPath = path.join(
-      process.cwd(),
-      'video_storage',
-      foldName,
-      'extra.mp4',
-    );
+    const videoPath = foldName;
 
     console.log(videoPath);
 
