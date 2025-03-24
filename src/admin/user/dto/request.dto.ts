@@ -100,19 +100,19 @@ export class UpdateUserRequest {
   // isActive: boolean;
 }
 
-export type UserRole = 'driver' | 'inspector' | 'reviewer' | 'admin';
+export type UserRole = 'driver' | 'inspector' | 'reviewer' | 'admin' | 'all';
 
 export class UserPaginationDto extends PartialType(PaginationDto) {
   @ApiProperty({
     description:
-      'role에 대한 필터링 (driver, inspector, reviewer, admin) 기본 값 driver',
-    enum: ['driver', 'inspector', 'reviewer', 'admin'],
-    example: 'driver',
+      'role에 대한 필터링 (driver, inspector, reviewer, admin, all) 기본 값 all',
+    enum: ['driver', 'inspector', 'reviewer', 'admin', 'all'],
+    example: 'all',
     required: false,
   })
   @IsOptional()
-  @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
-  role?: UserRole = 'driver';
+  @IsIn(['driver', 'inspector', 'reviewer', 'admin', 'all'])
+  role?: UserRole = 'all';
 }
 
 export class UserFindRoleDto {

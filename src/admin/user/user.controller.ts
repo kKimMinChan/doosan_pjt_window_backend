@@ -61,7 +61,7 @@ export class UserController {
   @ApiCreatedResponse(
     SwaggerHelper.getApiResponseSchema(UserResponse, '', true, true),
   )
-  @ApiResponse({ type: UserResponse })
+  // @ApiResponse({ type: UserResponse })
   async findAllPaginated(@Query() userPaginationDto: UserPaginationDto) {
     const users = await this.userService.findAllPaginated(userPaginationDto);
     return users;
@@ -69,12 +69,12 @@ export class UserController {
 
   @Get('not-paginated')
   @ApiCreatedResponse(
-    SwaggerHelper.getApiResponseSchema(UserResponse, '', true, true),
+    SwaggerHelper.getApiResponseSchema(UserResponse, '', false, true),
   )
-  @ApiResponse({ type: UserResponse })
+  // @ApiResponse({ type: UserResponse })
   async findRoleAll(@Query() userFindRoleDto: UserFindRoleDto) {
     const users = await this.userService.findAllPaginated(userFindRoleDto);
-    return users;
+    return { data: users.data };
   }
 
   @Get('all')

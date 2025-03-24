@@ -32,14 +32,16 @@ export class usersMongoRepository implements UsersRepository {
 
   async findAllPaginated(skip: number, limit: number, role: UserRole) {
     return await this.usersModel
-      .find({ role })
+      .find(role === 'all' ? {} : { role })
       .sort({ _id: -1 })
       .skip(skip)
       .limit(limit);
   }
 
   async findRoleAll(role: UserRole) {
-    return await this.usersModel.find({ role }).sort({ _id: -1 });
+    return await this.usersModel
+      .find(role === 'all' ? {} : { role })
+      .sort({ _id: -1 });
   }
 
   async findAll() {
