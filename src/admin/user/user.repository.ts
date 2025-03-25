@@ -139,9 +139,13 @@ export class usersMongoRepository implements UsersRepository {
   }
 
   async remove(id: string) {
-    const result = await this.usersModel.deleteOne({ _id: id });
+    const result = await this.usersModel.updateOne(
+      { _id: id }, // 바로 해당 사용자의 ID로 업데이트
+      { $set: { isDeleted: true } },
+      { new: true },
+    );
 
-    if (result.deletedCount > 0) return result;
+    if (result.modifiedCount > 0) return result;
 
     return null;
   }
