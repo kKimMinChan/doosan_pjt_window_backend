@@ -28,8 +28,8 @@ export class UserInfo {
   @Prop({ required: true, enum: ['driver', 'inspector', 'reviewer', 'admin'] })
   role: string;
 
-  // @Prop({ default: false })
-  // status?: boolean;
+  @Prop({ default: false })
+  isDeleted?: boolean;
 
   @Prop({
     type: mongoose.Schema.ObjectId,
@@ -41,12 +41,11 @@ export class UserInfo {
 
 export const UsersSchema = SchemaFactory.createForClass(UserInfo);
 
-// UsersSchema.index(
-//   { role: 1, equipmentId: 1 },
-//   {
-//     unique: false,
-//     partialFilterExpression: {
-//       role: { $in: ['inspector', 'reviewer'] },
-//     },
-//   },
-// );
+UsersSchema.pre(
+  ['find', 'findOne', 'findOneAndUpdate', 'findOneAndDelete', 'countDocuments'],
+  function (next) {
+    const query = this as mongoose.Query<any, UsersDocument>;
+    query.where({ isDeleted: false });
+    next();
+  },
+);
