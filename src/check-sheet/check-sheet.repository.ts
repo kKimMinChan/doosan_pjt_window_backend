@@ -81,7 +81,16 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   }
 
   async findAllLatest(ids: string[]) {
-    const results = await Promise.all(ids.map((id) => this.findOneLatest(id)));
+    const results = await Promise.all(
+      ids.map((id) =>
+        this.checkSheetModel
+          .findOne({ equipment: new mongoose.Types.ObjectId(id) })
+          .sort({ _id: -1 })
+          .setOptions({ autopopulate: false }) // ✅ 여기만 populate 제거
+          .exec(),
+      ),
+    );
+
     return results.filter((item) => item !== null);
   }
 

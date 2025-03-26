@@ -75,18 +75,18 @@ export class usersMongoRepository implements UsersRepository {
   }
 
   async createUser(userInfo: UserInfo) {
-    if (userInfo.role === 'inspector' || userInfo.role === 'reviewer') {
-      const existingUser = await this.usersModel.findOne({
-        role: userInfo.role,
-        equipmentId: userInfo.equipmentId,
-      });
+    // if (userInfo.role === 'inspector' || userInfo.role === 'reviewer') {
+    //   const existingUser = await this.usersModel.findOne({
+    //     role: userInfo.role,
+    //     equipmentId: userInfo.equipmentId,
+    //   });
 
-      if (existingUser) {
-        throw new BadRequestException(
-          `${userInfo.role}는 이미 할당된 상태입니다. 중복 할당은 불가능합니다.`,
-        );
-      }
-    }
+    //   if (existingUser) {
+    //     throw new BadRequestException(
+    //       `${userInfo.role}는 이미 할당된 상태입니다. 중복 할당은 불가능합니다.`,
+    //     );
+    //   }
+    // }
 
     const newUser = new this.usersModel(userInfo);
     return await newUser.save(); // 개별 문서로 저장

@@ -205,9 +205,27 @@ export class UserService {
         return result;
       }
 
-      console.log(todayItems[0].reviewer, todayItems[0].inspector);
+      const isRole = todayItems.filter(
+        (item) =>
+          item.reviewer.toString() === userObjectId.toString() ||
+          item.inspector.toString() === userObjectId.toString(),
+      );
 
-      // todayItems.filter((item) => item.reviewer === )
+      if (isRole.length > 0) {
+        throw new HttpException(
+          '금일 점검표의 점검자 혹은 확인자로 등록되어 있습니다.',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      const result = await this.usersRepository.remove(id);
+      if (!result) {
+        throw new HttpException(
+          '사용자 업데이트에 실패했습니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      return result;
 
       // return equipments;
     } catch (error) {
