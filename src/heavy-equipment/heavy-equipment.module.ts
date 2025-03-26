@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { HeavyEquipmentService } from './heavy-equipment.service';
 import { HeavyEquipmentController } from './heavy-equipment.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -15,7 +15,7 @@ import { UserModule } from 'src/admin/user/user.module';
     MongooseModule.forFeature([
       { name: HeavyEquipment.name, schema: HeavyEquipmentSchema },
     ]),
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   controllers: [HeavyEquipmentController],
   providers: [

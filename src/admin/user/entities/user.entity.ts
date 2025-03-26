@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 
 export type UsersDocument = UserInfo & Document;
 
+export type UserRole = 'driver' | 'inspector' | 'reviewer' | 'admin';
+
 @Schema({
   timestamps: true,
   toJSON: {
@@ -26,7 +28,7 @@ export class UserInfo {
   imageUrl: string;
 
   @Prop({ required: true, enum: ['driver', 'inspector', 'reviewer', 'admin'] })
-  role: string;
+  role: UserRole;
 
   @Prop({ default: false })
   isDeleted?: boolean;
@@ -45,6 +47,14 @@ UsersSchema.pre(
   ['find', 'findOne', 'findOneAndUpdate', 'findOneAndDelete', 'countDocuments'],
   function (next) {
     const query = this as mongoose.Query<any, UsersDocument>;
+    const options = query.getOptions?.();
+    console.log(options?.source, 'options');
+
+    if (options?.source === 'populate') {
+      console.log('next??');
+      return next(); // populate에서 호출한 경우 필터 생략
+    }
+
     query.where({ isDeleted: false });
     next();
   },

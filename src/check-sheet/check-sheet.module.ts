@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { CheckSheetService } from './check-sheet.service';
 import { CheckSheetController } from './check-sheet.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -26,7 +26,7 @@ import { HeavyEquipmentModule } from 'src/heavy-equipment/heavy-equipment.module
         multerOptionsFactory(configService),
     }),
     CheckItemModule,
-    UserModule,
+    forwardRef(() => UserModule),
     HeavyEquipmentModule,
   ],
   controllers: [CheckSheetController],

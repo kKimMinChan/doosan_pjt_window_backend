@@ -16,6 +16,7 @@ export interface HeavyEquipmentRepository {
   countEquipments();
   update(id: string, heavyEquipmentInfo: Partial<HeavyEquipment>);
   remove(id: string);
+  findQuery(query: any);
 }
 
 @Injectable()
@@ -24,6 +25,11 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
     @InjectModel(HeavyEquipment.name)
     private heavyEquipmentModel: Model<HeavyEquipmentDocument>,
   ) {}
+
+  async findQuery(query: any) {
+    const equipments = await this.heavyEquipmentModel.find(query);
+    return equipments;
+  }
 
   async createHeavyEquipment(heavyEquipmentInfo: HeavyEquipment) {
     const document = new this.heavyEquipmentModel(heavyEquipmentInfo);

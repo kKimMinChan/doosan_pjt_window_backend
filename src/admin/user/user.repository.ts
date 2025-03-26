@@ -8,18 +8,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserInfo, UsersDocument } from './entities/user.entity';
 import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
-import { UserRole } from './dto/request.dto';
+import { PaginationUserRole } from './dto/request.dto';
 
 export interface UsersRepository {
-  findAllPaginated(skip: number, limit: number, role: UserRole);
+  findAllPaginated(skip: number, limit: number, role: PaginationUserRole);
   findAll();
-  findRoleAll(role: UserRole);
-  countUsers(role: UserRole);
+  findRoleAll(role: PaginationUserRole);
+  countUsers(role: PaginationUserRole);
   findOne(id: string);
   createUser(userInfo: UserInfo);
   update(id: string, userInfo: UserInfo);
   remove(id: string);
-  findRole(id: string, role: 'INSPECTOR' | 'REVIEWER');
   findMissingUsers(userIds: string[]): Promise<string[]>;
 }
 
@@ -30,7 +29,11 @@ export class usersMongoRepository implements UsersRepository {
     private usersModel: Model<UsersDocument>,
   ) {}
 
-  async findAllPaginated(skip: number, limit: number, role: UserRole) {
+  async findAllPaginated(
+    skip: number,
+    limit: number,
+    role: PaginationUserRole,
+  ) {
     return await this.usersModel
       .find(role === 'all' ? {} : { role })
       .sort({ _id: -1 })
@@ -38,7 +41,7 @@ export class usersMongoRepository implements UsersRepository {
       .limit(limit);
   }
 
-  async findRoleAll(role: UserRole) {
+  async findRoleAll(role: PaginationUserRole) {
     return await this.usersModel
       .find(role === 'all' ? {} : { role })
       .sort({ _id: -1 });
@@ -49,8 +52,10 @@ export class usersMongoRepository implements UsersRepository {
     return users;
   }
 
-  async countUsers(role: UserRole) {
-    return this.usersModel.countDocuments({ role }).exec();
+  async countUsers(role: PaginationUserRole) {
+    return this.usersModel
+      .countDocuments(role === 'all' ? {} : { role })
+      .exec();
   }
 
   async findMissingUsers(userIds: string[]): Promise<string[]> {
@@ -69,16 +74,8 @@ export class usersMongoRepository implements UsersRepository {
     return userDocument;
   }
 
-  async findRole(id: string, role: 'INSPECTOR' | 'REVIEWER') {
-    return await this.usersModel.findOne({
-      equipmentId: id,
-      role,
-      isDeleted: false,
-    });
-  }
-
   async createUser(userInfo: UserInfo) {
-    if (userInfo.role === 'INSPECTOR' || userInfo.role === 'REVIEWER') {
+    if (userInfo.role === 'inspector' || userInfo.role === 'reviewer') {
       const existingUser = await this.usersModel.findOne({
         role: userInfo.role,
         equipmentId: userInfo.equipmentId,

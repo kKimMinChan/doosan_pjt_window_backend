@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { WorkPlanService } from './work-plan.service';
 import { WorkPlanController } from './work-plan.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -23,7 +23,7 @@ import { multerOptionsFactory } from 'src/config/multer.s3';
       useFactory: (configService: ConfigService) =>
         multerOptionsFactory(configService),
     }),
-    UserModule,
+    forwardRef(() => UserModule),
     HeavyEquipmentModule,
   ],
 

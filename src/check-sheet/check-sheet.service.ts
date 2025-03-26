@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -164,6 +166,8 @@ export class CheckSheetService {
         ),
       ]);
 
+      console.log(data, 'data ---------');
+
       console.log('findAll check-sheet-service');
 
       return {
@@ -194,7 +198,7 @@ export class CheckSheetService {
 
       const latest = await this.checkSheetRepository.findOneLatest(id);
 
-      console.log('findOneLatest', latest?.createdAt);
+      // console.log('findOneLatest', latest);
 
       return latest;
       // if (!latest)

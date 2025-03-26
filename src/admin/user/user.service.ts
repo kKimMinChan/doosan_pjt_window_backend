@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import {
   UpdateUserRequest,
   UserFindRoleDto,
@@ -9,10 +15,19 @@ import { usersMongoRepository } from './user.repository';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
 import mongoose from 'mongoose';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
+import { CheckSheetMongoRepository } from 'src/check-sheet/check-sheet.repository';
+import { WorkPlanMongoRepository } from 'src/work-plan/work-plan.repository';
+import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
 
 @Injectable()
 export class UserService {
-  constructor(private usersRepository: usersMongoRepository) {}
+  constructor(
+    private usersRepository: usersMongoRepository,
+    private checkSheetRepository: CheckSheetMongoRepository,
+    private equipmentRepository: HeavyEquipmentMongoRepository,
+    // @Inject(forwardRef(() => WorkPlanMongoRepository))
+    // private workPlanRepository: WorkPlanMongoRepository,
+  ) {}
   async createUser(userInfo: UserRequest, userFile: Express.MulterS3.File) {
     try {
       if (!userFile)
@@ -31,7 +46,6 @@ export class UserService {
             : 'key' in userFile
               ? userFile.key
               : null,
-        // : `https://${process.env.CLOUDFRONT_URL}/${userFile.key}`,
       };
 
       console.log(rest, 'rest');
@@ -142,22 +156,60 @@ export class UserService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      console.error(error, 'asdfoniwe');
       ErrorHelper.handleError(error);
     }
   }
 
   async remove(id: string) {
     try {
-      const result = await this.usersRepository.remove(id);
-      if (!result) {
-        throw new HttpException(
-          '사용자 업데이트에 실패했습니다.',
-          HttpStatus.BAD_REQUEST,
-        );
+      const user = await this.usersRepository.findOne(id);
+      if (user.role === 'admin') {
       }
 
-      return result;
+      const userObjectId = new mongoose.Types.ObjectId(id);
+      const query: any = {
+        $or: [{ inspectors: userObjectId }, { reviewers: userObjectId }],
+      };
+      const equipments = await this.equipmentRepository.findQuery(query);
+
+      const ids = equipments.map((equipment) => equipment._id as string);
+
+      const checkSheets = await this.checkSheetRepository.findAllLatest(ids);
+
+      /// 오늘 찾는 함수가 있음, 내일 적용시킬 것
+      const now = new Date();
+      const todayYear = now.getFullYear();
+      const todayMonth = now.getMonth();
+      const todayDate = now.getDate();
+
+      // ✅ 필터링
+      const todayItems = checkSheets.filter((item) => {
+        const createdAt = new Date(item.createdAt);
+
+        const isToday =
+          createdAt.getFullYear() === todayYear &&
+          createdAt.getMonth() === todayMonth &&
+          createdAt.getDate() === todayDate;
+        console.log(createdAt, isToday);
+        return isToday ? item : false;
+      });
+
+      if (!todayItems) {
+        const result = await this.usersRepository.remove(id);
+        if (!result) {
+          throw new HttpException(
+            '사용자 업데이트에 실패했습니다.',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        return result;
+      }
+
+      console.log(todayItems[0].reviewer, todayItems[0].inspector);
+
+      // todayItems.filter((item) => item.reviewer === )
+
+      // return equipments;
     } catch (error) {
       if (error instanceof mongoose.Error.CastError && error.path === '_id') {
         throw new HttpException(

@@ -2,6 +2,7 @@ import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
+import { UserRole } from '../entities/user.entity';
 
 export class UserRequest {
   @ApiProperty({
@@ -27,7 +28,7 @@ export class UserRequest {
     required: false,
   })
   @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
-  role: string;
+  role: UserRole;
 
   @ApiProperty({
     description: '업로드할 파일',
@@ -100,7 +101,12 @@ export class UpdateUserRequest {
   // isActive: boolean;
 }
 
-export type UserRole = 'driver' | 'inspector' | 'reviewer' | 'admin' | 'all';
+export type PaginationUserRole =
+  | 'driver'
+  | 'inspector'
+  | 'reviewer'
+  | 'admin'
+  | 'all';
 
 export class UserPaginationDto extends PartialType(PaginationDto) {
   @ApiProperty({
@@ -112,7 +118,7 @@ export class UserPaginationDto extends PartialType(PaginationDto) {
   })
   @IsOptional()
   @IsIn(['driver', 'inspector', 'reviewer', 'admin', 'all'])
-  role?: UserRole = 'all';
+  role?: PaginationUserRole = 'all';
 }
 
 export class UserFindRoleDto {
@@ -125,5 +131,5 @@ export class UserFindRoleDto {
   })
   @IsOptional()
   @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
-  role?: UserRole = 'driver';
+  role?: PaginationUserRole = 'driver';
 }

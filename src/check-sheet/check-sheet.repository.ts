@@ -13,6 +13,7 @@ export interface CheckSheetRepository {
   findOne(id: string);
   noPopulateFindOne(id: string);
   findOneLatest(id: string);
+  findAllLatest(ids: string[]);
   findAll(
     id: string,
     skip: number,
@@ -77,6 +78,11 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       .exec(); // ✅ `exec()` 호출하여 실행
 
     return checkSheet;
+  }
+
+  async findAllLatest(ids: string[]) {
+    const results = await Promise.all(ids.map((id) => this.findOneLatest(id)));
+    return results.filter((item) => item !== null);
   }
 
   async findOneLatestIssue(id: string, isToday: boolean) {

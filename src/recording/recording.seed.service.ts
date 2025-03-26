@@ -17,8 +17,8 @@ export class RecordingSeedService {
     const count = await this.recordingModel.countDocuments();
     if (count === 0) {
       await this.recordingModel.create({
-        recordingTargets: [],
-        cameraStatusTargets: [],
+        cameraIps: ['', ''],
+        pythonServerIps: [],
       });
       this.logger.log('Recording 초기 데이터 생성 완료');
     } else {
