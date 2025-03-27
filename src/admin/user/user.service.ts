@@ -25,8 +25,7 @@ export class UserService {
     private usersRepository: usersMongoRepository,
     private checkSheetRepository: CheckSheetMongoRepository,
     private equipmentRepository: HeavyEquipmentMongoRepository,
-    // @Inject(forwardRef(() => WorkPlanMongoRepository))
-    // private workPlanRepository: WorkPlanMongoRepository,
+    private workPlanRepository: WorkPlanMongoRepository,
   ) {}
   async createUser(userInfo: UserRequest, userFile: Express.MulterS3.File) {
     try {
@@ -162,21 +161,55 @@ export class UserService {
 
   async remove(id: string) {
     try {
+      // Role 찾기
       const user = await this.usersRepository.findOne(id);
-      if (user.role === 'admin') {
+      const userObjectId = new mongoose.Types.ObjectId(id);
+
+      // 모든 중장비 찾아서 id로 변경
+      const findAllEquipment = await this.equipmentRepository.findAll();
+      const equipmentIds = findAllEquipment.map((item) => item._id.toString());
+
+      console.log(equipmentIds, 'equipments');
+
+      // 진행중인 작업계획서에 해당하는 것 모두 찾기
+      const workPlanData =
+        await this.workPlanRepository.findAllTodayEntry(equipmentIds);
+
+      // console.log(workPlanData, 'workPlanData');
+
+      // 삭제하려는 유저가 진행 중인 작업 게획서의 작성자인지 확인
+      const isWriter = workPlanData.filter(
+        (item) =>
+          item.mutableData.writer.toString() === userObjectId.toString(),
+      );
+
+      // 삭제하려는 유저가 진행 중인 작업 계획서의 운전자인지 확인
+      const isDriver = workPlanData.flatMap((plan) =>
+        plan.driverSignatures
+          .filter((sig) => sig.driver.toString() === userObjectId.toString())
+          .map((sig) => sig.driver),
+      );
+
+      console.log(isDriver, 'isDriver', isWriter, 'isWriter');
+
+      if (isWriter.length > 0 || isDriver.length > 0) {
+        throw new HttpException(
+          '진행 중인 작업계획서의 작성자 혹은 운전자로 등록되어 있습니다.',
+          HttpStatus.CONFLICT,
+        );
       }
 
-      const userObjectId = new mongoose.Types.ObjectId(id);
+      // 중장비에 등록된 점검자, 확인자인지 확인
       const query: any = {
         $or: [{ inspectors: userObjectId }, { reviewers: userObjectId }],
       };
+
       const equipments = await this.equipmentRepository.findQuery(query);
 
       const ids = equipments.map((equipment) => equipment._id as string);
 
       const checkSheets = await this.checkSheetRepository.findAllLatest(ids);
 
-      /// 오늘 찾는 함수가 있음, 내일 적용시킬 것
       const now = new Date();
       const todayYear = now.getFullYear();
       const todayMonth = now.getMonth();
@@ -191,7 +224,7 @@ export class UserService {
           createdAt.getMonth() === todayMonth &&
           createdAt.getDate() === todayDate;
         console.log(createdAt, isToday);
-        return isToday ? item : false;
+        return isToday;
       });
 
       if (!todayItems) {

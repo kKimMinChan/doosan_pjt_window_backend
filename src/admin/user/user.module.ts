@@ -28,7 +28,7 @@ import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipme
     // CheckSheetModule,
     forwardRef(() => CheckSheetModule),
     HeavyEquipmentModule,
-    // forwardRef(() => WorkPlanModule),
+    forwardRef(() => WorkPlanModule),
   ],
   controllers: [UserController],
   providers: [
@@ -36,7 +36,7 @@ import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipme
     usersMongoRepository,
     CheckSheetMongoRepository,
     HeavyEquipmentMongoRepository,
-    // WorkPlanMongoRepository,
+    WorkPlanMongoRepository,
   ],
   exports: [MongooseModule],
 })

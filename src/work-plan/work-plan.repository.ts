@@ -72,6 +72,25 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     return includingTodayData;
   }
 
+  async findAllTodayEntry(ids: string[]) {
+    const today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
+
+    const includingTodayData = await Promise.all(
+      ids.map((id) =>
+        this.workPlanModel
+          .findOne({
+            equipment: id,
+            'mutableData.startDay': { $lte: today }, // 시작일이 오늘 이전 또는 동일
+            'mutableData.endDay': { $gte: today }, // 종료일이 오늘 이후 또는 동일
+          })
+          .setOptions({ autopopulate: false })
+          .exec(),
+      ),
+    );
+
+    return includingTodayData;
+  }
+
   async findOneLatestNotPopulate(id: string) {
     const workPlan = await this.workPlanModel
       .findOne({ equipment: id })
@@ -117,24 +136,94 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
       filter['adminSignatures.finish'] = null;
     }
 
-    // ✅ find()로 쿼리 실행
-    const workPlans = await this.workPlanModel
-      .find(filter)
-      .sort({ 'mutableData.startDay': sortOrder }) // ✅ 시작일 기준 오름차순 정렬
-      .skip(skip)
-      .limit(limit)
-      .populate('driverSignatures.driver')
-      .exec();
+    const pipeline: any[] = [];
+    pipeline.push({ $match: filter });
+    pipeline.push(
+      { $sort: { 'mutableData.startDay': sortOrder } },
+      { $skip: skip },
+      { $limit: limit },
+    );
 
-    return workPlans;
+    pipeline.push(
+      {
+        $lookup: {
+          from: 'userinfos', // 💡 컬렉션 이름 정확하게!
+          localField: 'mutableData.writer',
+          foreignField: '_id',
+          as: 'mutableData.writer',
+        },
+      },
+      {
+        $unwind: {
+          path: '$mutableData.writer',
+          preserveNullAndEmptyArrays: true, // ⛔ null 방지
+        },
+      },
+    );
 
+    pipeline.push({
+      $lookup: {
+        from: 'heavyequipments', // 💡 컬렉션 이름 정확하게!
+        localField: 'equipment',
+        foreignField: '_id',
+        as: 'equipment',
+      },
+    });
+
+    pipeline.push(
+      // ✅ mutableData.writer._id → mutableData.writer.id
+      {
+        $addFields: {
+          'mutableData.writer.id': '$mutableData.writer._id',
+        },
+      },
+      {
+        $unset: ['mutableData.writer._id'], // ⚠️ 필요하면 _id 삭제
+      },
+
+      // ✅ equipment._id → equipment.id (equipment가 배열일 수도 있음!)
+      {
+        $addFields: {
+          equipment: {
+            $map: {
+              input: '$equipment',
+              as: 'eq',
+              in: {
+                $mergeObjects: ['$$eq', { id: '$$eq._id' }],
+              },
+            },
+          },
+        },
+      },
+      {
+        $unset: ['equipment._id'],
+      },
+    );
+
+    pipeline.push(
+      {
+        $addFields: {
+          id: '$_id',
+        },
+      },
+      {
+        $unset: ['_id'], // ⚠️ 필요하면 _id 삭제
+      },
+    );
+
+    // // ✅ find()로 쿼리 실행
     // const workPlans = await this.workPlanModel
-    //   .find({ equipment: id })
-    //   .sort({ _id: -1 })
+    //   .find(filter)
+    //   .sort({ 'mutableData.startDay': sortOrder }) // ✅ 시작일 기준 오름차순 정렬
     //   .skip(skip)
     //   .limit(limit)
-    //   .populate('driverSignatures.driver');
-    // return workPlans;
+    //   .exec();
+
+    const workPlans = await this.workPlanModel.aggregate(pipeline);
+
+    console.log(workPlans, 'workPlans');
+
+    return workPlans;
   }
   async countWorkPlan(id: string) {
     return await this.workPlanModel.countDocuments({ equipment: id });

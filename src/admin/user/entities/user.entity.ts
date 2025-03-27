@@ -48,7 +48,7 @@ UsersSchema.pre(
   function (next) {
     const query = this as mongoose.Query<any, UsersDocument>;
     const options = query.getOptions?.();
-    console.log(options?.source, 'options');
+    // console.log(options?.source, 'options');
 
     if (options?.source === 'populate') {
       console.log('next??');
