@@ -171,6 +171,53 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     });
 
     pipeline.push(
+      {
+        $unwind: {
+          path: '$driverSignatures',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'userinfos',
+          localField: 'driverSignatures.driver',
+          foreignField: '_id',
+          as: 'matchedDriver',
+        },
+      },
+      {
+        $unwind: {
+          path: '$matchedDriver',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          'driverSignatures.driver': '$matchedDriver',
+        },
+      },
+      {
+        $project: {
+          matchedDriver: 0,
+        },
+      },
+      {
+        $group: {
+          _id: '$_id',
+          driverSignatures: { $push: '$driverSignatures' },
+          // 👇 아래는 필요한 다른 필드 다 복원해줘야 함!
+          mutableData: { $first: '$mutableData' },
+          fixedData: { $first: '$fixedData' },
+          adminSignatures: { $first: '$adminSignatures' },
+          equipment: { $first: '$equipment' },
+          createdAt: { $first: '$createdAt' },
+          updatedAt: { $first: '$updatedAt' },
+          __v: { $first: '$__v' },
+        },
+      },
+    );
+
+    pipeline.push(
       // ✅ mutableData.writer._id → mutableData.writer.id
       {
         $addFields: {
