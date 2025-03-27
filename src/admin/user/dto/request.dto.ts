@@ -125,11 +125,11 @@ export class UserFindRoleDto {
   @ApiProperty({
     description:
       'role에 대한 필터링 (driver, inspector, reviewer, admin) 기본 값 driver',
-    enum: ['driver', 'inspector', 'reviewer', 'admin'],
+    enum: ['driver', 'inspector', 'reviewer', 'admin', 'all'],
     example: 'driver',
     required: false,
   })
   @IsOptional()
-  @IsIn(['driver', 'inspector', 'reviewer', 'admin'])
+  @IsIn(['driver', 'inspector', 'reviewer', 'admin', 'all'])
   role?: PaginationUserRole = 'driver';
 }
