@@ -180,19 +180,22 @@ export class UserService {
       // 삭제하려는 유저가 진행 중인 작업 게획서의 작성자인지 확인
       const isWriter = workPlanData.filter(
         (item) =>
-          item.mutableData.writer.toString() === userObjectId.toString(),
+          item?.mutableData?.writer?.toString() === userObjectId?.toString(),
       );
 
       // 삭제하려는 유저가 진행 중인 작업 계획서의 운전자인지 확인
       const isDriver = workPlanData.flatMap((plan) =>
-        plan.driverSignatures
-          .filter((sig) => sig.driver.toString() === userObjectId.toString())
-          .map((sig) => sig.driver),
+        plan?.driverSignatures
+          .filter((sig) => sig?.driver?.toString() === userObjectId?.toString())
+          .map((sig) => sig?.driver),
       );
 
       console.log(isDriver, 'isDriver', isWriter, 'isWriter');
 
-      if (isWriter.length > 0 || isDriver.length > 0) {
+      if (
+        isWriter.filter((writer) => writer !== undefined).length > 0 ||
+        isDriver.filter((driver) => driver !== undefined).length > 0
+      ) {
         throw new HttpException(
           '진행 중인 작업계획서의 작성자 혹은 운전자로 등록되어 있습니다.',
           HttpStatus.CONFLICT,
