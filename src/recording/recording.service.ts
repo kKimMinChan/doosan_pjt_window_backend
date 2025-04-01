@@ -14,9 +14,7 @@ export class RecordingService {
   async update(updateRecordingDto: RecordingRequest) {
     console.log(updateRecordingDto, 'dto');
     const updateIp: Partial<Recording> = {
-      cameraIps: updateRecordingDto?.cameraIps.map(
-        (ip) => `192.168.0.${ip}:8080`,
-      ),
+      cameraIps: updateRecordingDto?.cameraIps,
       pythonServerIps: updateRecordingDto?.pythonServerIps,
     };
     console.log(updateIp, 'update');
