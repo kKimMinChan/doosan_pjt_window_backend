@@ -12,28 +12,14 @@ export class RecordingService {
   }
 
   async update(updateRecordingDto: RecordingRequest) {
-    console.log(updateRecordingDto, 'dto');
     const updateIp: Partial<Recording> = {
       cameraIps: updateRecordingDto?.cameraIps,
       pythonServerIps: updateRecordingDto?.pythonServerIps,
     };
-    console.log(updateIp, 'update');
     return await this.recordingRepository.update(updateIp);
   }
 
   async remove() {
     return await this.recordingRepository.remove();
   }
-
-  // async updateCameraBe(updateRecordingDto: CameraBeIpRequest) {
-  //   const updateCameraBeIp: Partial<Recording> = {
-  //     cameraStatusTargets: updateRecordingDto.cameraStatusTargets,
-  //   };
-
-  //   return await this.recordingRepository.update(updateCameraBeIp);
-  // }
-
-  // async removeCameraBe() {
-  //   return await this.recordingRepository.remove();
-  // }
 }

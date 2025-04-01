@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
+import mongoose, { UpdateQuery } from 'mongoose';
 
 export type UsersDocument = UserInfo & Document;
 
@@ -33,6 +33,9 @@ export class UserInfo {
   @Prop({ default: false })
   isDeleted?: boolean;
 
+  @Prop()
+  deletedAt?: Date;
+
   @Prop({
     type: mongoose.Schema.ObjectId,
     ref: 'HeavyEquipment',
@@ -59,3 +62,5 @@ UsersSchema.pre(
     next();
   },
 );
+
+UsersSchema.index({ deletedAt: 1 }, { expireAfterSeconds: 5184000 });

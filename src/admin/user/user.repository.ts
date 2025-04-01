@@ -138,7 +138,7 @@ export class usersMongoRepository implements UsersRepository {
   async remove(id: string) {
     const result = await this.usersModel.updateOne(
       { _id: id }, // 바로 해당 사용자의 ID로 업데이트
-      { $set: { isDeleted: true } },
+      { isDeleted: true, deletedAt: new Date() },
       { new: true },
     );
 

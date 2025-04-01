@@ -112,3 +112,8 @@ export class WorkPlan {
 export const WorkPlanSchema = SchemaFactory.createForClass(WorkPlan);
 
 WorkPlanSchema.plugin(require('mongoose-autopopulate'));
+
+WorkPlanSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 60 * 24 * 60 * 60 },
+); // 60일
