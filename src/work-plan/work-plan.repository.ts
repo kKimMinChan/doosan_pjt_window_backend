@@ -258,6 +258,8 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
       },
     );
 
+    pipeline.push({ $sort: { 'mutableData.startDay': sortOrder } });
+
     // // ✅ find()로 쿼리 실행
     // const workPlans = await this.workPlanModel
     //   .find(filter)
