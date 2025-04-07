@@ -60,7 +60,7 @@ export class SystemStatusService {
       console.log(isWithinRange, '--------------');
 
       const driverSignature = workPlan?.driverSignatures?.find(
-        (item) => item.driver.toString() === userId,
+        (item) => item?.driver?.toString() === userId,
       );
 
       // console.log(workPlan.driverSignatures);
