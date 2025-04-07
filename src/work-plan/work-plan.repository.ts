@@ -193,8 +193,18 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
       },
       {
         $addFields: {
-          'driverSignatures.driver': '$matchedDriver',
+          'driverSignatures.driver': {
+            $mergeObjects: [
+              '$matchedDriver',
+              {
+                id: '$matchedDriver._id',
+              },
+            ],
+          },
         },
+      },
+      {
+        $unset: ['matchedDriver._id'],
       },
       {
         $project: {
