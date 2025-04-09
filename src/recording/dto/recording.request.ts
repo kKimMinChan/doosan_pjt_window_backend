@@ -38,4 +38,15 @@ export class RecordingRequest {
   @IsString({ each: true }) // ✅ 배열의 각 요소가 문자열인지 확인
   @IsNotEmpty({ each: true }) // ✅ 배열 요소가 빈 문자열이면 안됨
   pythonServerIps: string[];
+
+  @ApiProperty({
+    example: ['rtsp:192.168.0.13:8080/cam', 'rtsp:192.168.0.15:8080/cam'],
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray() // ✅ 배열인지 확인
+  @IsString({ each: true }) // ✅ 배열의 각 요소가 문자열인지 확인
+  @IsNotEmpty({ each: true }) // ✅ 배열 요소가 빈 문자열이면 안됨
+  rtspIps: string[];
 }

@@ -16,6 +16,9 @@ export class Recording {
 
   @Prop()
   pythonServerIps: string[] | [];
+
+  @Prop()
+  rtspIps: string[] | [];
 }
 
 export const RecordingSchema = SchemaFactory.createForClass(Recording);
