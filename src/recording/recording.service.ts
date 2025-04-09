@@ -15,6 +15,7 @@ export class RecordingService {
     const updateIp: Partial<Recording> = {
       cameraIps: updateRecordingDto?.cameraIps,
       pythonServerIps: updateRecordingDto?.pythonServerIps,
+      rtspIps: updateRecordingDto?.rtspIps,
     };
     return await this.recordingRepository.update(updateIp);
   }
