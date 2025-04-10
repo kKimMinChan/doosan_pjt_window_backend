@@ -13,6 +13,7 @@ import { WorkPlanModule } from './work-plan/work-plan.module';
 import { RecordingModule } from './recording/recording.module';
 import { SystemStatusModule } from './system-status/system-status.module';
 import { LogsModule } from './user-logs/logs.module';
+import { RasPiModule } from './ras-pi/ras-pi.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LogsModule } from './user-logs/logs.module';
     RecordingModule,
     SystemStatusModule,
     LogsModule,
+    RasPiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -40,7 +40,7 @@ export class RecordingRequest {
   pythonServerIps: string[];
 
   @ApiProperty({
-    example: ['rtsp:192.168.0.13:8080/cam', 'rtsp:192.168.0.15:8080/cam'],
+    example: ['rtsp://192.168.0.13:8080/cam', 'rtsp://192.168.0.15:8080/cam'],
     required: false,
     type: [String],
   })

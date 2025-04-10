@@ -17,6 +17,8 @@ export class RecordingService {
       pythonServerIps: updateRecordingDto?.pythonServerIps,
       rtspIps: updateRecordingDto?.rtspIps,
     };
+
+    console.log(updateIp, 'updateIp');
     return await this.recordingRepository.update(updateIp);
   }
 
