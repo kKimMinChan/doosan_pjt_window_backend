@@ -7,32 +7,34 @@ export class RasPiService {
   wifiChange(wifiChangeDto: WifiChangeDto): Promise<string> {
     return new Promise((resolve, reject) => {
       const conn = new Client();
-      console.log(wifiChangeDto, 'wifiChangeDto');
       conn
         .on('ready', () => {
           conn.exec(
-            `sudo nmcli device wifi connect "${wifiChangeDto.wifiSsid}" password "${wifiChangeDto.wifiPassword}" &`,
+            `sudo nmcli device wifi connect "${wifiChangeDto.wifiSsid}" password "${wifiChangeDto.wifiPassword}"`,
             (err, stream) => {
               if (err) return reject(err);
+              setTimeout(() => {
+                conn.end();
+                resolve('Wi-Fi 변경 명령이 실행되었습니다.');
+              }, 1000); // 1초 안에 세션 죽기 전에 응답
+              // let result = '';
+              // let error = '';
 
-              let result = '';
-              let error = '';
-
-              stream
-                .on('close', (code) => {
-                  conn.end();
-                  if (code === 0) {
-                    resolve(result);
-                  } else {
-                    reject(error || `Failed with code ${code}`);
-                  }
-                })
-                .on('data', (data) => {
-                  result += data.toString();
-                })
-                .stderr.on('data', (data) => {
-                  error += data.toString();
-                });
+              // stream
+              //   .on('close', (code) => {
+              //     conn.end();
+              //     if (code === 0) {
+              //       resolve('Wi-Fi 변경 명령이 실행되었습니다.');
+              //     } else {
+              //       reject(error || `Failed with code ${code}`);
+              //     }
+              //   })
+              //   .on('data', (data) => {
+              //     result += data.toString();
+              //   })
+              //   .stderr.on('data', (data) => {
+              //     error += data.toString();
+              //   });
             },
           );
         })
@@ -48,7 +50,6 @@ export class RasPiService {
 
   shutdown(shutDownDto: RasPiDto): Promise<string> {
     return new Promise((resolve, reject) => {
-      console.log(shutDownDto, 'shutDownDto');
       const conn = new Client();
       conn
         .on('ready', () => {
