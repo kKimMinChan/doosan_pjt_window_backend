@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { WorkPlan, WorkPlanDocument } from './entities/work-plan.schema';
 import mongoose, { Model, SortOrder } from 'mongoose';
 import { ResourceNotFoundError } from 'src/helper/ErrorHelper';
+import { stringify } from 'querystring';
 
 export interface WorkPlanRepository {
   create(workPlanDto: WorkPlan);
@@ -18,7 +19,13 @@ export interface WorkPlanRepository {
     startDay: string,
     endDay: string,
   );
-  countWorkPlan(id: string);
+  countWorkPlan(
+    id: string,
+    todayId: string,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  );
   updateSignature(
     id: string,
     matchValue: string,
@@ -129,12 +136,32 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
       ];
     }
 
+    if (startDay || endDay) {
+      filter.$or = [];
+
+      if (startDay && !endDay) {
+        filter.$or.push({
+          'mutableData.startDay': { $gte: startDay },
+          // 'mutableData.endDay': { $exists: false },
+        });
+      }
+
+      if (!startDay && endDay) {
+        filter.$or.push({
+          'mutableData.endDay': { $lte: endDay },
+          // 'mutableData.startDay': { $exists: false },
+        });
+      }
+    }
+
     // ✅ 점검 상태 필터 추가
     if (inspectionStatus === 'checked') {
       filter['adminSignatures.finish'] = { $ne: null };
     } else if (inspectionStatus === 'unChecked') {
       filter['adminSignatures.finish'] = null;
     }
+
+    console.log(JSON.stringify(filter, null, 2), 'findAll filter');
 
     const pipeline: any[] = [];
     pipeline.push({ $match: filter });
@@ -280,12 +307,67 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
 
     const workPlans = await this.workPlanModel.aggregate(pipeline);
 
-    console.log(workPlans, 'workPlans');
+    console.log(workPlans.length, 'workPlans--------');
 
     return workPlans;
   }
-  async countWorkPlan(id: string) {
-    return await this.workPlanModel.countDocuments({ equipment: id });
+  async countWorkPlan(
+    id: string,
+    todayId: string,
+    inspectionStatus: string,
+    startDay: string,
+    endDay: string,
+  ) {
+    console.log(inspectionStatus, startDay, endDay, 'count');
+    const filter: any = {
+      equipment: new mongoose.Types.ObjectId(id),
+      _id: { $ne: new mongoose.Types.ObjectId(todayId) }, // ✅ 특정 문서 제외
+    };
+
+    // ✅ 날짜 필터 추가
+    if (startDay && endDay) {
+      filter.$or = [
+        { 'mutableData.startDay': { $gte: startDay, $lte: endDay } }, // 시작일이 기준 범위 내
+        { 'mutableData.endDay': { $gte: startDay, $lte: endDay } }, // 종료일이 기준 범위 내
+        {
+          'mutableData.startDay': { $lte: startDay },
+          'mutableData.endDay': { $gte: endDay },
+        }, // 전체 포함
+      ];
+    }
+
+    if (startDay || endDay) {
+      filter.$or = [];
+
+      if (startDay && !endDay) {
+        filter.$or.push({
+          'mutableData.startDay': { $gte: startDay },
+          // 'mutableData.endDay': { $exists: false },
+        });
+      }
+
+      if (!startDay && endDay) {
+        filter.$or.push({
+          'mutableData.endDay': { $lte: endDay },
+          // 'mutableData.startDay': { $exists: false },
+        });
+      }
+    }
+
+    // ✅ 점검 상태 필터 추가
+    if (inspectionStatus === 'checked') {
+      filter['adminSignatures.finish'] = { $ne: null };
+    } else if (inspectionStatus === 'unChecked') {
+      filter['adminSignatures.finish'] = null;
+    }
+
+    console.log(JSON.stringify(filter, null, 2), 'count filter');
+
+    const count = await this.workPlanModel.countDocuments(filter).exec();
+
+    console.log(count, 'count');
+
+    return count;
   }
 
   async updateDetails(id: string, workPlanDto: Partial<WorkPlan>) {

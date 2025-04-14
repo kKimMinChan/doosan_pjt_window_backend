@@ -81,7 +81,13 @@ export class WorkPlanService {
           startDay,
           endDay,
         ),
-        this.workPlanRepository.countWorkPlan(id),
+        this.workPlanRepository.countWorkPlan(
+          id,
+          todayId,
+          inspectionStatus,
+          startDay,
+          endDay,
+        ),
       ]);
 
       // console.log(data, '-------', totalCount);
