@@ -2,6 +2,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer-options.interface';
 import { diskStorage } from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 import * as multerS3 from 'multer-s3';
 import * as path from 'path';
 import * as os from 'os';
@@ -84,7 +85,7 @@ export const multerOptionsFactory = (
           const lastIndex = safeName.lastIndexOf('_');
           const baseName = safeName.substring(0, lastIndex);
           // console.log(baseName, 'safe', fileExtName, 'ext', buffer);
-          callback(null, `${Date.now()}${ext}`);
+          callback(null, `${Date.now()}-${uuidv4()}${ext}`);
           console.log('이미지 등록 local');
         },
       }),
