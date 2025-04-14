@@ -97,7 +97,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   async findOneLatestIssue(id: string, isToday: boolean) {
     const filter: any = {
       equipment: new mongoose.Types.ObjectId(id),
-      createdAt: { $gte: new Date(Date.now() - 63 * 60 * 60 * 1000) }, // ✅ 최근 63시간 데이터 필터
+      createdAt: { $gte: new Date(Date.now() - 87 * 60 * 60 * 1000) }, // ✅ 최근 63시간 데이터 필터
     };
 
     // ✅ MongoDB Aggregate 사용하여 최적화
