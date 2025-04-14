@@ -338,14 +338,21 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     }
 
     // ✅ 점검 상태 필터 적용
-    if (inspectionStatus === 'CHECKED') {
+    if (inspectionStatus === 'checked') {
       filter.issue = { $ne: null };
-    } else if (inspectionStatus === 'UNCHECKED') {
+    } else if (inspectionStatus === 'unChecked') {
       filter.issue = null;
     }
 
     // ✅ 필터 적용하여 개수 계산
     const totalCount = await this.checkSheetModel.countDocuments(filter).exec();
+
+    console.log(
+      JSON.stringify(filter, null, 2),
+      'count filter',
+      totalCount,
+      inspectionStatus,
+    );
 
     return isToday ? totalCount - 1 : totalCount;
   }

@@ -166,7 +166,7 @@ export class CheckSheetService {
         ),
       ]);
 
-      console.log(data, 'data ---------');
+      // console.log(data, 'data ---------');
 
       console.log('findAll check-sheet-service');
 
