@@ -17,6 +17,7 @@ export interface HeavyEquipmentRepository {
   update(id: string, heavyEquipmentInfo: Partial<HeavyEquipment>);
   remove(id: string);
   findQuery(query: any);
+  oldRoleFieldUpdate(oldRole: string, userId: string);
 }
 
 @Injectable()
@@ -104,6 +105,16 @@ export class HeavyEquipmentMongoRepository implements HeavyEquipmentRepository {
         HttpStatus.CONFLICT,
       );
     }
+
+    if (result.modifiedCount > 0) return result;
+    return null;
+  }
+
+  async oldRoleFieldUpdate(oldRole: string, userId: string) {
+    const result = await this.heavyEquipmentModel.updateMany(
+      { [`${oldRole}`]: userId },
+      { $pull: { [`${oldRole}`]: userId } },
+    );
 
     if (result.modifiedCount > 0) return result;
     return null;

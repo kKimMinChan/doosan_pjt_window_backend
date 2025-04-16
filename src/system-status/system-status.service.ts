@@ -68,6 +68,7 @@ export class SystemStatusService {
       // console.log(driverSignature, 'driverSignature');
 
       const systemStatus: SystemStatus = {
+        isAdmin: user?.role === 'admin' ? true : false,
         hasValidCheckSheet: checkSheet?.issue != null,
         hasValidWorkPlan: isWithinRange,
         isSignedWorkPlan: isWithinRange

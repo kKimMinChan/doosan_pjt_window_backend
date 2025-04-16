@@ -35,4 +35,11 @@ export class SystemStatusResponse {
     required: false,
   })
   isSignedUser: boolean;
+
+  @ApiProperty({
+    description: '관리자인지',
+    example: true,
+    required: false,
+  })
+  isAdmin: boolean;
 }

@@ -25,6 +25,9 @@ export class SystemStatus {
 
   @Prop()
   isSignedUser: boolean;
+
+  @Prop()
+  isAdmin: boolean;
 }
 
 export const SystemStatusSchema = SchemaFactory.createForClass(SystemStatus);

@@ -18,6 +18,7 @@ import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { CheckSheetMongoRepository } from 'src/check-sheet/check-sheet.repository';
 import { WorkPlanMongoRepository } from 'src/work-plan/work-plan.repository';
 import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
+import { inspect } from 'util';
 
 @Injectable()
 export class UserService {
@@ -137,6 +138,113 @@ export class UserService {
                 : null,
         }),
       };
+      const user = await this.usersRepository.findOne(id);
+      const userObjectId = new mongoose.Types.ObjectId(id);
+
+      // 모든 중장비 찾아서 id로 변경
+      const findAllEquipment = await this.equipmentRepository.findAll();
+      const equipmentIds = findAllEquipment.map((item) => item._id.toString());
+
+      console.log(equipmentIds, 'equipments');
+
+      // 진행중인 작업계획서에 해당하는 것 모두 찾기
+      const workPlanData =
+        await this.workPlanRepository.findAllTodayEntry(equipmentIds);
+
+      // console.log(workPlanData, 'workPlanData');
+
+      // 삭제하려는 유저가 진행 중인 작업 게획서의 작성자인지 확인
+      const isWriter = workPlanData.filter(
+        (item) =>
+          item?.mutableData?.writer?.toString() === userObjectId?.toString(),
+      );
+
+      // 삭제하려는 유저가 진행 중인 작업 계획서의 운전자인지 확인
+      const isDriver = workPlanData.flatMap((plan) =>
+        plan?.driverSignatures
+          .filter((sig) => sig?.driver?.toString() === userObjectId?.toString())
+          .map((sig) => sig?.driver),
+      );
+
+      console.log(isDriver, 'isDriver', isWriter, 'isWriter');
+
+      if (
+        isWriter.filter((writer) => writer !== undefined).length > 0 ||
+        isDriver.filter((driver) => driver !== undefined).length > 0
+      ) {
+        throw new HttpException(
+          '진행 중인 작업계획서의 작성자 혹은 운전자로 등록되어 있습니다.',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      // 중장비에 등록된 점검자, 확인자인지 확인
+      const query: any = {
+        $or: [{ inspectors: userObjectId }, { reviewers: userObjectId }],
+      };
+
+      const equipments = await this.equipmentRepository.findQuery(query);
+
+      const ids = equipments.map((equipment) => equipment._id as string);
+
+      const checkSheets = await this.checkSheetRepository.findAllLatest(ids);
+
+      const now = new Date();
+      const todayYear = now.getFullYear();
+      const todayMonth = now.getMonth();
+      const todayDate = now.getDate();
+
+      // ✅ 필터링
+      const todayItems = checkSheets.filter((item) => {
+        const createdAt = new Date(item.createdAt);
+
+        const isToday =
+          createdAt.getFullYear() === todayYear &&
+          createdAt.getMonth() === todayMonth &&
+          createdAt.getDate() === todayDate;
+        console.log(createdAt, isToday);
+        return isToday;
+      });
+
+      if (!todayItems) {
+        const result = await this.usersRepository.remove(id);
+        if (!result) {
+          throw new HttpException(
+            '사용자 업데이트에 실패했습니다.',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        return result;
+      }
+
+      const isRole = todayItems.filter(
+        (item) =>
+          item.reviewer.toString() === userObjectId.toString() ||
+          item.inspector.toString() === userObjectId.toString(),
+      );
+
+      if (isRole.length > 0) {
+        throw new HttpException(
+          '금일 점검표의 점검자 혹은 확인자로 등록되어 있습니다.',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      const oldRole = user.role;
+      if (oldRole !== userInfo.role) {
+        const roleFieldMap = {
+          inspector: 'inspectors',
+          reviewer: 'reviewers',
+          driver: 'drivers',
+        };
+        const oldRoleField = roleFieldMap[oldRole];
+        if (oldRoleField) {
+          await this.equipmentRepository.oldRoleFieldUpdate(
+            oldRoleField,
+            userObjectId.toString(),
+          );
+        }
+      }
 
       const result = await this.usersRepository.update(id, updateData as any);
 
