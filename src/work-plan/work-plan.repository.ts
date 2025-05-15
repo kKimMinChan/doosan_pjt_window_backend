@@ -8,6 +8,7 @@ import { stringify } from 'querystring';
 export interface WorkPlanRepository {
   create(workPlanDto: WorkPlan);
   findOne(id: string);
+  findOneNotPopulate(id: string);
   findTodayEntry(id: string);
   findAll(
     id: string,
@@ -56,6 +57,16 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
     const workPlan = await this.workPlanModel
       .findById(id)
       .populate('driverSignatures.driver');
+
+    if (!workPlan)
+      throw new ResourceNotFoundError(
+        '해당 id의 작업 계획서가 존재하지 않습니다.',
+      );
+    return workPlan;
+  }
+
+  async findOneNotPopulate(id: string) {
+    const workPlan = await this.workPlanModel.findById(id);
 
     if (!workPlan)
       throw new ResourceNotFoundError(

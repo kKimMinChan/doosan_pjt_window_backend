@@ -15,6 +15,7 @@ import { CheckSheetService } from './check-sheet.service';
 import {
   CheckSheetPaginationDto,
   CheckSheetRequest,
+  IssueStatus,
   UpdateCheckSheetRequest,
 } from './dto/check-sheet.request';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
@@ -110,6 +111,17 @@ export class CheckSheetController {
     @Body() body: any,
   ) {
     await this.checkSheetService.update(id, body, files);
+    return {
+      translate: '요청이 성공적으로 처리되었습니다.',
+    };
+  }
+
+  @Put(':id/issue-status')
+  async updateIssueStatus(
+    @Param('id', ObjectIdValidationPipe) id: string,
+    @Body() body: IssueStatus,
+  ) {
+    await this.checkSheetService.updateIssueStatus(id, body);
     return {
       translate: '요청이 성공적으로 처리되었습니다.',
     };

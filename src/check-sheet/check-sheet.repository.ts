@@ -33,6 +33,7 @@ export interface CheckSheetRepository {
   );
   findOneLatestIssue(id: string, isToday: boolean);
   update(id: string, updateDto: Partial<CheckSheet>);
+  updateIssueStatus(id: string, isSolved: boolean);
   remove(id: string);
   removeAll();
 }
@@ -97,7 +98,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
   async findOneLatestIssue(id: string, isToday: boolean) {
     const filter: any = {
       equipment: new mongoose.Types.ObjectId(id),
-      createdAt: { $gte: new Date(Date.now() - 87 * 60 * 60 * 1000) }, // ✅ 최근 63시간 데이터 필터
+      //createdAt: { $gte: new Date(Date.now() - 87 * 60 * 60 * 1000) }, // ✅ 최근 63시간 데이터 필터
     };
 
     // ✅ MongoDB Aggregate 사용하여 최적화
@@ -106,7 +107,7 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
       { $sort: { createdAt: -1 } }, // ✅ 최신 데이터 우선 정렬
       { $skip: isToday ? 1 : 0 }, // ✅ 가장 최신 데이터 1개 제외 (isToday가 true일 경우)
       { $match: { issue: { $ne: null } } }, // ✅ issue가 null이 아닌 데이터 필터링
-      { $project: { _id: 0, issue: 1, createdAt: 1 } }, // ✅ issue 필드만 선택
+      { $project: { _id: 0, id: '$_id', issue: 1, isSolved: 1, createdAt: 1 } }, // ✅ issue 필드만 선택
     ];
 
     const issueList = await this.checkSheetModel.aggregate(pipeline).exec();
@@ -357,6 +358,23 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     return isToday ? totalCount - 1 : totalCount;
   }
 
+  async updateIssueStatus(id: string, isSolved: boolean) {
+    const checkSheet = await this.checkSheetModel
+      .findByIdAndUpdate(
+        id,
+        { $set: { isSolved } },
+        { new: true, omitUndefined: true },
+      )
+      .exec();
+
+    if (!checkSheet)
+      throw new ResourceNotFoundError(
+        '해당 id의 안전 점검표가 존재하지 않습니다.',
+      );
+
+    return checkSheet;
+  }
+
   async update(id: string, updateDto: Partial<CheckSheet>) {
     const checkSheet = await this.checkSheetModel.findById(id).exec();
 
@@ -389,6 +407,9 @@ export class CheckSheetMongoRepository implements CheckSheetRepository {
     }
     if (updateDto.issue !== undefined) {
       updateFields.issue = updateDto.issue;
+    }
+    if (updateDto.isSolved !== undefined) {
+      updateFields.isSolved = updateDto.isSolved;
     }
     if (updateDto.inspector !== undefined) {
       updateFields.inspector = updateDto.inspector;

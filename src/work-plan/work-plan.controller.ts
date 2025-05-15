@@ -78,6 +78,11 @@ export class WorkPlanController {
     return await this.workPlanService.findAll(id, paginationDto);
   }
 
+  @Get('workPlan/:id/save')
+  async saveCurrentWorkPlan(@Param('id', ObjectIdValidationPipe) id: string) {
+    return await this.workPlanService.saveCurrentWorkPlan(id);
+  }
+
   @Put(':id/details')
   async updateDetails(
     @Param('id', ObjectIdValidationPipe) id: string,

@@ -8,7 +8,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CheckSheetPaginationDto, Item } from './dto/check-sheet.request';
+import {
+  CheckSheetPaginationDto,
+  IssueStatus,
+  Item,
+} from './dto/check-sheet.request';
 import { CheckSheetMongoRepository } from './check-sheet.repository';
 import { CheckItemMongoRepository } from 'src/check-item/check-item.repository';
 import { ErrorHelper } from 'src/helper/ErrorHelper';
@@ -230,21 +234,25 @@ export class CheckSheetService {
     }
   }
 
+  async updateIssueStatus(id: string, body: IssueStatus) {
+    try {
+      return await this.checkSheetRepository.updateIssueStatus(
+        id,
+        body.isResolved,
+      );
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
   async update(id: string, body: any, files: Express.MulterS3.File[]) {
     try {
-      // if (body?.items === undefined)
-      //   throw new BadRequestException('items가 존재하지 않습니다.');
-
       const checkSheet = await this.checkSheetRepository.noPopulateFindOne(id);
       if (!checkSheet) {
         throw new NotFoundException(`CheckSheet를 찾을 수 없습니다.`);
       }
 
       const date = new Date();
-      // console.log(
-      //   date.toISOString().split('T')[0],
-      //   checkSheet.createdAt.toISOString().split('T')[0],
-      // );
       if (
         date.toISOString().split('T')[0] !==
         checkSheet.createdAt.toISOString().split('T')[0]
@@ -291,6 +299,7 @@ export class CheckSheetService {
       const updateDto = {
         items,
         issue: body.issue,
+        isSolved: body.issue ? false : null,
         images,
         inspector: body.inspector,
         reviewer: body.reviewer,

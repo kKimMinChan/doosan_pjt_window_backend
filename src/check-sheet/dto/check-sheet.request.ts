@@ -14,6 +14,15 @@ import {
 import { CheckItemRequest } from 'src/check-item/dto/check-item-request.dto';
 import { PaginationDto } from 'src/common-dto/pagination.dto';
 
+export class IssueStatus {
+  @ApiProperty({
+    description: '해결 여부',
+    example: false,
+  })
+  @IsBoolean()
+  isResolved: boolean;
+}
+
 export class Item {
   @ApiProperty({ description: 'CheckItem' })
   @ValidateNested()

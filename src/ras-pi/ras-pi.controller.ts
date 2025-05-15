@@ -8,7 +8,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { RasPiService } from './ras-pi.service';
-import { shutdownResponse } from './dto/update-ras-pi.dto';
+import { rebootResponse, shutdownResponse } from './dto/update-ras-pi.dto';
 import { RasPiDto, WifiChangeDto } from './dto/create-ras-pi.dto';
 import { ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
@@ -45,6 +45,21 @@ export class RasPiController {
     }
   }
 
+  @Post('reboot')
+  @ApiCreatedResponse(
+    SwaggerHelper.getApiResponseSchema(rebootResponse, '', false, true),
+  )
+  async reboot(@Body() rasPiDto: RasPiDto) {
+    try {
+      const result = await this.rasPiService.reboot(rasPiDto);
+      return {
+        translate: result,
+      };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
   @Post('scan-wifi-networks')
   async scanWifiNetworks(@Body() rasPiDto: RasPiDto) {
     try {
@@ -58,11 +73,6 @@ export class RasPiController {
   findOne(@Param('id') id: string) {
     return this.rasPiService.findOne(+id);
   }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateRasPiDto: UpdateRasPiDto) {
-  //   return this.rasPiService.update(+id, updateRasPiDto);
-  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

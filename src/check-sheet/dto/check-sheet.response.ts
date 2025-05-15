@@ -56,6 +56,13 @@ export class CheckSheetResponse {
   issue: string;
 
   @ApiProperty({
+    description: '해결 여부',
+    example: false,
+    required: false,
+  })
+  isSolved: boolean | null;
+
+  @ApiProperty({
     description: '중장비',
     required: false,
   })

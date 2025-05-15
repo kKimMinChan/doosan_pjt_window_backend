@@ -84,6 +84,42 @@ export class RasPiService {
     });
   }
 
+  reboot(shutDownDto: RasPiDto): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const conn = new Client();
+      conn
+        .on('ready', () => {
+          conn.exec('sudo reboot', (err, stream) => {
+            if (err) return reject(err);
+            let result = '';
+            let error = '';
+            stream
+              .on('close', (code) => {
+                conn.end();
+                if (code === 0) {
+                  resolve('reboot command sent');
+                } else {
+                  reject(error || `Failed with code ${code}`);
+                }
+              })
+              .on('data', (data) => {
+                result += data.toString();
+              })
+              .stderr.on('data', (data) => {
+                error += data.toString();
+              });
+          });
+        })
+        .on('error', (err) => reject(err))
+        .connect({
+          host: shutDownDto.hostIp,
+          port: 22,
+          username: shutDownDto.hostName,
+          password: shutDownDto.hostPassword,
+        });
+    });
+  }
+
   scanWifiNetworks(rasPiDto: RasPiDto): Promise<string[]> {
     return new Promise((resolve, reject) => {
       const conn = new Client();

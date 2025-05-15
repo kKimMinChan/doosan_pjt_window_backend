@@ -70,6 +70,9 @@ export class CheckSheet {
   @Prop({ type: String, required: false, default: null })
   issue?: string | null;
 
+  @Prop({ type: Boolean, required: false, default: null })
+  isSolved: boolean | null;
+
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserInfo',

@@ -14,7 +14,6 @@ import { ErrorHelper } from 'src/helper/ErrorHelper';
 import { WorkPlanMongoRepository } from './work-plan.repository';
 import { WorkPlan } from './entities/work-plan.schema';
 import { usersMongoRepository } from 'src/admin/user/user.repository';
-import { PaginationDto } from 'src/common-dto/pagination.dto';
 import { HeavyEquipmentMongoRepository } from 'src/heavy-equipment/heavy-equipment.repository';
 
 @Injectable()
@@ -124,6 +123,51 @@ export class WorkPlanService {
     }
   }
 
+  async saveCurrentWorkPlan(id: string) {
+    try {
+      const workPlanDoc = await this.workPlanRepository.findOneNotPopulate(id);
+      const workPlan = workPlanDoc?.toObject();
+      if (!workPlan)
+        throw new NotFoundException(
+          '해당 id의 작업 계획서가 존재하지 않습니다.',
+        );
+
+      const date = new Date();
+      const kstString = new Date(date.getTime() + 9 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0];
+
+      const saveWorkPlan = {
+        ...workPlan,
+        mutableData: {
+          ...workPlan.mutableData, // 기존 mutableData 복사
+          endDay: kstString, // endDay만 덮어쓰기
+        },
+      };
+
+      const result = await this.workPlanRepository.updateDetails(
+        id,
+        saveWorkPlan,
+      );
+      if (result.matchedCount === 0)
+        throw new NotFoundException(
+          '해당 id의 작업 계획서가 존재하지 않습니다.',
+        );
+
+      if (result.modifiedCount === 0) {
+        return {
+          translate: '요청이 완료되었지만 변경된 내용이 없습니다.',
+          message: 'No Changes',
+        };
+      }
+      return {
+        translate: '요청이 성공적으로 완료되었습니다.',
+      };
+    } catch (error) {
+      ErrorHelper.handleError(error);
+    }
+  }
+
   async updateDetails(id: string, workPlanDto: WorkPlanDetailsRequest) {
     try {
       console.log(id, workPlanDto, '--------');
@@ -151,6 +195,7 @@ export class WorkPlanService {
       // if (!driverSignatures) delete workPlan.driverSignatures
 
       console.log(equipment, mutableData, fixedData, '------------', workPlan);
+
       const result = await this.workPlanRepository.updateDetails(id, workPlan);
       if (result.matchedCount === 0)
         throw new NotFoundException(
