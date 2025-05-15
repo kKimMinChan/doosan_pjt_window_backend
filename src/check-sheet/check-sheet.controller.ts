@@ -117,6 +117,7 @@ export class CheckSheetController {
   }
 
   @Put(':id/issue-status')
+  @ApiCreatedResponse(SwaggerHelper.getApiResponseSchema())
   async updateIssueStatus(
     @Param('id', ObjectIdValidationPipe) id: string,
     @Body() body: IssueStatus,

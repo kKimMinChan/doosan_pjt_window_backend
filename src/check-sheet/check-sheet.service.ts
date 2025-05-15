@@ -238,7 +238,7 @@ export class CheckSheetService {
     try {
       return await this.checkSheetRepository.updateIssueStatus(
         id,
-        body.isResolved,
+        body.isSolved,
       );
     } catch (error) {
       ErrorHelper.handleError(error);

@@ -20,7 +20,7 @@ export class IssueStatus {
     example: false,
   })
   @IsBoolean()
-  isResolved: boolean;
+  isSolved: boolean;
 }
 
 export class Item {
