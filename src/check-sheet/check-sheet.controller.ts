@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Query,
@@ -18,7 +17,7 @@ import {
   IssueStatus,
   UpdateCheckSheetRequest,
 } from './dto/check-sheet.request';
-import { PaginationDto } from 'src/common-dto/pagination.dto';
+
 import {
   ApiBody,
   ApiConsumes,
@@ -26,10 +25,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  AnyFilesInterceptor,
-  FilesInterceptor,
-} from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { SwaggerHelper } from 'src/helper/SwaggerHelper';
 import { CheckSheetResponse, IssueResponse } from './dto/check-sheet.response';
 import { ObjectIdValidationPipe } from 'src/pipes/objectid-validation.pipe';
