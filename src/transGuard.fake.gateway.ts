@@ -1,14 +1,8 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import https from 'https';
-import fs from 'fs';
+import http from 'http';
 
-const options = {
-  key: fs.readFileSync('/Users/kimminchan/localhost-key.pem'),
-  cert: fs.readFileSync('/Users/kimminchan/localhost.pem'),
-};
-
-const server = https.createServer(options);
-const wss = new WebSocketServer({ server });
+const server = http.createServer();
+const wss = new WebSocketServer({ server, path: '/ws' });
 
 const clientIntervals = new Map<
   WebSocket,
@@ -114,6 +108,6 @@ function randomMovingWindow(
   };
 }
 
-server.listen(443, () => {
+server.listen(80, () => {
   console.log('✅ WebSocket server listening on wss://dev.fboedev.com');
 });
