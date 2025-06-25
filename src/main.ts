@@ -109,6 +109,17 @@ async function bootstrap() {
   wss.on('connection', (ws) => {
     console.log('Client connected');
 
+    ws.send(
+      JSON.stringify({
+        event: 'connected',
+        result: true,
+        data: {
+          videoWidth: 1280,
+          videoHeight: 720,
+        },
+      }),
+    );
+
     ws.on('message', (message) => {
       try {
         const parsed = JSON.parse(message.toString());
@@ -121,6 +132,7 @@ async function bootstrap() {
             outlierMultiplier,
             videoWidth,
             videoHeight,
+            predictRate = 30,
           } = parsed.payload;
 
           console.log('Starting stream with params:', {
@@ -135,44 +147,59 @@ async function bootstrap() {
           const windowWidth = Math.floor(videoWidth * 0.1);
           const windowHeight = Math.floor(videoHeight * 0.1);
 
-          let currentRange = randomMovingWindow(
+          let currentRange = randomMovingCircle(
             videoWidth,
             videoHeight,
-            windowWidth,
-            windowHeight,
+            Math.min(windowWidth, windowHeight) / 2, // 반지름은 윈도우 크기의 절반
           );
 
           const windowMoveInterval = setInterval(() => {
-            currentRange = randomMovingWindow(
+            currentRange = randomMovingCircle(
               videoWidth,
               videoHeight,
-              windowWidth,
-              windowHeight,
+              Math.min(windowWidth, windowHeight), // 반지름은 윈도우 크기의 절반
             );
             console.log('📸 카메라 이동:', currentRange);
           }, 3000);
 
           const emitInterval = setInterval(() => {
             const isOutlier = Math.random() < outlierRate * 0.01;
-            const { xMin, xMax, yMin, yMax } = currentRange;
+            const isPredictable = Math.random() < predictRate * 0.01; // 30% 확률로 예측 가능한 값
+            let x,
+              y,
+              z = Math.random() * 1;
 
-            let x = Math.random() * (xMax - xMin) + xMin;
-            let y = Math.random() * (yMax - yMin) + yMin;
+            const { centerX, centerY, radius } = currentRange;
 
-            if (isOutlier) {
-              x *= outlierMultiplier;
-              y *= outlierMultiplier;
+            console.log('📸 정말이동?:', currentRange);
+
+            // 랜덤 각도와 거리 생성
+            const angle = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * radius;
+
+            // 정상값 또는 이상치
+            const adjustedDistance = isOutlier
+              ? distance * outlierMultiplier
+              : distance;
+
+            // 극좌표 → 직교좌표 변환
+            x = Math.round(centerX + adjustedDistance * Math.cos(angle));
+            y = Math.round(centerY + adjustedDistance * Math.sin(angle));
+
+            const payload: any = {
+              event: 'position',
+              result: true,
+              data: {
+                origin: { width: videoWidth, height: videoHeight },
+                block: [{ x, y }],
+              },
+            };
+
+            if (isPredictable) {
+              payload.data.predict = [{ x, y, z }];
             }
 
-            console.log('Emitting position:', { x, y, outlier: isOutlier });
-
-            ws.send(
-              JSON.stringify({
-                event: 'position',
-                result: true,
-                data: { x, y, outlier: isOutlier },
-              }),
-            );
+            ws.send(JSON.stringify(payload));
           }, intervalMs);
 
           clientIntervals.set(ws, { emitInterval, windowMoveInterval });
@@ -202,19 +229,20 @@ async function bootstrap() {
     }
   }
 
-  function randomMovingWindow(
+  function randomMovingCircle(
     videoWidth: number,
     videoHeight: number,
-    windowWidth: number,
-    windowHeight: number,
+    radius: number = 50,
   ) {
-    const xMin = Math.floor(Math.random() * (videoWidth - windowWidth));
-    const yMin = Math.floor(Math.random() * (videoHeight - windowHeight));
+    const centerX =
+      Math.floor(Math.random() * (videoWidth - 2 * radius)) + radius;
+    const centerY =
+      Math.floor(Math.random() * (videoHeight - 2 * radius)) + radius;
+
     return {
-      xMin,
-      xMax: xMin + windowWidth,
-      yMin,
-      yMax: yMin + windowHeight,
+      centerX,
+      centerY,
+      radius,
     };
   }
 
