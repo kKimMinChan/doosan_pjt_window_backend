@@ -133,6 +133,7 @@ async function bootstrap() {
             videoWidth,
             videoHeight,
             predictRate = 30,
+            predictDuration = 3000,
           } = parsed.payload;
 
           console.log('Starting stream with params:', {
@@ -147,7 +148,16 @@ async function bootstrap() {
           const windowWidth = Math.floor(videoWidth * 0.1);
           const windowHeight = Math.floor(videoHeight * 0.1);
 
+          let isInPredictMode = false;
+          let predictModeTimeout: NodeJS.Timeout | null = null;
+
           let currentRange = randomMovingCircle(
+            videoWidth,
+            videoHeight,
+            Math.min(windowWidth, windowHeight) / 2, // 반지름은 윈도우 크기의 절반
+          );
+
+          let currentPredictRange = randomMovingCircle(
             videoWidth,
             videoHeight,
             Math.min(windowWidth, windowHeight) / 2, // 반지름은 윈도우 크기의 절반
@@ -159,32 +169,64 @@ async function bootstrap() {
               videoHeight,
               Math.min(windowWidth, windowHeight), // 반지름은 윈도우 크기의 절반
             );
+            currentPredictRange = randomMovingCircle(
+              videoWidth,
+              videoHeight,
+              Math.min(windowWidth, windowHeight) / 2, // 반지름은 윈도우 크기의 절반
+            );
             console.log('📸 카메라 이동:', currentRange);
           }, 3000);
 
           const emitInterval = setInterval(() => {
             const isOutlier = Math.random() < outlierRate * 0.01;
-            const isPredictable = Math.random() < predictRate * 0.01; // 30% 확률로 예측 가능한 값
             let x,
               y,
               z = Math.random() * 1;
 
+            let predictX, predictY;
+
             const { centerX, centerY, radius } = currentRange;
+            const {
+              centerX: predictCenterX,
+              centerY: predictCenterY,
+              radius: predictRadius,
+            } = currentPredictRange;
 
             console.log('📸 정말이동?:', currentRange);
 
             // 랜덤 각도와 거리 생성
             const angle = Math.random() * 2 * Math.PI;
             const distance = Math.random() * radius;
+            const predictDistance = Math.random() * predictRadius;
 
             // 정상값 또는 이상치
             const adjustedDistance = isOutlier
               ? distance * outlierMultiplier
               : distance;
 
+            const predictAdjustedDistance = isOutlier
+              ? predictDistance * outlierMultiplier
+              : predictDistance;
+
             // 극좌표 → 직교좌표 변환
             x = Math.round(centerX + adjustedDistance * Math.cos(angle));
             y = Math.round(centerY + adjustedDistance * Math.sin(angle));
+            predictX = Math.round(
+              predictCenterX + predictAdjustedDistance * Math.cos(angle),
+            );
+            predictY = Math.round(
+              predictCenterY + predictAdjustedDistance * Math.sin(angle),
+            );
+
+            // 예측 모드 진입 여부 체크
+            if (!isInPredictMode && Math.random() < predictRate * 0.01) {
+              isInPredictMode = true;
+
+              // 3초 뒤 예측 모드 해제
+              predictModeTimeout = setTimeout(() => {
+                isInPredictMode = false;
+              }, predictDuration);
+            }
 
             const payload: any = {
               event: 'position',
@@ -195,8 +237,9 @@ async function bootstrap() {
               },
             };
 
-            if (isPredictable) {
-              payload.data.predict = [{ x, y, z }];
+            // 예측 모드인 경우 predict 추가
+            if (isInPredictMode) {
+              payload.data.predict = [{ predictX, predictY, z }];
             }
 
             ws.send(JSON.stringify(payload));
