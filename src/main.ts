@@ -112,6 +112,7 @@ async function bootstrap() {
     ws.on('message', (message) => {
       try {
         const parsed = JSON.parse(message.toString());
+        console.log('Received message:', parsed);
 
         if (parsed.event === 'start-stream') {
           const {
@@ -121,6 +122,14 @@ async function bootstrap() {
             videoWidth,
             videoHeight,
           } = parsed.payload;
+
+          console.log('Starting stream with params:', {
+            fps,
+            outlierRate,
+            outlierMultiplier,
+            videoWidth,
+            videoHeight,
+          });
 
           const intervalMs = 1000 / fps;
           const windowWidth = Math.floor(videoWidth * 0.1);
@@ -155,11 +164,13 @@ async function bootstrap() {
               y *= outlierMultiplier;
             }
 
+            console.log('Emitting position:', { x, y, outlier: isOutlier });
+
             ws.send(
               JSON.stringify({
                 event: 'position',
                 result: true,
-                payload: { x, y, outlier: isOutlier },
+                data: { x, y, outlier: isOutlier },
               }),
             );
           }, intervalMs);
