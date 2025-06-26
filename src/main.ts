@@ -242,7 +242,7 @@ async function bootstrap() {
 
             // 예측 모드인 경우 predict 추가
             if (isInPredictMode) {
-              payload.data.predict = [{ x2, y2, z }];
+              payload.data.predict = [{ x: x2, y: y2, z }];
             }
 
             ws.send(JSON.stringify(payload));
