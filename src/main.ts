@@ -159,9 +159,12 @@ async function bootstrap() {
           let d = 0;
 
           const totalSteps = 8;
-          const stepIntervalCount = totalSteps * 2 - 2;
-          const predictStepsPerEmit =
-            predictDuration / (intervalMs * stepIntervalCount);
+          const stepsPerCycle = totalSteps * 2 - 2; // 14
+          const stepIntervalFrames = Math.max(
+            1,
+            Math.floor(predictDuration / intervalMs / stepsPerCycle),
+          );
+          let predictFrameCount = 0;
 
           const emitInterval = setInterval(() => {
             const now = Date.now();
@@ -197,6 +200,7 @@ async function bootstrap() {
               isInPredictMode = true;
               step = 0;
               direction = 1;
+              predictFrameCount = 0;
 
               predictModeTimeout = setTimeout(() => {
                 isInPredictMode = false;
@@ -204,19 +208,23 @@ async function bootstrap() {
               }, predictDuration);
             }
 
-            // 예측 모드 중이면 d 값 순차 전환
+            // d 단계 조절
             if (isInPredictMode) {
-              d = step;
+              if (predictFrameCount % stepIntervalFrames === 0) {
+                d = step;
 
-              step += direction;
-              if (step === totalSteps - 1) {
-                direction = -1;
-              } else if (step === 0 && direction === -1) {
-                // 왕복 완료
-                isInPredictMode = false;
-                d = 0;
-                clearTimeout(predictModeTimeout!);
+                step += direction;
+
+                if (step === totalSteps - 1) {
+                  direction = -1;
+                } else if (step === 0 && direction === -1) {
+                  // 왕복 완료
+                  isInPredictMode = false;
+                  d = 0;
+                  clearTimeout(predictModeTimeout!);
+                }
               }
+              predictFrameCount++;
             }
 
             const payload: any = {
@@ -228,9 +236,12 @@ async function bootstrap() {
               },
             };
 
+            const dValue = Number(d.toFixed(2));
+            console.log('예측 단계:', dValue);
+
             // 예측 모드인 경우 predict 추가
             if (isInPredictMode) {
-              payload.data.predict = [{ x: x2, y: y2, d }];
+              payload.data.predict = [{ x: x2, y: y2, d: dValue }];
             }
 
             ws.send(JSON.stringify(payload));
