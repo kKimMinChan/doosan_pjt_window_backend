@@ -235,7 +235,7 @@ async function bootstrap() {
               event: 'position',
               result: true,
               data: {
-                origin: { width: videoWidth, height: videoHeight },
+                origin: { width: 1280, height: 720 },
                 block: [{ x, y }],
               },
             };
