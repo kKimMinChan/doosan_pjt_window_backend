@@ -108,17 +108,7 @@ async function bootstrap() {
 
   wss.on('connection', (ws) => {
     console.log('Client connected');
-
-    ws.send(
-      JSON.stringify({
-        event: 'connected',
-        result: true,
-        data: {
-          videoWidth: 1280,
-          videoHeight: 720,
-        },
-      }),
-    );
+    ws.connectedAt = Date.now();
 
     ws.on('message', (message) => {
       try {
@@ -155,8 +145,8 @@ async function bootstrap() {
           let predictModeTimeout: NodeJS.Timeout | null = null;
 
           let step = 0;
-          let direction = 1;
-          let d = 0;
+          let direction = 0.9;
+          let d: number;
 
           const totalSteps = 8;
           const stepsPerCycle = totalSteps * 2 - 2; // 14
@@ -168,8 +158,17 @@ async function bootstrap() {
 
           const emitInterval = setInterval(() => {
             const now = Date.now();
+            const elapsedSinceConnect = now - ws.connectedAt;
             const isOutlier = Math.random() < outlierRate * 0.01;
             let x, y, x2, y2;
+
+            console.log(
+              `Elapsed time since connection: ${elapsedSinceConnect} ms`,
+              'now:',
+              now,
+              'connectedAt:',
+              ws.connectedAt,
+            );
 
             // 랜덤 각도와 거리 생성
             const angle = Math.random() * 2 * Math.PI;
@@ -199,7 +198,7 @@ async function bootstrap() {
             if (!isInPredictMode && Math.random() < predictRate * 0.01) {
               isInPredictMode = true;
               step = 0;
-              direction = 1;
+              direction = 0.9;
               predictFrameCount = 0;
 
               predictModeTimeout = setTimeout(() => {
@@ -215,9 +214,9 @@ async function bootstrap() {
 
                 step += direction;
 
-                if (step === totalSteps - 1) {
+                if (step >= totalSteps - 1) {
                   direction = -1;
-                } else if (step === 0 && direction === -1) {
+                } else if (step <= 0 && direction === -1) {
                   // 왕복 완료
                   isInPredictMode = false;
                   d = 0;
@@ -236,12 +235,10 @@ async function bootstrap() {
               },
             };
 
-            const dValue = Number(d.toFixed(2));
-            console.log('예측 단계:', dValue);
-
             // 예측 모드인 경우 predict 추가
-            if (isInPredictMode) {
-              payload.data.predict = [{ x: x2, y: y2, d: dValue }];
+            if (isInPredictMode && elapsedSinceConnect >= 3000) {
+              payload.data.predict = [{ x: x2, y: y2, d: d.toFixed(1) }];
+              console.log(payload.data.predict);
             }
 
             ws.send(JSON.stringify(payload));
