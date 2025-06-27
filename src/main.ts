@@ -162,14 +162,6 @@ async function bootstrap() {
             const isOutlier = Math.random() < outlierRate * 0.01;
             let x, y, x2, y2;
 
-            console.log(
-              `Elapsed time since connection: ${elapsedSinceConnect} ms`,
-              'now:',
-              now,
-              'connectedAt:',
-              ws.connectedAt,
-            );
-
             // 랜덤 각도와 거리 생성
             const angle = Math.random() * 2 * Math.PI;
             const distance = Math.random() * radius;
@@ -235,11 +227,15 @@ async function bootstrap() {
               },
             };
 
+            if (blockX === null || blockY === null) {
+              delete payload.data.block;
+            }
+
             // 예측 모드인 경우 predict 추가
             if (isInPredictMode && elapsedSinceConnect >= 3000) {
               payload.data.predict = [{ x: x2, y: y2, d: d.toFixed(1) }];
-              console.log(payload.data.predict);
             }
+            console.log(payload);
 
             ws.send(JSON.stringify(payload));
           }, intervalMs);
@@ -273,7 +269,7 @@ async function bootstrap() {
 
   server.listen(4000, () => {
     console.log(
-      '✅ Nest + WebSocket 서버 실행 중: http://localhost:4000, wss://dev.fboedev.com/ws',
+      '✅ Nest + WebSocket 서버 실행 중: http://localhost:4000, wss://dev.fboedev.com/demo/tp',
     );
   });
 }
