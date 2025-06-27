@@ -11,8 +11,14 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { ObjectIdValidationPipe } from './pipes/objectid-validation.pipe';
 import { RecordingSeedService } from './recording/recording.seed.service';
 import { createServer } from 'http';
-import { initializeWebSocketTp } from './websocket/transGuard/tp.gateway';
-import { initializeWebSocketCrane } from './websocket/transGuard/crane.gateway';
+import {
+  // initializeWebSocketTp,
+  wssTp,
+} from './websocket/transGuard/tp.gateway';
+import {
+  // initializeWebSocketCrane,
+  wssCrane,
+} from './websocket/transGuard/crane.gateway';
 
 // import * as fs from 'fs';
 
@@ -97,8 +103,25 @@ async function bootstrap() {
   const httpAdapter = app.getHttpAdapter();
   const expressApp = httpAdapter.getInstance();
   const server = createServer(expressApp);
+
+  // ← 이 위치! HTTP 서버 생성 후, WS 초기화 함수 호출 전 또는 후 상관없이 한 번만 등록
+  server.on('upgrade', (req, socket, head) => {
+    console.log('🔁 upgrade 요청 URL:', req.url);
+    if (req.url === '/demo-tp') {
+      wssTp.handleUpgrade(req, socket, head, (ws) => {
+        wssTp.emit('connection', ws, req);
+      });
+    } else if (req.url === '/demo-crane') {
+      wssCrane.handleUpgrade(req, socket, head, (ws) => {
+        wssCrane.emit('connection', ws, req);
+      });
+    } else {
+      socket.destroy();
+    }
+  });
+
   // initializeWebSocketTp(server);
-  initializeWebSocketCrane(server);
+  // initializeWebSocketCrane(server);
 
   server.listen(4000, () => {
     console.log(

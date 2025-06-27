@@ -1,155 +1,303 @@
+// import { WebSocketServer, WebSocket } from 'ws';
+// import { Server } from 'http';
+
+// export function initializeWebSocketCrane(server: Server) {
+//    const wssCrane = new WebSocketServer({ server, path: '/demo-crane' });
+//   console.log('✅ Crane WebSocket initialized on /demo-crane');
+//   const clientIntervals = new Map<
+//     WebSocket,
+//     {
+//       emitInterval: NodeJS.Timeout;
+//       windowMoveInterval: NodeJS.Timeout;
+//     }
+//   >();
+
+//   wssCrane.on('connection', (ws) => {
+//     console.log('✅ Crane 서버 – connection 이벤트 발생');
+//     (ws as any).connectedAt = Date.now();
+
+//     ws.on('message', (message) => {
+//       try {
+//         const parsed = JSON.parse(message.toString());
+//         console.log('Received message:', parsed);
+
+//         if (parsed.event === 'start-stream') {
+//           const {
+//             fps,
+//             outlierRate,
+//             outlierMultiplier,
+//             blockX,
+//             blockY,
+//             predictRate = 30,
+//             predictDuration = 3000,
+//             radius = 50,
+//             predictX,
+//             predictY,
+//           } = parsed.payload;
+
+//           const intervalMs = 1000 / fps;
+//           let isInPredictMode = false;
+//           let predictModeTimeout: NodeJS.Timeout | null = null;
+
+//           let step = 0;
+//           let direction = 0.9;
+//           let d: number;
+
+//           const totalSteps = 8;
+//           const stepsPerCycle = totalSteps * 2 - 2;
+//           const stepIntervalFrames = Math.max(
+//             1,
+//             Math.floor(predictDuration / intervalMs / stepsPerCycle),
+//           );
+//           let predictFrameCount = 0;
+
+//           const emitInterval = setInterval(() => {
+//             const now = Date.now();
+//             const elapsedSinceConnect = now - (ws as any).connectedAt;
+//             const isOutlier = Math.random() < outlierRate * 0.01;
+//             let x, y, x2, y2;
+
+//             const angle = Math.random() * 2 * Math.PI;
+//             const distance = Math.random() * radius;
+//             const predictDistance = Math.random() * radius;
+
+//             const adjustedDistance = isOutlier
+//               ? distance * outlierMultiplier
+//               : distance;
+//             const predictAdjustedDistance = isOutlier
+//               ? predictDistance * outlierMultiplier
+//               : predictDistance;
+
+//             x = Math.round(blockX + adjustedDistance * Math.cos(angle));
+//             y = Math.round(blockY + adjustedDistance * Math.sin(angle));
+//             x2 = Math.round(
+//               predictX + predictAdjustedDistance * Math.cos(angle),
+//             );
+//             y2 = Math.round(
+//               predictY + predictAdjustedDistance * Math.sin(angle),
+//             );
+
+//             if (!isInPredictMode && Math.random() < predictRate * 0.01) {
+//               isInPredictMode = true;
+//               step = 0;
+//               direction = 0.9;
+//               predictFrameCount = 0;
+
+//               predictModeTimeout = setTimeout(() => {
+//                 isInPredictMode = false;
+//                 d = 0;
+//               }, predictDuration);
+//             }
+
+//             if (isInPredictMode) {
+//               if (predictFrameCount % stepIntervalFrames === 0) {
+//                 d = step;
+//                 step += direction;
+
+//                 if (step >= totalSteps - 1) {
+//                   direction = -1;
+//                 } else if (step <= 0 && direction === -1) {
+//                   isInPredictMode = false;
+//                   d = 0;
+//                   clearTimeout(predictModeTimeout!);
+//                 }
+//               }
+//               predictFrameCount++;
+//             }
+
+//             const payload: any = {
+//               event: 'position',
+//               result: true,
+//               data: {
+//                 origin: { width: 1280, height: 720 },
+//               },
+//             };
+
+//             if (blockX != 0 && blockY != 0) {
+//               payload.data.block = [{ x, y }];
+//             }
+
+//             if (isInPredictMode && elapsedSinceConnect >= 3000) {
+//               payload.data.predict = [{ x: x2, y: y2, d: d.toFixed(1) }];
+//             }
+
+//             console.log(payload);
+
+//             ws.send(JSON.stringify(payload));
+//           }, intervalMs);
+
+//           clientIntervals.set(ws, { emitInterval, windowMoveInterval: null });
+//         }
+
+//         if (parsed.event === 'stop-stream') {
+//           clearClient(ws);
+//           ws.send(JSON.stringify({ event: 'stopped', result: true }));
+//         }
+//       } catch (err) {
+//         console.error('Invalid message:', message);
+//       }
+//     });
+
+//     ws.on('close', () => {
+//       console.log('Client disconnected');
+//       clearClient(ws);
+//     });
+//   });
+
+//   function clearClient(ws: WebSocket) {
+//     const timers = clientIntervals.get(ws);
+//     if (timers) {
+//       clearInterval(timers.emitInterval);
+//       clearInterval(timers.windowMoveInterval);
+//       clientIntervals.delete(ws);
+//     }
+//   }
+// }
+
+// src/crane.socket.ts
 import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'http';
 
-export function initializeWebSocketCrane(server: Server) {
-  const wssCrane = new WebSocketServer({ server, path: '/demo-crane' });
-  console.log('✅ Crane WebSocket initialized on /demo-crane');
-  const clientIntervals = new Map<
-    WebSocket,
-    {
-      emitInterval: NodeJS.Timeout;
-      windowMoveInterval: NodeJS.Timeout;
-    }
-  >();
+// noServer: true 로만 생성
+export const wssCrane = new WebSocketServer({ noServer: true });
 
-  wssCrane.on('connection', (ws) => {
-    console.log('Client connected');
-    (ws as any).connectedAt = Date.now();
+const clientIntervals = new Map<
+  WebSocket,
+  { emitInterval: NodeJS.Timeout; windowMoveInterval: NodeJS.Timeout | null }
+>();
 
-    ws.on('message', (message) => {
-      try {
-        const parsed = JSON.parse(message.toString());
-        console.log('Received message:', parsed);
+wssCrane.on('connection', (ws) => {
+  console.log('✅ Crane 서버 – connection 이벤트 발생');
+  (ws as any).connectedAt = Date.now();
 
-        if (parsed.event === 'start-stream') {
-          const {
-            fps,
-            outlierRate,
-            outlierMultiplier,
-            blockX,
-            blockY,
-            predictRate = 30,
-            predictDuration = 3000,
-            radius = 50,
-            predictX,
-            predictY,
-          } = parsed.payload;
+  ws.on('message', (message) => {
+    try {
+      const parsed = JSON.parse(message.toString());
+      console.log('Received message:', parsed);
 
-          const intervalMs = 1000 / fps;
-          let isInPredictMode = false;
-          let predictModeTimeout: NodeJS.Timeout | null = null;
+      if (parsed.event === 'start-stream') {
+        const {
+          fps,
+          outlierRate,
+          outlierMultiplier,
+          blockX,
+          blockY,
+          predictRate = 30,
+          predictDuration = 3000,
+          radius = 50,
+          predictX,
+          predictY,
+        } = parsed.payload;
 
-          let step = 0;
-          let direction = 0.9;
-          let d: number;
+        const intervalMs = 1000 / fps;
+        let isInPredictMode = false;
+        let predictModeTimeout: NodeJS.Timeout | null = null;
 
-          const totalSteps = 8;
-          const stepsPerCycle = totalSteps * 2 - 2;
-          const stepIntervalFrames = Math.max(
-            1,
-            Math.floor(predictDuration / intervalMs / stepsPerCycle),
-          );
-          let predictFrameCount = 0;
+        let step = 0;
+        let direction = 0.9;
+        let d: number;
 
-          const emitInterval = setInterval(() => {
-            const now = Date.now();
-            const elapsedSinceConnect = now - (ws as any).connectedAt;
-            const isOutlier = Math.random() < outlierRate * 0.01;
-            let x, y, x2, y2;
+        const totalSteps = 8;
+        const stepsPerCycle = totalSteps * 2 - 2;
+        const stepIntervalFrames = Math.max(
+          1,
+          Math.floor(predictDuration / intervalMs / stepsPerCycle),
+        );
+        let predictFrameCount = 0;
 
-            const angle = Math.random() * 2 * Math.PI;
-            const distance = Math.random() * radius;
-            const predictDistance = Math.random() * radius;
+        const emitInterval = setInterval(() => {
+          const now = Date.now();
+          const elapsedSinceConnect = now - (ws as any).connectedAt;
+          const isOutlier = Math.random() < outlierRate * 0.01;
+          let x, y, x2, y2;
 
-            const adjustedDistance = isOutlier
-              ? distance * outlierMultiplier
-              : distance;
-            const predictAdjustedDistance = isOutlier
-              ? predictDistance * outlierMultiplier
-              : predictDistance;
+          const angle = Math.random() * 2 * Math.PI;
+          const distance = Math.random() * radius;
+          const predictDistance = Math.random() * radius;
 
-            x = Math.round(blockX + adjustedDistance * Math.cos(angle));
-            y = Math.round(blockY + adjustedDistance * Math.sin(angle));
-            x2 = Math.round(
-              predictX + predictAdjustedDistance * Math.cos(angle),
-            );
-            y2 = Math.round(
-              predictY + predictAdjustedDistance * Math.sin(angle),
-            );
+          const adjustedDistance = isOutlier
+            ? distance * outlierMultiplier
+            : distance;
+          const predictAdjustedDistance = isOutlier
+            ? predictDistance * outlierMultiplier
+            : predictDistance;
 
-            if (!isInPredictMode && Math.random() < predictRate * 0.01) {
-              isInPredictMode = true;
-              step = 0;
-              direction = 0.9;
-              predictFrameCount = 0;
+          x = Math.round(blockX + adjustedDistance * Math.cos(angle));
+          y = Math.round(blockY + adjustedDistance * Math.sin(angle));
+          x2 = Math.round(predictX + predictAdjustedDistance * Math.cos(angle));
+          y2 = Math.round(predictY + predictAdjustedDistance * Math.sin(angle));
 
-              predictModeTimeout = setTimeout(() => {
+          if (!isInPredictMode && Math.random() < predictRate * 0.01) {
+            isInPredictMode = true;
+            step = 0;
+            direction = 0.9;
+            predictFrameCount = 0;
+
+            predictModeTimeout = setTimeout(() => {
+              isInPredictMode = false;
+              d = 0;
+            }, predictDuration);
+          }
+
+          if (isInPredictMode) {
+            if (predictFrameCount % stepIntervalFrames === 0) {
+              d = step;
+              step += direction;
+
+              if (step >= totalSteps - 1) {
+                direction = -1;
+              } else if (step <= 0 && direction === -1) {
                 isInPredictMode = false;
                 d = 0;
-              }, predictDuration);
-            }
-
-            if (isInPredictMode) {
-              if (predictFrameCount % stepIntervalFrames === 0) {
-                d = step;
-                step += direction;
-
-                if (step >= totalSteps - 1) {
-                  direction = -1;
-                } else if (step <= 0 && direction === -1) {
-                  isInPredictMode = false;
-                  d = 0;
-                  clearTimeout(predictModeTimeout!);
-                }
+                clearTimeout(predictModeTimeout!);
               }
-              predictFrameCount++;
             }
+            predictFrameCount++;
+          }
 
-            const payload: any = {
-              event: 'position',
-              result: true,
-              data: {
-                origin: { width: 1280, height: 720 },
-              },
-            };
+          const payload: any = {
+            event: 'position',
+            result: true,
+            data: {
+              origin: { width: 1280, height: 720 },
+            },
+          };
 
-            if (blockX != 0 && blockY != 0) {
-              payload.data.block = [{ x, y }];
-            }
+          if (blockX != 0 && blockY != 0) {
+            payload.data.block = [{ x, y }];
+          }
 
-            if (isInPredictMode && elapsedSinceConnect >= 3000) {
-              payload.data.predict = [{ x: x2, y: y2, d: d.toFixed(1) }];
-            }
+          if (isInPredictMode && elapsedSinceConnect >= 3000) {
+            payload.data.predict = [{ x: x2, y: y2, d: d.toFixed(1) }];
+          }
 
-            console.log(payload);
+          console.log(payload);
 
-            ws.send(JSON.stringify(payload));
-          }, intervalMs);
+          ws.send(JSON.stringify(payload));
+        }, intervalMs);
 
-          clientIntervals.set(ws, { emitInterval, windowMoveInterval: null });
-        }
-
-        if (parsed.event === 'stop-stream') {
-          clearClient(ws);
-          ws.send(JSON.stringify({ event: 'stopped', result: true }));
-        }
-      } catch (err) {
-        console.error('Invalid message:', message);
+        clientIntervals.set(ws, { emitInterval, windowMoveInterval: null });
       }
-    });
 
-    ws.on('close', () => {
-      console.log('Client disconnected');
-      clearClient(ws);
-    });
+      if (parsed.event === 'stop-stream') {
+        clearClient(ws);
+        ws.send(JSON.stringify({ event: 'stopped', result: true }));
+      }
+    } catch (err) {
+      console.error('Invalid message:', message);
+    }
   });
 
-  function clearClient(ws: WebSocket) {
-    const timers = clientIntervals.get(ws);
-    if (timers) {
-      clearInterval(timers.emitInterval);
-      clearInterval(timers.windowMoveInterval);
-      clientIntervals.delete(ws);
-    }
+  ws.on('close', () => {
+    console.log('Client disconnected');
+    clearClient(ws);
+  });
+});
+
+function clearClient(ws: WebSocket) {
+  const timers = clientIntervals.get(ws);
+  if (timers) {
+    clearInterval(timers.emitInterval);
+    if (timers.windowMoveInterval) clearInterval(timers.windowMoveInterval);
+    clientIntervals.delete(ws);
   }
 }
