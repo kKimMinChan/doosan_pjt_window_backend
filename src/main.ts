@@ -96,7 +96,7 @@ async function bootstrap() {
   const httpAdapter = app.getHttpAdapter();
   const expressApp = httpAdapter.getInstance();
   const server = createServer(expressApp);
-  const wss = new WebSocketServer({ server, path: '/ws' });
+  const wss = new WebSocketServer({ server, path: '/demo/tp' });
 
   const clientIntervals = new Map<
     WebSocket,
