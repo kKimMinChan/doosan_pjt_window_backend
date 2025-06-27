@@ -107,11 +107,11 @@ async function bootstrap() {
   // ← 이 위치! HTTP 서버 생성 후, WS 초기화 함수 호출 전 또는 후 상관없이 한 번만 등록
   server.on('upgrade', (req, socket, head) => {
     console.log('🔁 upgrade 요청 URL:', req.url);
-    if (req.url === '/demo-tp') {
+    if (req.url === '/demo/tp') {
       wssTp.handleUpgrade(req, socket, head, (ws) => {
         wssTp.emit('connection', ws, req);
       });
-    } else if (req.url === '/demo-crane') {
+    } else if (req.url === '/demo/crane') {
       wssCrane.handleUpgrade(req, socket, head, (ws) => {
         wssCrane.emit('connection', ws, req);
       });
