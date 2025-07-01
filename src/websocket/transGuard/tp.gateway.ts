@@ -45,7 +45,7 @@ interface TpDetectionData {
 interface TpPayload {
   event: 'position';
   result: boolean;
-  data: TpDetectionData;
+  data: TpDetectionData[];
 }
 
 export const wssTp = new WebSocketServer({ noServer: true });
@@ -103,11 +103,13 @@ wssTp.on('connection', (ws) => {
           const payload: TpPayload = {
             event: 'position',
             result: true,
-            data: {
-              origin: { width: 1280, height: 720 },
-              block: { x1, y1, x2, y2 },
-              predict: predictItems,
-            },
+            data: [
+              {
+                origin: { width: 1280, height: 720 },
+                block: { x1, y1, x2, y2 },
+                predict: predictItems,
+              },
+            ],
           };
 
           // if (blockX > 0 && blockY > 0) {
