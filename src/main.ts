@@ -103,9 +103,39 @@ async function bootstrap() {
   const httpAdapter = app.getHttpAdapter();
   const expressApp = httpAdapter.getInstance();
   const server = createServer(expressApp);
+  const server1 = createServer(expressApp);
+  const server2 = createServer(expressApp);
 
   // ← 이 위치! HTTP 서버 생성 후, WS 초기화 함수 호출 전 또는 후 상관없이 한 번만 등록
   server.on('upgrade', (req, socket, head) => {
+    console.log('🔁 upgrade 요청 URL:', req.url);
+    if (req.url === '/demo/tp') {
+      wssTp.handleUpgrade(req, socket, head, (ws) => {
+        wssTp.emit('connection', ws, req);
+      });
+    } else if (req.url === '/demo/crane') {
+      wssCrane.handleUpgrade(req, socket, head, (ws) => {
+        wssCrane.emit('connection', ws, req);
+      });
+    } else {
+      socket.destroy();
+    }
+  });
+  server1.on('upgrade', (req, socket, head) => {
+    console.log('🔁 upgrade 요청 URL:', req.url);
+    if (req.url === '/demo/tp') {
+      wssTp.handleUpgrade(req, socket, head, (ws) => {
+        wssTp.emit('connection', ws, req);
+      });
+    } else if (req.url === '/demo/crane') {
+      wssCrane.handleUpgrade(req, socket, head, (ws) => {
+        wssCrane.emit('connection', ws, req);
+      });
+    } else {
+      socket.destroy();
+    }
+  });
+  server2.on('upgrade', (req, socket, head) => {
     console.log('🔁 upgrade 요청 URL:', req.url);
     if (req.url === '/demo/tp') {
       wssTp.handleUpgrade(req, socket, head, (ws) => {
@@ -124,6 +154,16 @@ async function bootstrap() {
   // initializeWebSocketCrane(server);
 
   server.listen(4000, () => {
+    console.log(
+      '✅ Nest + WebSocket 서버 실행 중: http://localhost:4000, wss://dev.fboedev.com/demo/tp',
+    );
+  });
+  server1.listen(4001, () => {
+    console.log(
+      '✅ Nest + WebSocket 서버 실행 중: http://localhost:4000, wss://dev.fboedev.com/demo/tp',
+    );
+  });
+  server2.listen(4002, () => {
     console.log(
       '✅ Nest + WebSocket 서버 실행 중: http://localhost:4000, wss://dev.fboedev.com/demo/tp',
     );

@@ -112,9 +112,12 @@ wssTp.on('connection', (ws) => {
             result: true,
             data: {
               origin: { width: 1280, height: 720 },
-              block: [{ x, y }],
             },
           };
+
+          if (blockX > 0 && blockY > 0) {
+            payload.data.block = [{ x, y }];
+          }
 
           if (isInPredictMode && elapsedSinceConnect >= 3000) {
             payload.data.predict = [{ x: x2, y: y2, d: d.toFixed(1) }];

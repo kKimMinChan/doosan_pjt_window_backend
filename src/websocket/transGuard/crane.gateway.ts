@@ -262,7 +262,7 @@ wssCrane.on('connection', (ws) => {
             },
           };
 
-          if (blockX != 0 && blockY != 0) {
+          if (blockX > 0 && blockY > 0) {
             payload.data.block = [{ x, y }];
           }
 
