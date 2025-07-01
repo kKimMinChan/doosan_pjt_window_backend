@@ -8,7 +8,7 @@ import { Server } from 'http';
 interface PredictItem {
   from: { x: number; y: number };
   to: { x: number; y: number };
-  distance: number;
+  distance?: number;
 }
 
 interface Block {
@@ -182,9 +182,11 @@ function randomPositionPredict(
   const fromY = Math.round(predict.from.y + distance * Math.sin(angle));
   const toX = Math.round(predict.to.x + distance * Math.cos(angle));
   const toY = Math.round(predict.to.y + distance * Math.sin(angle));
-  const distanceBetween = Math.sqrt(
-    Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2),
-  );
+  const distanceBetween =
+    Math.round(
+      Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) * 100,
+    ) / 100;
+
   return {
     from: { x: fromX, y: fromY },
     to: { x: toX, y: toY },

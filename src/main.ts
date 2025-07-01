@@ -103,8 +103,6 @@ async function bootstrap() {
   const httpAdapter = app.getHttpAdapter();
   const expressApp = httpAdapter.getInstance();
   const server = createServer(expressApp);
-  const server1 = createServer(expressApp);
-  const server2 = createServer(expressApp);
 
   // ← 이 위치! HTTP 서버 생성 후, WS 초기화 함수 호출 전 또는 후 상관없이 한 번만 등록
   server.on('upgrade', (req, socket, head) => {
