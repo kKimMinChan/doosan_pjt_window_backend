@@ -1,14 +1,10 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'http';
-
-// export function initializeWebSocketTp(server: Server) {
-
-// }
 
 interface PredictItem {
   from: { x: number; y: number };
   to: { x: number; y: number };
   distance?: number;
+  radius?: number; // Optional radius for predict item
 }
 
 interface Block {
@@ -16,6 +12,7 @@ interface Block {
   y1: number;
   x2: number;
   y2: number;
+  radius?: number; // Optional radius for block
 }
 
 interface ParsedTP {
@@ -67,38 +64,43 @@ wssTp.on('connection', (ws) => {
       const parsed: ParsedTP = JSON.parse(message.toString());
       console.log('Received message:', parsed);
 
+      // ✅ payload가 빈 객체일 경우 연결 종료
+      if (
+        parsed &&
+        typeof parsed.payload === 'object' &&
+        parsed.payload &&
+        Object.keys(parsed.payload).length === 0
+      ) {
+        console.warn('⚠️ 빈 payload 수신 → 연결 종료');
+        ws.close(1000, 'Empty payload received');
+        return;
+      }
+
       if (parsed.event === 'start-stream') {
         const { fps, radius, block, predict } = parsed.payload;
 
         const intervalMs = 1000 / fps;
-        // let isInPredictMode = false;
-        // let predictModeTimeout: NodeJS.Timeout | null = null;
-
-        // let step = 0;
-        // let direction = 0.9;
-        // let d: number;
-
-        // const totalSteps = 8;
-        // const stepsPerCycle = totalSteps * 2 - 2;
-        // const stepIntervalFrames = Math.max(
-        //   1,
-        //   Math.floor(predictDuration / intervalMs / stepsPerCycle),
-        // );
-        // let predictFrameCount = 0;
 
         const emitIntervalTp = setInterval(() => {
-          // const now = Date.now();
-          // const elapsedSinceConnect = now - (ws as any).connectedAt;
-          // const isOutlier = Math.random() < outlierRate * 0.01;
           let x1, y1, x2, y2;
 
-          ({ x1, y1, x2, y2 } = randomPositionBlock(block, radius));
+          const angle = Math.random() * 2 * Math.PI;
+          const distance = Math.random() * block.radius;
 
-          const predictItems: PredictItem[] = predict.map((item) =>
-            randomPositionPredict(item, radius),
+          ({ x1, y1, x2, y2 } = randomPositionBlock(block, angle, distance));
+
+          const predictItems: PredictItem[] = predict.map((item, index) =>
+            randomPositionPredict(item, radius, angle, distance),
           );
 
-          // const predictDistance = Math.random() * radius;
+          console.log(
+            x1,
+            y1,
+            x2,
+            y2,
+            predictItems[0].from,
+            predictItems[1]?.from,
+          );
 
           const payload: TpPayload = {
             event: 'position',
@@ -111,16 +113,6 @@ wssTp.on('connection', (ws) => {
               },
             ],
           };
-
-          // if (blockX > 0 && blockY > 0) {
-          //   payload.data.block = [{ x, y }];
-          // }
-
-          // if (isInPredictMode && elapsedSinceConnect >= 3000) {
-          //   payload.data.predict = [{ x: x2, y: y2, d: d.toFixed(1) }];
-          // }
-
-          console.log(payload);
 
           ws.send(JSON.stringify(payload));
         }, intervalMs);
@@ -156,12 +148,10 @@ function clearClient(ws: WebSocket) {
 }
 
 function randomPositionBlock(
-  block: { x1: number; y1: number; x2: number; y2: number },
-  radius: number,
+  block: Block,
+  angle: number,
+  distance: number,
 ): { x1: number; y1: number; x2: number; y2: number } {
-  const angle = Math.random() * 2 * Math.PI;
-  const distance = Math.random() * radius;
-
   const x1 = Math.round(block.x1 + distance * Math.cos(angle));
   const y1 = Math.round(block.y1 + distance * Math.sin(angle));
   const x2 = Math.round(block.x2 + distance * Math.cos(angle));
@@ -172,22 +162,27 @@ function randomPositionBlock(
 function randomPositionPredict(
   predict: PredictItem,
   radius: number,
+  angle: number,
+  distance: number,
 ): {
   from: { x: number; y: number };
   to: { x: number; y: number };
   distance: number;
 } {
-  const angle = Math.random() * 2 * Math.PI;
-  const distance = Math.random() * radius;
+  const angleTo = Math.random() * 2 * Math.PI;
+  const distanceTo = Math.random() * radius;
 
   const fromX = Math.round(predict.from.x + distance * Math.cos(angle));
   const fromY = Math.round(predict.from.y + distance * Math.sin(angle));
-  const toX = Math.round(predict.to.x + distance * Math.cos(angle));
-  const toY = Math.round(predict.to.y + distance * Math.sin(angle));
+  const toX = Math.round(predict.to.x + distanceTo * Math.cos(angleTo));
+  const toY = Math.round(predict.to.y + distanceTo * Math.sin(angleTo));
   const distanceBetween =
     Math.round(
-      Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) * 100,
+      (Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) * 100) /
+        (predict?.distance ? predict.distance : 1),
     ) / 100;
+
+  console.log(distanceBetween);
 
   return {
     from: { x: fromX, y: fromY },
