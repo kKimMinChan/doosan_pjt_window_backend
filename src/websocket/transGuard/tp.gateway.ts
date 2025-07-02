@@ -62,7 +62,12 @@ wssTp.on('connection', (ws) => {
   ws.on('message', (message) => {
     try {
       const parsed: ParsedTP = JSON.parse(message.toString());
-      console.log('Received message:', parsed);
+      console.log(
+        'Received message:',
+        parsed,
+        'predict',
+        parsed.payload.predict,
+      );
 
       // ✅ payload가 빈 객체일 경우 연결 종료
       if (
@@ -90,17 +95,17 @@ wssTp.on('connection', (ws) => {
           ({ x1, y1, x2, y2 } = randomPositionBlock(block, angle, distance));
 
           const predictItems: PredictItem[] = predict.map((item, index) =>
-            randomPositionPredict(item, radius, angle, distance),
+            randomPositionPredict(item, angle, distance),
           );
 
-          console.log(
-            x1,
-            y1,
-            x2,
-            y2,
-            predictItems[0].from,
-            predictItems[1]?.from,
-          );
+          // console.log(
+          //   x1,
+          //   y1,
+          //   x2,
+          //   y2,
+          //   predictItems[0].from,
+          //   predictItems[1]?.from,
+          // );
 
           const payload: TpPayload = {
             event: 'position',
@@ -113,6 +118,12 @@ wssTp.on('connection', (ws) => {
               },
             ],
           };
+
+          console.log(
+            'Sending payload:',
+            payload.data[0].predict,
+            payload.data[0].block,
+          );
 
           ws.send(JSON.stringify(payload));
         }, intervalMs);
@@ -161,7 +172,7 @@ function randomPositionBlock(
 }
 function randomPositionPredict(
   predict: PredictItem,
-  radius: number,
+  // radius: number,
   angle: number,
   distance: number,
 ): {
@@ -170,7 +181,7 @@ function randomPositionPredict(
   distance: number;
 } {
   const angleTo = Math.random() * 2 * Math.PI;
-  const distanceTo = Math.random() * radius;
+  const distanceTo = Math.random() * predict.radius!;
 
   const fromX = Math.round(predict.from.x + distance * Math.cos(angle));
   const fromY = Math.round(predict.from.y + distance * Math.sin(angle));
@@ -182,7 +193,20 @@ function randomPositionPredict(
         (predict?.distance ? predict.distance : 1),
     ) / 100;
 
-  console.log(distanceBetween);
+  console.log(
+    'fromX:',
+    fromX,
+    'fromY',
+    fromY,
+    'toX',
+    toX,
+    'toY',
+    toY,
+    predict.from.x,
+    predict.from.y,
+    predict.to.x,
+    predict.to.y,
+  );
 
   return {
     from: { x: fromX, y: fromY },
