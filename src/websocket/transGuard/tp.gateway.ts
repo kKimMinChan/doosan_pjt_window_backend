@@ -5,6 +5,7 @@ interface PredictItem {
   to: { x: number; y: number };
   distance?: number;
   radius?: number; // Optional radius for predict item
+  rate?: number; // Optional rate for predict item
 }
 
 interface Block {
@@ -12,6 +13,7 @@ interface Block {
   y1: number;
   x2: number;
   y2: number;
+  rate?: number; // Optional rate for block
   radius?: number; // Optional radius for block
 }
 
@@ -82,7 +84,7 @@ wssTp.on('connection', (ws) => {
       }
 
       if (parsed.event === 'start-stream') {
-        const { fps, radius, block, predict } = parsed.payload;
+        const { fps, block, predict } = parsed.payload;
 
         const intervalMs = 1000 / fps;
 
@@ -92,10 +94,17 @@ wssTp.on('connection', (ws) => {
           const angle = Math.random() * 2 * Math.PI;
           const distance = Math.random() * block.radius;
 
-          ({ x1, y1, x2, y2 } = randomPositionBlock(block, angle, distance));
+          const tpUnrecognized = Math.random() * 100 < block.rate;
+
+          ({ x1, y1, x2, y2 } = randomPositionBlock(
+            block,
+            angle,
+            distance,
+            tpUnrecognized,
+          ));
 
           const predictItems: PredictItem[] = predict.map((item, index) =>
-            randomPositionPredict(item, angle, distance),
+            randomPositionPredict(item, angle, distance, tpUnrecognized),
           );
 
           // console.log(
@@ -162,7 +171,12 @@ function randomPositionBlock(
   block: Block,
   angle: number,
   distance: number,
+  tpUnrecognized: boolean,
 ): { x1: number; y1: number; x2: number; y2: number } {
+  if (tpUnrecognized) {
+    return { x1: 0, y1: 0, x2: 0, y2: 0 };
+  }
+
   const x1 = Math.round(block.x1 + distance * Math.cos(angle));
   const y1 = Math.round(block.y1 + distance * Math.sin(angle));
   const x2 = Math.round(block.x2 + distance * Math.cos(angle));
@@ -175,11 +189,27 @@ function randomPositionPredict(
   // radius: number,
   angle: number,
   distance: number,
+  tpUnrecognized?: boolean,
 ): {
   from: { x: number; y: number };
   to: { x: number; y: number };
   distance: number;
 } {
+  if (tpUnrecognized) {
+    return {
+      from: { x: 0, y: 0 },
+      to: { x: 0, y: 0 },
+      distance: 0,
+    };
+  }
+  if (Math.random() * 100 < predict.rate!) {
+    return {
+      from: { x: 0, y: 0 },
+      to: { x: 0, y: 0 },
+      distance: 0,
+    };
+  }
+
   const angleTo = Math.random() * 2 * Math.PI;
   const distanceTo = Math.random() * predict.radius!;
 
