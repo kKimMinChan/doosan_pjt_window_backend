@@ -57,6 +57,7 @@ export class WorkPlanService {
 
   async findAll(id: string, paginationDto: WorkPlanPaginationDto) {
     try {
+      console.log('--------------');
       await this.heavyEquipmentRepository.findOne(id);
 
       const { page, limit, order, inspectionStatus, startDay, endDay } =

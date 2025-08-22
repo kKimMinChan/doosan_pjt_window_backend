@@ -18,7 +18,7 @@ interface Block {
 }
 
 interface ParsedTP {
-  event: 'start-stream' | 'stop-stream';
+  event: 'connect-tp-demo' | 'disconnect-tp-demo';
   payload: {
     fps: number;
     radius: number;
@@ -83,7 +83,7 @@ wssTp.on('connection', (ws) => {
         return;
       }
 
-      if (parsed.event === 'start-stream') {
+      if (parsed.event === 'connect-tp-demo') {
         const { fps, block, predict } = parsed.payload;
 
         const intervalMs = 1000 / fps;
@@ -143,7 +143,7 @@ wssTp.on('connection', (ws) => {
         });
       }
 
-      if (parsed.event === 'stop-stream') {
+      if (parsed.event === 'disconnect-tp-demo') {
         clearClient(ws);
         ws.send(JSON.stringify({ event: 'stopped', result: true }));
       }

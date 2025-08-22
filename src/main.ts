@@ -19,6 +19,8 @@ import {
   // initializeWebSocketCrane,
   wssCrane,
 } from './websocket/transGuard/crane.gateway';
+import { wssTpSelectionSync } from './websocket/transGuard/tp-selection-sync.gateway';
+import { join } from 'path';
 
 // import * as fs from 'fs';
 
@@ -39,6 +41,8 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('Doosan')
     .build();
+
+  app.useStaticAssets(join(__dirname, '..', 'public'));
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory, {
@@ -115,6 +119,10 @@ async function bootstrap() {
       wssCrane.handleUpgrade(req, socket, head, (ws) => {
         wssCrane.emit('connection', ws, req);
       });
+    } else if (req.url === '/tp-selection') {
+      wssTpSelectionSync.handleUpgrade(req, socket, head, (ws) => {
+        wssTpSelectionSync.emit('connection', ws, req);
+      });
     } else {
       socket.destroy();
     }
@@ -124,9 +132,7 @@ async function bootstrap() {
   // initializeWebSocketCrane(server);
 
   server.listen(4000, () => {
-    console.log(
-      '✅ Nest + WebSocket 서버 실행 중: http://localhost:4000, wss://dev.fboedev.com/demo/tp',
-    );
+    console.log('✅ Nest + WebSocket 서버 실행 중: http://localhost:4000');
   });
 }
 bootstrap();

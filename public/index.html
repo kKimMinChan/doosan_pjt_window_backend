@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>TP Selection Sync Tester</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        margin: 16px;
+      }
+      fieldset {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 16px;
+      }
+      button {
+        padding: 8px 12px;
+        margin-right: 8px;
+      }
+      #log {
+        background: #111;
+        color: #0f0;
+        padding: 10px;
+        border-radius: 8px;
+        height: 260px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      input[type='text'] {
+        width: 420px;
+        padding: 6px;
+      }
+      .badge {
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>TP Selection Sync Tester</h1>
+
+    <fieldset>
+      <legend>연결</legend>
+      <div class="row">
+        <label>WebSocket URL</label>
+        <input
+          id="wsUrl"
+          type="text"
+          value="ws://localhost:4000/tp-selection"
+        />
+        <button id="btnConnect">Connect</button>
+        <button id="btnDisconnect" disabled>Disconnect</button>
+        <span class="badge" id="status">DISCONNECTED</span>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>선택 전송</legend>
+      <div class="row" style="margin-bottom: 8px">
+        <label
+          ><input type="radio" name="target" value="tp" checked /> tp</label
+        >
+        <label><input type="radio" name="target" value="block" /> block</label>
+      </div>
+      <button id="btnSend">Send update-tp-selection</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>로그</legend>
+      <div id="log"></div>
+    </fieldset>
+
+    <script>
+      let ws = null;
+      const $ = (id) => document.getElementById(id);
+      const log = (msg, obj) => {
+        const time = new Date().toISOString().split('T')[1].replace('Z', '');
+        $('log').textContent +=
+          `[${time}] ${msg}` + (obj ? ' ' + JSON.stringify(obj) : '') + '\n';
+        $('log').scrollTop = $('log').scrollHeight;
+      };
+
+      const setStatus = (s) => {
+        $('status').textContent = s;
+      };
+
+      $('btnConnect').onclick = () => {
+        const url = $('wsUrl').value.trim();
+        if (!url) return alert('WS URL을 입력하세요.');
+
+        ws = new WebSocket(url);
+        log('CONNECTING...', { url });
+
+        ws.onopen = () => {
+          setStatus('CONNECTED');
+          $('btnConnect').disabled = true;
+          $('btnDisconnect').disabled = false;
+          log('CONNECTED');
+
+          // 서버가 이 이벤트를 처리해 응답 보내도록 되어 있음
+          // const hello = { event: 'connect-tp-selection', payload: {} };
+          // ws.send(JSON.stringify(hello));
+          // log('→ send', hello);
+        };
+
+        ws.onmessage = (ev) => {
+          try {
+            const data = JSON.parse(ev.data);
+            log('← recv', data);
+          } catch {
+            log('← recv (text)', ev.data);
+          }
+        };
+
+        ws.onclose = (ev) => {
+          setStatus('DISCONNECTED');
+          $('btnConnect').disabled = false;
+          $('btnDisconnect').disabled = true;
+          log(`DISCONNECTED (code=${ev.code}, reason=${ev.reason || ''})`);
+          ws = null;
+        };
+
+        ws.onerror = (err) => {
+          log('ERROR', err);
+        };
+      };
+
+      $('btnDisconnect').onclick = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const bye = { event: 'disconnect-tp-selection', payload: {} };
+        ws.send(JSON.stringify(bye));
+        log('→ send', bye);
+        ws.close(1000, 'Client disconnect');
+      };
+
+      $('btnSend').onclick = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          return alert('먼저 연결하세요.');
+        }
+        const target = document.querySelector(
+          'input[name="target"]:checked',
+        ).value;
+        const msg = { event: 'update-tp-selection', payload: { target } };
+        ws.send(JSON.stringify(msg));
+        log('→ send', msg);
+      };
+    </script>
+  </body>
+</html>

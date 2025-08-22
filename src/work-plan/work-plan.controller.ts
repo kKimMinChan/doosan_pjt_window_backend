@@ -75,6 +75,7 @@ export class WorkPlanController {
     @Query() paginationDto: WorkPlanPaginationDto,
     @Param('id', ObjectIdValidationPipe) id: string,
   ) {
+    // console.log('Pagination DTO:', paginationDto);
     return await this.workPlanService.findAll(id, paginationDto);
   }
 

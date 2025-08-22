@@ -318,10 +318,11 @@ export class WorkPlanMongoRepository implements WorkPlanRepository {
 
     const workPlans = await this.workPlanModel.aggregate(pipeline);
 
-    console.log(workPlans.length, 'workPlans--------');
+    console.log(workPlans, 'workPlans--------');
 
     return workPlans;
   }
+
   async countWorkPlan(
     id: string,
     todayId: string,
