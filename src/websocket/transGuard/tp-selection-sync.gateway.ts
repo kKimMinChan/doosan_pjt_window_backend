@@ -1,5 +1,28 @@
 import { WebSocketServer, WebSocket } from 'ws';
 
+const HEARTBEAT_MS = 25_000;
+
+function setupHeartbeat() {
+  const t = setInterval(() => {
+    for (const ws of wssTpSelectionSync.clients) {
+      const s = ws as WebSocket & { isAlive?: boolean };
+      if (s.isAlive === false) {
+        try {
+          s.terminate();
+        } catch {}
+        continue;
+      }
+      s.isAlive = false;
+      try {
+        s.ping();
+      } catch {}
+    }
+  }, HEARTBEAT_MS);
+  process.on('SIGINT', () => clearInterval(t));
+  process.on('SIGTERM', () => clearInterval(t));
+}
+setupHeartbeat();
+
 interface ParsedTP {
   event: 'update-tp-selection' | 'connect-tp-selection';
   payload: {
@@ -22,11 +45,26 @@ const clients = new Map<string, WebSocket>(); // id -> ws
 
 let currentSelection: TpSelectionPayload | null = null;
 
-wssTpSelectionSync.on('connection', (ws) => {
+wssTpSelectionSync.on('connection', (ws, req?: any) => {
+  const kst = () =>
+    new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+  const ip =
+    req?.socket?.remoteAddress ??
+    req?.headers?.['x-forwarded-for'] ??
+    'unknown';
   const id = crypto.randomUUID(); // 매 접속 고유 ID
   (ws as any).id = id;
   clients.set(id, ws);
-  console.log(`Client connected: ${id}`);
+
+  (ws as any).isAlive = true;
+  ws.on('pong', () => {
+    (ws as any).isAlive = true;
+  });
+
+  // (선택) TCP keepalive도 켜기
+  ws._socket?.setKeepAlive?.(true, 30_000);
+
+  console.log(`[WS][${kst()}] CONNECT id=${id} ip=${ip}`);
 
   ws.on('message', (message) => {
     try {
@@ -59,11 +97,13 @@ wssTpSelectionSync.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    console.log(`Client disconnected: ${id}`);
+    console.log(`[WS][${kst()}] DISCONNECT id=${id} ip=${ip}`);
     clients.delete(id);
     // ✅ 모든 클라이언트가 떠나면 상태 초기화
     if (clients.size === 0) {
-      console.log('All clients disconnected. Resetting currentSelection.');
+      console.log(
+        `[WS][${kst()}] All clients disconnected. Resetting currentSelection.`,
+      );
       currentSelection = null;
     }
   });
