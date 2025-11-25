@@ -118,10 +118,46 @@
           log('→ send', hello);
         };
 
+        // 헬퍼: payload에서 target('tp'|'block') 뽑기
+        function normalizeTarget(payload) {
+          if (!payload) return undefined;
+          if (typeof payload === 'string') return payload;
+          if (typeof payload === 'object') return payload.target;
+          return undefined;
+        }
+
+        // 헬퍼: 라디오 선택 적용 + (선택) 라벨 강조
+        function setTarget(t) {
+          const el = document.querySelector(
+            `input[name="target"][value="${t}"]`,
+          );
+          const other = document.querySelector(
+            `input[name="target"][value="${t === 'tp' ? 'block' : 'tp'}"]`,
+          );
+          if (!el) {
+            log(`No such target: ${t}`);
+            return;
+          }
+          el.checked = true;
+          // 라벨 강조(원치 않으면 아래 4줄 제거)
+          el.closest('label')?.classList.add('active');
+          other?.closest('label')?.classList.remove('active');
+          log(`ui target <- ${t}`);
+        }
+
         ws.onmessage = (ev) => {
           try {
             const data = JSON.parse(ev.data);
             log('← recv', data);
+
+            // last-tp-selection 또는 동일 의미의 이벤트면 반영
+            if (
+              data.event === 'last-tp-selection' ||
+              data.event === 'tp-selection-updated'
+            ) {
+              const t = normalizeTarget(data.payload);
+              if (t === 'tp' || t === 'block') setTarget(t);
+            }
           } catch {
             log('← recv (text)', ev.data);
           }

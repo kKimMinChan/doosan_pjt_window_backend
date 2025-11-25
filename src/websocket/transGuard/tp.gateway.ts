@@ -15,6 +15,7 @@ interface Block {
   y2: number;
   rate?: number; // Optional rate for block
   radius?: number; // Optional radius for block
+  distance?: number;
 }
 
 interface ParsedTP {
@@ -172,9 +173,9 @@ function randomPositionBlock(
   angle: number,
   distance: number,
   tpUnrecognized: boolean,
-): { x1: number; y1: number; x2: number; y2: number } {
+): { x1: number; y1: number; x2: number; y2: number; distance?: number } {
   if (tpUnrecognized) {
-    return { x1: 0, y1: 0, x2: 0, y2: 0 };
+    return { x1: 0, y1: 0, x2: 0, y2: 0, distance: 0 };
   }
 
   const x1 = Math.round(block.x1 + distance * Math.cos(angle));
@@ -182,8 +183,9 @@ function randomPositionBlock(
   const x2 = Math.round(block.x2 + distance * Math.cos(angle));
   const y2 = Math.round(block.y2 + distance * Math.sin(angle));
 
-  return { x1, y1, x2, y2 };
+  return { x1, y1, x2, y2, distance: block.distance };
 }
+
 function randomPositionPredict(
   predict: PredictItem,
   // radius: number,
@@ -220,7 +222,7 @@ function randomPositionPredict(
   const distanceBetween =
     Math.round(
       (Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) * 100) /
-        (predict?.distance ? predict.distance : 1),
+        (predict?.distance ? 1 : predict.distance),
     ) / 100;
 
   console.log(

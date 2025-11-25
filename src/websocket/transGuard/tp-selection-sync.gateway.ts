@@ -1,27 +1,27 @@
 import { WebSocketServer, WebSocket } from 'ws';
 
-const HEARTBEAT_MS = 25_000;
+// const HEARTBEAT_MS = 25_000;
 
-function setupHeartbeat() {
-  const t = setInterval(() => {
-    for (const ws of wssTpSelectionSync.clients) {
-      const s = ws as WebSocket & { isAlive?: boolean };
-      if (s.isAlive === false) {
-        try {
-          s.terminate();
-        } catch {}
-        continue;
-      }
-      s.isAlive = false;
-      try {
-        s.ping();
-      } catch {}
-    }
-  }, HEARTBEAT_MS);
-  process.on('SIGINT', () => clearInterval(t));
-  process.on('SIGTERM', () => clearInterval(t));
-}
-setupHeartbeat();
+// function setupHeartbeat() {
+//   const t = setInterval(() => {
+//     for (const ws of wssTpSelectionSync.clients) {
+//       const s = ws as WebSocket & { isAlive?: boolean };
+//       if (s.isAlive === false) {
+//         try {
+//           s.terminate();
+//         } catch {}
+//         continue;
+//       }
+//       s.isAlive = false;
+//       try {
+//         s.ping();
+//       } catch {}
+//     }
+//   }, HEARTBEAT_MS);
+//   process.on('SIGINT', () => clearInterval(t));
+//   process.on('SIGTERM', () => clearInterval(t));
+// }
+// setupHeartbeat();
 
 interface ParsedTP {
   event: 'update-tp-selection' | 'connect-tp-selection';
@@ -56,19 +56,21 @@ wssTpSelectionSync.on('connection', (ws, req?: any) => {
   (ws as any).id = id;
   clients.set(id, ws);
 
-  (ws as any).isAlive = true;
-  ws.on('pong', () => {
-    (ws as any).isAlive = true;
-  });
+  // (ws as any).isAlive = true;
+  // ws.on('pong', () => {
+  //   (ws as any).isAlive = true;
+  // });
 
   // (선택) TCP keepalive도 켜기
-  ws._socket?.setKeepAlive?.(true, 30_000);
+  // ws._socket?.setKeepAlive?.(true, 30_000);
 
   console.log(`[WS][${kst()}] CONNECT id=${id} ip=${ip}`);
 
   ws.on('message', (message) => {
     try {
       const parsed: ParsedTP = JSON.parse(message.toString());
+
+      console.log(`[WS][${kst()}] RECV id=${id} ip=${ip} msg=`, parsed);
 
       if (parsed.event === 'update-tp-selection') {
         if (parsed.payload.target) {
