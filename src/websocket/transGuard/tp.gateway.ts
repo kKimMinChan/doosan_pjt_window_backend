@@ -90,19 +90,20 @@ wssTp.on('connection', (ws) => {
         const intervalMs = 1000 / fps;
 
         const emitIntervalTp = setInterval(() => {
-          let x1, y1, x2, y2;
+          let x1, y1, x2, y2, blockDistance;
 
           const angle = Math.random() * 2 * Math.PI;
           const distance = Math.random() * block.radius;
 
           const tpUnrecognized = Math.random() * 100 < block.rate;
 
-          ({ x1, y1, x2, y2 } = randomPositionBlock(
-            block,
-            angle,
-            distance,
-            tpUnrecognized,
-          ));
+          ({
+            x1,
+            y1,
+            x2,
+            y2,
+            distance: blockDistance,
+          } = randomPositionBlock(block, angle, distance, tpUnrecognized));
 
           const predictItems: PredictItem[] = predict.map((item, index) =>
             randomPositionPredict(item, angle, distance, tpUnrecognized),
@@ -123,7 +124,7 @@ wssTp.on('connection', (ws) => {
             data: [
               {
                 origin: { width: 1280, height: 720 },
-                block: { x1, y1, x2, y2 },
+                block: { x1, y1, x2, y2, distance: blockDistance },
                 predict: predictItems,
               },
             ],
