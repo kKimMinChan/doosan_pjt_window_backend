@@ -226,9 +226,8 @@ function randomPositionPredict(
   let distanceBetween = 0;
 
   if (base > 0) {
-    // 0.9 ~ 1.1 사이 랜덤 배수
-    const jitterRatio = 1 + (Math.random() * 0.2 - 0.1);
-    distanceBetween = Math.round(base * jitterRatio);
+    const jitterRatio = 1 + (Math.random() * 0.06 - 0.03);
+    distanceBetween = Math.round(base * jitterRatio * 100) / 100;
   } else {
     distanceBetween = 0;
   }
