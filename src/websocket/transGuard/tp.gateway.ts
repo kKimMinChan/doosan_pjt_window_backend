@@ -226,8 +226,9 @@ function randomPositionPredict(
   let distanceBetween = 0;
 
   if (base > 0) {
+    // 0.97 ~ 1.03
     const jitterRatio = 1 + (Math.random() * 0.06 - 0.03);
-    distanceBetween = Math.round(base * jitterRatio * 100) / 100;
+    distanceBetween = Math.round(base * jitterRatio);
   } else {
     distanceBetween = 0;
   }
