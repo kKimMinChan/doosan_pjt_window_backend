@@ -223,7 +223,7 @@ function randomPositionPredict(
   const distanceBetween =
     Math.round(
       (Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) * 100) /
-        (predict?.distance ? 1 : predict.distance),
+        (predict?.distance ? predict.distance : predict.distance),
     ) / 100;
 
   console.log(
