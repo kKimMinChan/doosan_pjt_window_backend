@@ -220,16 +220,18 @@ function randomPositionPredict(
   const fromY = Math.round(predict.from.y + distance * Math.sin(angle));
   const toX = Math.round(predict.to.x + distanceTo * Math.cos(angleTo));
   const toY = Math.round(predict.to.y + distanceTo * Math.sin(angleTo));
-  const d = predict?.distance ?? 0;
 
-  const distanceBetween =
-    d === 0
-      ? 0
-      : Math.round(
-          (Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) *
-            100) /
-            d,
-        ) / 100;
+  const base = predict?.distance ?? 0; // 기준 거리 (정수)
+
+  let distanceBetween = 0;
+
+  if (base > 0) {
+    // 0.9 ~ 1.1 사이 랜덤 배수
+    const jitterRatio = 1 + (Math.random() * 0.2 - 0.1);
+    distanceBetween = Math.round(base * jitterRatio);
+  } else {
+    distanceBetween = 0;
+  }
 
   console.log(
     'fromX:',
