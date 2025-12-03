@@ -220,11 +220,16 @@ function randomPositionPredict(
   const fromY = Math.round(predict.from.y + distance * Math.sin(angle));
   const toX = Math.round(predict.to.x + distanceTo * Math.cos(angleTo));
   const toY = Math.round(predict.to.y + distanceTo * Math.sin(angleTo));
+  const d = predict?.distance ?? 0;
+
   const distanceBetween =
-    Math.round(
-      (Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) * 100) /
-        (predict?.distance ? predict.distance : predict.distance),
-    ) / 100;
+    d === 0
+      ? 0
+      : Math.round(
+          (Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2)) *
+            100) /
+            d,
+        ) / 100;
 
   console.log(
     'fromX:',
