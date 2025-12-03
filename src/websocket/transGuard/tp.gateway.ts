@@ -226,27 +226,29 @@ function randomPositionPredict(
   let distanceBetween = 0;
 
   if (base > 0) {
-    // 0.97 ~ 1.03
-    const jitterRatio = 1 + (Math.random() * 0.06 - 0.03);
-    distanceBetween = Math.round(base * jitterRatio);
+    // predict.radius 만큼 랜덤 배수
+    const jitterRatio = 1 + (Math.random() * predict.radius) / 100;
+    distanceBetween = base * jitterRatio;
   } else {
     distanceBetween = 0;
   }
 
-  console.log(
-    'fromX:',
-    fromX,
-    'fromY',
-    fromY,
-    'toX',
-    toX,
-    'toY',
-    toY,
-    predict.from.x,
-    predict.from.y,
-    predict.to.x,
-    predict.to.y,
-  );
+  console.log('distanceBetween:', distanceBetween);
+
+  // console.log(
+  //   'fromX:',
+  //   fromX,
+  //   'fromY',
+  //   fromY,
+  //   'toX',
+  //   toX,
+  //   'toY',
+  //   toY,
+  //   predict.from.x,
+  //   predict.from.y,
+  //   predict.to.x,
+  //   predict.to.y,
+  // );
 
   return {
     from: { x: fromX, y: fromY },
